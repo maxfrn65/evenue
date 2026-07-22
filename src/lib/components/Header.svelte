@@ -1,4 +1,6 @@
 <script lang="ts">
+	import Button from '$lib/components/ui/button/button.svelte';
+	import Badge from '$lib/components/ui/badge/badge.svelte';
 	import { PartyPopper, ShieldCheck, User, Search, PlusCircle } from 'lucide-svelte';
 </script>
 
@@ -14,9 +16,9 @@
 			<div class="flex flex-col">
 				<span class="text-xl font-extrabold tracking-tight text-white flex items-center gap-1.5">
 					Evenue
-					<span class="text-xs px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30 font-medium">
+					<Badge variant="purple" class="text-[10px] px-2 py-0.5">
 						Events
-					</span>
+					</Badge>
 				</span>
 				<span class="text-[10px] text-slate-400 tracking-wide font-medium">Locations & Soirées Couvertes</span>
 			</div>
@@ -37,23 +39,17 @@
 			</a>
 		</nav>
 
-		<!-- Action Buttons -->
-		<div class="flex items-center gap-4">
-			<a
-				href="/become-host"
-				class="hidden sm:flex items-center gap-2 text-sm font-semibold text-purple-300 hover:text-white bg-purple-950/40 hover:bg-purple-900/60 border border-purple-500/30 px-4 py-2 rounded-xl transition-all"
-			>
+		<!-- Action Buttons using Shadcn Button Components -->
+		<div class="flex items-center gap-3">
+			<Button href="/become-host" variant="outline" size="sm" class="hidden sm:inline-flex gap-2">
 				<PlusCircle class="w-4 h-4 text-purple-400" />
 				Devenir Hôte
-			</a>
+			</Button>
 
-			<a
-				href="/auth/login"
-				class="gradient-button text-sm flex items-center gap-2"
-			>
+			<Button href="/auth/login" variant="gradient" size="sm" class="gap-2">
 				<User class="w-4 h-4" />
 				Se connecter
-			</a>
+			</Button>
 		</div>
 	</div>
 </header>
