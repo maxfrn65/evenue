@@ -60,7 +60,22 @@ Ce registre consigne l'ensemble des décisions d'architecture, de sécurité et 
   2. Intégration de filtres avancés (Ville, Prix/soirée, Capacité convives, Types d'événements autorisés) combinée à une carte interactive géolocalisée avec repères dynamiques.
 - **Décision & Justification** :
   - **Recherche multicritère événementielle** : Permet aux organisateurs de trouver instantanément des lieux acceptant spécifiquement les soirées et mariages sans risquer les annulations pour mensonge.
-  - **Intégration de la carte interactive** : Améliore la conversion utilisateur et offre une vue synthétique des tarifs par soirée sur le territoire.
+
+---
+
+## Arbitrage #005 — Composants UI Shadcn-Svelte, Carte Leaflet & Scope Restreint Wakam
+
+- **Date** : 22 Juillet 2026
+- **Ticket ClickUp** : [[CU-005]](https://app.clickup.com/t/86cavq44n) | **GitHub PR** : [#4](https://github.com/maxfrn65/evenue/pull/4)
+- **Contexte** : Refactorisation UX globale, composants shadcn-svelte et ajustement du scope d'affichage de la bannière Wakam.
+- **Options envisagées** :
+  1. Conserver des balises HTML brutes et des boutons hétérogènes.
+  2. Remplacer l'intégralité des boutons, cartes, badges, inputs et selects par des composants shadcn-svelte réutilisables (`Button`, `Card`, `Input`, `Label`, `Badge`, `Select`).
+  3. Restreindre la bannière `CoverageBanner` au tunnel de réservation uniquement (`/bookings/new`).
+- **Décision & Justification** :
+  - **Système de composants Shadcn-Svelte** : Assure la cohérence visuelle, la maintenabilité et la prise en charge native des liens `href` sur les boutons.
+  - **Restreindre la bannière Wakam au tunnel** : Évite la surcharge visuelle globale et concentre l'élément de rassurance au moment exact de l'engagement de paiement.
+  - **Carte Leaflet / OpenStreetMap** : Remplacé le composant statique par de véritables tuiles interactives sombres et des marqueurs cliquables.
 
 ---
 
@@ -72,3 +87,4 @@ Ce registre consigne l'ensemble des décisions d'architecture, de sécurité et 
 | ARB-002 | UI/UX / Transparence | Design System Sombre, Svelte 5 Runes & Bannière Wakam | ✅ Validé |
 | ARB-003 | Sécurité / Auth & KYC | Scrypt, PrismaPg & Onboarding Stripe Connect Express | ✅ Validé |
 | ARB-004 | Frontend / Géolocalisation | Moteur de recherche multicritère & Carte Mapbox | ✅ Validé |
+| ARB-005 | UI/UX / System | Composants Shadcn-Svelte, Carte Leaflet & Scope Wakam | ✅ Validé |
