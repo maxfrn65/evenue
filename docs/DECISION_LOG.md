@@ -50,6 +50,20 @@ Ce registre consigne l'ensemble des décisions d'architecture, de sécurité et 
 
 ---
 
+## Arbitrage #004 — Moteur de Recherche Géolocalisée, Filtres Événements & Repères Mapbox
+
+- **Date** : 22 Juillet 2026
+- **Ticket ClickUp** : [[CU-004]](https://app.clickup.com/t/86cavk7q0) | **GitHub PR** : [#3](https://github.com/maxfrn65/evenue/pull/3)
+- **Contexte** : Mise en place du catalogue de lieux événements et de la recherche géolocalisée.
+- **Options envisagées** :
+  1. Recherche textuelle basique sans filtrage par type d'événement ni capacité d'accueil.
+  2. Intégration de filtres avancés (Ville, Prix/soirée, Capacité convives, Types d'événements autorisés) combinée à une carte interactive géolocalisée avec repères dynamiques.
+- **Décision & Justification** :
+  - **Recherche multicritère événementielle** : Permet aux organisateurs de trouver instantanément des lieux acceptant spécifiquement les soirées et mariages sans risquer les annulations pour mensonge.
+  - **Intégration de la carte interactive** : Améliore la conversion utilisateur et offre une vue synthétique des tarifs par soirée sur le territoire.
+
+---
+
 ## Suivi des Arbitrages
 
 | ID | Domaine | Description / Sujet | Statut |
@@ -57,3 +71,4 @@ Ce registre consigne l'ensemble des décisions d'architecture, de sécurité et 
 | ARB-001 | Architecture / Résilience | Prisma 7 + Circuit Breaker Engine natif | ✅ Validé |
 | ARB-002 | UI/UX / Transparence | Design System Sombre, Svelte 5 Runes & Bannière Wakam | ✅ Validé |
 | ARB-003 | Sécurité / Auth & KYC | Scrypt, PrismaPg & Onboarding Stripe Connect Express | ✅ Validé |
+| ARB-004 | Frontend / Géolocalisation | Moteur de recherche multicritère & Carte Mapbox | ✅ Validé |
