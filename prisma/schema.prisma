@@ -1,0 +1,134 @@
+// Prisma Schema for Evenue Platform
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  HOST
+  GUEST
+  ADMIN
+}
+
+enum KycStatus {
+  NOT_STARTED
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum BookingStatus {
+  PENDING_PAYMENT
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+  DISPUTED
+}
+
+enum InsuranceStatus {
+  PENDING
+  ACTIVE
+  CLAIMED
+  EXPIRED
+  FAILED
+}
+
+enum PayoutStatus {
+  HELD_IN_ESCROW
+  DISBURSED
+  REFUNDED
+}
+
+model User {
+  id              String      @id @default(uuid())
+  email           String      @unique
+  passwordHash    String
+  firstName       String
+  lastName        String
+  role            UserRole    @default(GUEST)
+  kycStatus       KycStatus   @default(NOT_STARTED)
+  stripeAccountId String?     // Stripe Connect Express account for hosts
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  listings        Listing[]   @relation("HostListings")
+  bookings        Booking[]   @relation("GuestBookings")
+}
+
+model Listing {
+  id               String     @id @default(uuid())
+  hostId           String
+  title            String
+  description      String
+  address          String
+  city             String
+  zipCode          String
+  latitude         Float
+  longitude        Float
+  pricePerNight    Float
+  securityDeposit  Float      @default(500.0)
+  maxCapacity      Int
+  eventTypeAllowed String[]   // e.g. ["SOIRÉE", "ANNIVERSAIRE", "MARIAGE"]
+  icalSyncUrl      String?
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+
+  host             User       @relation("HostListings", fields: [hostId], references: [id], onDelete: Cascade)
+  bookings         Booking[]
+}
+
+model Booking {
+  id                   String           @id @default(uuid())
+  listingId            String
+  guestId              String
+  startDate            DateTime
+  endDate              DateTime
+  totalPrice           Float
+  hostEarnings         Float
+  platformFee          Float
+  insuranceFee         Float
+  securityDepositAmount Float
+  status               BookingStatus    @default(PENDING_PAYMENT)
+  stripePaymentIntentId String?
+  stripeEscrowHoldId   String?
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+
+  listing              Listing          @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  guest                User             @relation("GuestBookings", fields: [guestId], references: [id], onDelete: Cascade)
+  insurancePolicy      InsurancePolicy?
+  payout               Payout?
+}
+
+model InsurancePolicy {
+  id              String          @id @default(uuid())
+  bookingId       String          @unique
+  policyNumber    String          @unique
+  wakamResponseId String?
+  status          InsuranceStatus @default(PENDING)
+  coverageAmount  Float           @default(10000.0)
+  certificateUrl  String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  booking         Booking         @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+}
+
+model Payout {
+  id              String       @id @default(uuid())
+  bookingId       String       @unique
+  hostAmount      Float
+  platformAmount  Float
+  insurerAmount   Float
+  status          PayoutStatus @default(HELD_IN_ESCROW)
+  stripeTransferId String?
+  disbursedAt     DateTime?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  booking         Booking      @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+}
