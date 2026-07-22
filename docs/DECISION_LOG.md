@@ -19,8 +19,24 @@ Ce registre consigne l'ensemble des décisions d'architecture, de sécurité et 
 
 ---
 
-## Suivi des Arbitrages à venir
+## Arbitrage #002 — Design System Thématique, Svelte 5 Runes & Bannière Transparence Wakam
+
+- **Date** : 22 Juillet 2026
+- **Ticket ClickUp** : [[CU-002]](https://app.clickup.com/t/86cavjr54) | **GitHub PR** : [#1](https://github.com/maxfrn65/evenue/pull/1)
+- **Contexte** : Création du Design System Evenue et mise en place de la transparence tarifaire et d'assurance réclamée au cadrage.
+- **Options envisagées** :
+  1. Utiliser Tailwind v3 avec classes utilitaires dispersées.
+  2. Masquer les conditions d'assurance dans une sous-page secondaire.
+  3. Intégrer un composant dédié `CoverageBanner` directement sur la page d'accueil avec les règles « Couvert / Non couvert » et adopter Svelte 5 Runes (`$props()`).
+- **Décision & Justification** :
+  - **Bannière de Transparence `CoverageBanner`** : Intégrée nativement sur le Héro pour lever immédiatement les craintes des hôtes (dégâts) et des invités (légalité des soirées).
+  - **Migrer sur Svelte 5 Runes (`$props()`)** : Assure la conformité avec la dernière version majeure du framework.
+
+---
+
+## Suivi des Arbitrages
 
 | ID | Domaine | Description / Sujet | Statut |
 |---|---|---|---|
 | ARB-001 | Architecture / Résilience | Prisma 7 + Circuit Breaker Engine natif | ✅ Validé |
+| ARB-002 | UI/UX / Transparence | Design System Sombre, Svelte 5 Runes & Bannière Wakam | ✅ Validé |
