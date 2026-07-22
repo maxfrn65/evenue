@@ -34,9 +34,26 @@ Ce registre consigne l'ensemble des décisions d'architecture, de sécurité et 
 
 ---
 
+## Arbitrage #003 — Hashage Scrypt, Adaptateur PrismaPg & KYC Délégation Stripe Connect
+
+- **Date** : 22 Juillet 2026
+- **Ticket ClickUp** : [[CU-003]](https://app.clickup.com/t/86cavk2c8) | **GitHub PR** : [#2](https://github.com/maxfrn65/evenue/pull/2)
+- **Contexte** : Implémentation du service d'authentification et de vérification d'identité des Hôtes.
+- **Options envisagées** :
+  1. Stocker des documents d'identité (Passeports/RIB) en interne.
+  2. Utiliser un hash MD5/SHA256 pour les mots de passe.
+  3. Utiliser scrypt avec timingSafeEqual et déléguer le KYC à Stripe Connect Express API.
+- **Décision & Justification** :
+  - **Délégation KYC à Stripe Connect Express** : Annule la responsabilité RGPD de stockage des pièces sensibles et respecte le Security by Design.
+  - **Scrypt & timingSafeEqual** : Sécurise les mdp et élimine les attaques par canal auxiliaire (timing attacks).
+  - **Adaptateur PrismaPg** : Assure la compatibilité Prisma 7 et la gestion des pools de connexions PostgreSQL.
+
+---
+
 ## Suivi des Arbitrages
 
 | ID | Domaine | Description / Sujet | Statut |
 |---|---|---|---|
 | ARB-001 | Architecture / Résilience | Prisma 7 + Circuit Breaker Engine natif | ✅ Validé |
 | ARB-002 | UI/UX / Transparence | Design System Sombre, Svelte 5 Runes & Bannière Wakam | ✅ Validé |
+| ARB-003 | Sécurité / Auth & KYC | Scrypt, PrismaPg & Onboarding Stripe Connect Express | ✅ Validé |
