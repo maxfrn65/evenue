@@ -1,5 +1,9 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import Button from '$lib/components/ui/button/button.svelte';
+	import Input from '$lib/components/ui/input/input.svelte';
+	import Label from '$lib/components/ui/label/label.svelte';
+	import Card from '$lib/components/ui/card/card.svelte';
 	import { User, Mail, Lock, ShieldCheck, ArrowRight } from 'lucide-svelte';
 
 	let firstName = $state('');
@@ -42,7 +46,7 @@
 </script>
 
 <div class="max-w-md mx-auto my-12 px-4">
-	<div class="glass-card p-8 rounded-2xl space-y-6">
+	<Card class="p-8 space-y-6">
 		<div class="text-center space-y-2">
 			<div class="w-12 h-12 rounded-xl bg-purple-500/20 text-purple-400 mx-auto flex items-center justify-center border border-purple-500/30">
 				<ShieldCheck class="w-6 h-6 text-emerald-400" />
@@ -60,105 +64,98 @@
 		<form onsubmit={handleSubmit} class="space-y-4">
 			<!-- Role Toggle -->
 			<div>
-				<span class="block text-xs font-semibold text-slate-300 mb-2 uppercase">Type de compte</span>
+				<Label>Type de compte</Label>
 				<div class="grid grid-cols-2 gap-3">
-					<button
+					<Button
 						type="button"
+						variant={role === 'GUEST' ? 'default' : 'outline'}
+						size="sm"
 						onclick={() => (role = 'GUEST')}
-						class={`py-2.5 px-3 rounded-xl border text-xs font-semibold transition-all ${
-							role === 'GUEST'
-								? 'bg-purple-600/30 border-purple-500 text-purple-300'
-								: 'bg-slate-900/60 border-white/10 text-slate-400 hover:text-white'
-						}`}
 					>
 						Organisateur / Invité
-					</button>
-					<button
+					</Button>
+					<Button
 						type="button"
+						variant={role === 'HOST' ? 'default' : 'outline'}
+						size="sm"
 						onclick={() => (role = 'HOST')}
-						class={`py-2.5 px-3 rounded-xl border text-xs font-semibold transition-all ${
-							role === 'HOST'
-								? 'bg-purple-600/30 border-purple-500 text-purple-300'
-								: 'bg-slate-900/60 border-white/10 text-slate-400 hover:text-white'
-						}`}
 					>
 						Propriétaire / Hôte
-					</button>
+					</Button>
 				</div>
 			</div>
 
 			<!-- First & Last Name -->
 			<div class="grid grid-cols-2 gap-3">
 				<div>
-					<label for="register-firstname" class="block text-xs font-semibold text-slate-300 mb-1.5 uppercase">Prénom</label>
-					<input
+					<Label for="register-firstname">Prénom</Label>
+					<Input
 						id="register-firstname"
 						type="text"
 						bind:value={firstName}
 						required
 						placeholder="Maxime"
-						class="w-full bg-slate-900/80 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-purple-500"
 					/>
 				</div>
 				<div>
-					<label for="register-lastname" class="block text-xs font-semibold text-slate-300 mb-1.5 uppercase">Nom</label>
-					<input
+					<Label for="register-lastname">Nom</Label>
+					<Input
 						id="register-lastname"
 						type="text"
 						bind:value={lastName}
 						required
 						placeholder="Dupont"
-						class="w-full bg-slate-900/80 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-purple-500"
 					/>
 				</div>
 			</div>
 
 			<!-- Email -->
 			<div>
-				<label for="register-email" class="block text-xs font-semibold text-slate-300 mb-1.5 uppercase">Adresse Email</label>
+				<Label for="register-email">Adresse Email</Label>
 				<div class="relative">
-					<Mail class="w-4 h-4 text-slate-500 absolute left-3.5 top-3" />
-					<input
+					<Mail class="w-4 h-4 text-slate-500 absolute left-3.5 top-3 z-10" />
+					<Input
 						id="register-email"
 						type="email"
 						bind:value={email}
 						required
 						placeholder="nom@exemple.com"
-						class="w-full bg-slate-900/80 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-purple-500"
+						class="pl-10"
 					/>
 				</div>
 			</div>
 
 			<!-- Password -->
 			<div>
-				<label for="register-password" class="block text-xs font-semibold text-slate-300 mb-1.5 uppercase">Mot de passe (8 car. min)</label>
+				<Label for="register-password">Mot de passe (8 car. min)</Label>
 				<div class="relative">
-					<Lock class="w-4 h-4 text-slate-500 absolute left-3.5 top-3" />
-					<input
+					<Lock class="w-4 h-4 text-slate-500 absolute left-3.5 top-3 z-10" />
+					<Input
 						id="register-password"
 						type="password"
 						bind:value={password}
 						required
 						minlength="8"
 						placeholder="••••••••"
-						class="w-full bg-slate-900/80 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-purple-500"
+						class="pl-10"
 					/>
 				</div>
 			</div>
 
-			<button
+			<Button
 				type="submit"
+				variant="gradient"
 				disabled={loading}
-				class="gradient-button w-full py-3 flex items-center justify-center gap-2 text-sm mt-4 font-semibold disabled:opacity-50"
+				class="w-full py-3 text-sm mt-4 gap-2 font-semibold"
 			>
 				{loading ? 'Création du compte...' : 'S\'inscrire'}
 				<ArrowRight class="w-4 h-4" />
-			</button>
+			</Button>
 		</form>
 
 		<div class="pt-4 border-t border-white/10 text-center text-xs text-slate-400">
 			Déjà un compte ?
 			<a href="/auth/login" class="text-purple-400 font-semibold hover:underline ml-1">Se connecter</a>
 		</div>
-	</div>
+	</Card>
 </div>

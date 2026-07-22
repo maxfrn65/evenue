@@ -1,5 +1,7 @@
 <script lang="ts">
-	import { ShieldCheck, ShieldAlert, Sparkles, CheckCircle2, XCircle } from 'lucide-svelte';
+	import Card from '$lib/components/ui/card/card.svelte';
+	import Badge from '$lib/components/ui/badge/badge.svelte';
+	import { ShieldCheck, Sparkles, CheckCircle2, XCircle } from 'lucide-svelte';
 
 	let { compact = false }: { compact?: boolean } = $props();
 
@@ -17,7 +19,7 @@
 	];
 </script>
 
-<div class="glass-card p-6 md:p-8 rounded-2xl relative overflow-hidden border border-purple-500/20">
+<Card class="p-6 md:p-8 rounded-2xl relative overflow-hidden border-purple-500/20">
 	<!-- Background glow -->
 	<div class="absolute -top-24 -right-24 w-60 h-60 bg-purple-600/10 rounded-full blur-3xl pointer-events-none"></div>
 
@@ -30,18 +32,20 @@
 			<div>
 				<h3 class="text-xl font-bold text-white flex items-center gap-2">
 					Assurance Événementielle Embarquée Wakam
-					<span class="text-xs bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2.5 py-0.5 rounded-full font-medium">
+					<Badge variant="emerald">
 						Native & Sans Frais
-					</span>
+					</Badge>
 				</h3>
 				<p class="text-sm text-slate-400 mt-0.5">
 					Chaque réservation inclut une police d'assurance automatique émise par Wakam AssurTech.
 				</p>
 			</div>
 		</div>
-		<div class="hidden sm:flex items-center gap-2 text-xs text-purple-300 bg-purple-900/40 px-3 py-1.5 rounded-lg border border-purple-500/30">
-			<Sparkles class="w-4 h-4 text-amber-400" />
-			<span>0 € de surcoût masqué</span>
+		<div class="hidden sm:flex items-center gap-2 text-xs">
+			<Badge variant="purple" class="gap-1 px-3 py-1.5 text-purple-300">
+				<Sparkles class="w-4 h-4 text-amber-400" />
+				<span>0 € de surcoût masqué</span>
+			</Badge>
 		</div>
 	</div>
 
@@ -79,4 +83,4 @@
 			</ul>
 		</div>
 	</div>
-</div>
+</Card>
