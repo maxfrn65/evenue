@@ -38,8 +38,10 @@
 		"vitest": "^4.1.8"
 	},
 	"dependencies": {
+		"@lucide/svelte": "^1.25.0",
 		"@prisma/client": "^7.9.0",
 		"dotenv": "^17.4.2",
+		"lucide-svelte": "^1.0.1",
 		"prisma": "^7.9.0"
 	}
 }
