@@ -68,14 +68,28 @@ Ce registre consigne l'ensemble des décisions d'architecture, de sécurité et 
 - **Date** : 22 Juillet 2026
 - **Ticket ClickUp** : [[CU-005]](https://app.clickup.com/t/86cavq44n) | **GitHub PR** : [#4](https://github.com/maxfrn65/evenue/pull/4)
 - **Contexte** : Refactorisation UX globale, composants shadcn-svelte et ajustement du scope d'affichage de la bannière Wakam.
+
+---
+
+## Arbitrage #006 — Thème Clair Minimaliste, Session Utilisateur Header & Fiches Produits Dynamiques
+
+- **Date** : 23 Juillet 2026
+- **Ticket ClickUp** : [[CU-006]](https://app.clickup.com/t/86cavr8qr)
+- **Contexte** : Harmonisation de la direction artistique sur le preset épuré Shadcn fond blanc / CTA noirs et gestion dynamique du profil connecté dans le Header.
+
+---
+
+## Arbitrage #007 — Moteur de Réservation, Séquestre Stripe Connect & Circuit Breaker Wakam
+
+- **Date** : 23 Juillet 2026
+- **Ticket ClickUp** : [[CU-007]](https://app.clickup.com/t/86cavrn9r) | **GitHub PR** : [#5](https://github.com/maxfrn65/evenue/pull/5)
+- **Contexte** : Implémentation du moteur de réservation, de la détection de chevauchement et du séquestre bancaire avec assurance Wakam embarquée.
 - **Options envisagées** :
-  1. Conserver des balises HTML brutes et des boutons hétérogènes.
-  2. Remplacer l'intégralité des boutons, cartes, badges, inputs et selects par des composants shadcn-svelte réutilisables (`Button`, `Card`, `Input`, `Label`, `Badge`, `Select`).
-  3. Restreindre la bannière `CoverageBanner` au tunnel de réservation uniquement (`/bookings/new`).
+  1. Prélever immédiatement les fonds de l'hôte et gérer les litiges manuellement.
+  2. Créer un PaymentIntent avec capture manuelle différée et émettre la police Wakam via le Circuit Breaker.
 - **Décision & Justification** :
-  - **Système de composants Shadcn-Svelte** : Assure la cohérence visuelle, la maintenabilité et la prise en charge native des liens `href` sur les boutons.
-  - **Restreindre la bannière Wakam au tunnel** : Évite la surcharge visuelle globale et concentre l'élément de rassurance au moment exact de l'engagement de paiement.
-  - **Carte Leaflet / OpenStreetMap** : Remplacé le composant statique par de véritables tuiles interactives sombres et des marqueurs cliquables.
+  - **Séquestre Stripe Connect avec capture manuelle différée** : Garantit que la caution et le montant de la location sont sécurisés jusqu'à la fin sans risque d'impayé.
+  - **Protection Circuit Breaker de l'API Wakam** : Maintient le taux de conversion même en cas d'indisponibilité temporaire de l'InsurTech en basculant en mode dégradé avec N° de police offline.
 
 ---
 
@@ -88,3 +102,5 @@ Ce registre consigne l'ensemble des décisions d'architecture, de sécurité et 
 | ARB-003 | Sécurité / Auth & KYC | Scrypt, PrismaPg & Onboarding Stripe Connect Express | ✅ Validé |
 | ARB-004 | Frontend / Géolocalisation | Moteur de recherche multicritère & Carte Mapbox | ✅ Validé |
 | ARB-005 | UI/UX / System | Composants Shadcn-Svelte, Carte Leaflet & Scope Wakam | ✅ Validé |
+| ARB-006 | UI/UX / DA | Thème clair minimaliste, Session Header & Fiche Dynamique | ✅ Validé |
+| ARB-007 | Backend / Finance | Moteur de réservation, Séquestre Stripe & Circuit Breaker Wakam | ✅ Validé |
