@@ -49,7 +49,7 @@
 	<Card class="space-y-6 border-slate-200 p-8 shadow-md">
 		<div class="space-y-2 text-center">
 			<a href="/" class="inline-block">
-				<img src={logoFull} alt="Evenue Logo" class="h-12 w-auto mx-auto object-contain mb-2" />
+				<img src={logoFull} alt="Evenue" class="h-12 w-auto mx-auto object-contain mb-2" />
 			</a>
 			<h1 class="text-2xl font-bold text-slate-950">Créer un compte Evenue</h1>
 			<p class="text-xs text-slate-500">
@@ -59,6 +59,9 @@
 
 		{#if errorMessage}
 			<div
+				id="register-error"
+				role="alert"
+				aria-live="assertive"
 				class="rounded-lg border border-rose-200 bg-rose-50 p-3 text-center text-xs font-medium text-rose-700"
 			>
 				{errorMessage}
@@ -67,13 +70,14 @@
 
 		<form onsubmit={handleSubmit} class="space-y-4">
 			<!-- Role Toggle -->
-			<div class="flex flex-col gap-1.5">
-				<Label>Type de compte</Label>
+			<fieldset class="flex flex-col gap-1.5 border-0 p-0 m-0">
+				<legend class="text-sm font-medium mb-1.5">Type de compte</legend>
 				<div class="grid grid-cols-2 gap-3">
 					<Button
 						type="button"
 						variant={role === 'GUEST' ? 'default' : 'outline'}
 						size="sm"
+						aria-pressed={role === 'GUEST'}
 						onclick={() => (role = 'GUEST')}
 					>
 						Organisateur / Invité
@@ -82,12 +86,13 @@
 						type="button"
 						variant={role === 'HOST' ? 'default' : 'outline'}
 						size="sm"
+						aria-pressed={role === 'HOST'}
 						onclick={() => (role = 'HOST')}
 					>
 						Propriétaire / Hôte
 					</Button>
 				</div>
-			</div>
+			</fieldset>
 
 			<!-- First & Last Name -->
 			<div class="grid grid-cols-2 gap-3">
@@ -129,6 +134,8 @@
 						type="email"
 						bind:value={email}
 						required
+						aria-invalid={errorMessage ? 'true' : undefined}
+						aria-describedby={errorMessage ? 'register-error' : undefined}
 						placeholder="nom@exemple.com"
 					/>
 				</InputGroup.Root>

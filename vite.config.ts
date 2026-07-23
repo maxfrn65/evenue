@@ -25,7 +25,14 @@ export default defineConfig({
 			provider: 'v8',
 			reporter: ['text', 'json', 'html'],
 			include: ['src/lib/server/**/*.ts'],
-			exclude: ['src/lib/server/db.ts']
+			exclude: ['src/lib/server/db.ts', 'src/lib/server/**/*.test.ts'],
+			// Regression guardrails — the build fails if coverage drops below these.
+			thresholds: {
+				statements: 75,
+				branches: 63,
+				functions: 85,
+				lines: 78
+			}
 		},
 		projects: [
 			{

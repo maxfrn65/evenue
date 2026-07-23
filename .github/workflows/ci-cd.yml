@@ -71,12 +71,41 @@ jobs:
           path: coverage/
 
   # =========================================================
-  # Job 3: Docker Build & Push to Scaleway Registry
+  # Job 3: Dependency Vulnerability Audit (SCA — OWASP A06)
+  # =========================================================
+  security-audit:
+    name: Dependency Vulnerability Audit (npm audit)
+    runs-on: ubuntu-latest
+    needs: check-and-lint
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      # Report all high+ advisories (informational, never silently hidden).
+      - name: Audit dependencies (high and above)
+        run: npm audit --audit-level=high || true
+
+      # Hard gate: fail the pipeline on any critical vulnerability.
+      - name: Fail on critical vulnerabilities
+        run: npm audit --audit-level=critical
+
+  # =========================================================
+  # Job 4: Docker Build & Push to Scaleway Registry
   # =========================================================
   build-and-push:
     name: Build & Push Docker Image to Scaleway
     runs-on: ubuntu-latest
-    needs: unit-tests
+    needs: [unit-tests, security-audit]
     if: github.ref == 'refs/heads/main'
 
     steps:

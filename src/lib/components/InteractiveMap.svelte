@@ -1,5 +1,8 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
+	// Self-host Leaflet CSS from the npm package instead of an external CDN
+	// (OWASP A05: removes a third-party origin with no SRI from the page).
+	import 'leaflet/dist/leaflet.css';
 
 	interface ListingMarker {
 		id: string;
@@ -93,6 +96,10 @@
 	});
 </script>
 
-<div class="w-full h-full rounded-lg overflow-hidden relative border border-slate-200 min-h-[320px]">
+<div
+	class="w-full h-full rounded-lg overflow-hidden relative border border-slate-200 min-h-[320px]"
+	role="region"
+	aria-label="Carte interactive des lieux événementiels disponibles"
+>
 	<div bind:this={mapElement} class="w-full h-full min-h-[320px] bg-slate-100"></div>
 </div>

@@ -1,5 +1,6 @@
 import { prisma } from './db';
 import { fetchAndParseExternalICal } from './ical';
+import { assertSafeExternalUrl } from './url-safety';
 
 export interface ListingFilterInput {
 	city?: string;
@@ -228,6 +229,11 @@ export async function getListingDisabledDates(listingId: string) {
  * Create a new event listing.
  */
 export async function createListing(input: CreateListingInput) {
+	// SSRF guard (OWASP A10): reject unsafe iCal sync URLs at the input boundary.
+	if (input.icalSyncUrl && input.icalSyncUrl.trim() !== '') {
+		assertSafeExternalUrl(input.icalSyncUrl);
+	}
+
 	const listing = await prisma.listing.create({
 		data: {
 			hostId: input.hostId,
@@ -268,6 +274,11 @@ export async function updateListing(id: string, hostId: string, input: UpdateLis
 
 	if (listing.hostId !== hostId) {
 		throw new Error("Vous n'êtes pas autorisé à modifier cette annonce.");
+	}
+
+	// SSRF guard (OWASP A10): validate any updated iCal sync URL.
+	if (input.icalSyncUrl !== undefined && input.icalSyncUrl.trim() !== '') {
+		assertSafeExternalUrl(input.icalSyncUrl);
 	}
 
 	const data: any = {};

@@ -10,7 +10,7 @@
 			<!-- Brand col -->
 			<div class="space-y-4 md:col-span-1">
 				<div class="flex items-center gap-2.5">
-					<img src={logoNobg} alt="Evenue Logo" class="h-8 w-auto" />
+					<img src={logoNobg} alt="Evenue" class="h-8 w-auto" />
 				</div>
 				<p class="text-xs leading-relaxed">
 					La première plateforme de location de logements dédiée aux événements privés avec assurance dégradations Wakam embarquée nativement.

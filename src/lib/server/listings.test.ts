@@ -169,4 +169,59 @@ describe('Listings Service — Event Search & Filtering', () => {
 		expect(created.id).toBe('new-listing-1');
 		expect(prisma.listing.create).toHaveBeenCalled();
 	});
+
+	it('should accept a listing with a safe public iCal sync URL', async () => {
+		vi.mocked(prisma.listing.create).mockResolvedValue({ id: 'new-listing-2' } as any);
+
+		const created = await createListing({
+			hostId: 'host-1',
+			title: 'Loft',
+			description: 'Loft lumineux',
+			address: '1 rue A',
+			city: 'Paris',
+			zipCode: '75001',
+			latitude: 48.85,
+			longitude: 2.35,
+			pricePerNight: 300,
+			maxCapacity: 20,
+			eventTypeAllowed: ['SOIRÉE'],
+			icalSyncUrl: 'https://calendar.google.com/feed.ics'
+		});
+
+		expect(created.id).toBe('new-listing-2');
+	});
+
+	it('should reject a listing whose iCal sync URL targets an internal host (SSRF)', async () => {
+		await expect(
+			createListing({
+				hostId: 'host-1',
+				title: 'Loft',
+				description: 'Loft',
+				address: '1 rue A',
+				city: 'Paris',
+				zipCode: '75001',
+				latitude: 48.85,
+				longitude: 2.35,
+				pricePerNight: 300,
+				maxCapacity: 20,
+				eventTypeAllowed: ['SOIRÉE'],
+				icalSyncUrl: 'http://169.254.169.254/latest/meta-data/'
+			})
+		).rejects.toThrow(/iCal/i);
+
+		expect(prisma.listing.create).not.toHaveBeenCalled();
+	});
+
+	it('should reject an update whose iCal sync URL targets a private IP (SSRF)', async () => {
+		vi.mocked(prisma.listing.findUnique).mockResolvedValue({
+			id: 'listing-1',
+			hostId: 'host-1'
+		} as any);
+
+		await expect(
+			updateListing('listing-1', 'host-1', { icalSyncUrl: 'http://192.168.0.10/cal.ics' })
+		).rejects.toThrow(/iCal/i);
+
+		expect(prisma.listing.update).not.toHaveBeenCalled();
+	});
 });
