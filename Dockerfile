@@ -1,7 +1,7 @@
 # =========================================================
 # Stage 1: Base Dependencies & Prisma Client Generator
 # =========================================================
-FROM node:20-alpine AS deps
+FROM node:22-alpine AS deps
 WORKDIR /app
 
 # Install openssl for Prisma binaries
@@ -16,7 +16,7 @@ RUN npx prisma generate
 # =========================================================
 # Stage 2: Application Builder
 # =========================================================
-FROM node:20-alpine AS builder
+FROM node:22-alpine AS builder
 WORKDIR /app
 
 COPY --from=deps /app/node_modules ./node_modules
@@ -28,7 +28,7 @@ RUN npm run build
 # =========================================================
 # Stage 3: Lightweight Production Runner
 # =========================================================
-FROM node:20-alpine AS runner
+FROM node:22-alpine AS runner
 WORKDIR /app
 
 RUN apk add --no-co-cache openssl curl
