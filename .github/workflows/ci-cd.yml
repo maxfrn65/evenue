@@ -1,0 +1,132 @@
+name: Evenue CI/CD Pipeline & Scaleway Deploy
+
+on:
+  push:
+    branches: [ main, feature/* ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  SCALEWAY_REGISTRY: rg.fr-par.scw.cloud/evenue
+  IMAGE_NAME: evenue-app
+
+jobs:
+  # =========================================================
+  # Job 1: Lint & Svelte 5 Type Check
+  # =========================================================
+  check-and-lint:
+    name: SvelteKit Check & Type Safety
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Generate Prisma Client
+        run: npx prisma generate
+
+      - name: Run svelte-check
+        run: npm run check
+
+  # =========================================================
+  # Job 2: Vitest Automated Unit Test Suite & Coverage (>80%)
+  # =========================================================
+  unit-tests:
+    name: Vitest Automated Tests & Coverage
+    runs-on: ubuntu-latest
+    needs: check-and-lint
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Generate Prisma Client
+        run: npx prisma generate
+
+      - name: Run Vitest with Coverage
+        run: npm run test:coverage
+
+      - name: Upload Coverage Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: code-coverage-report
+          path: coverage/
+
+  # =========================================================
+  # Job 3: Docker Build & Push to Scaleway Registry
+  # =========================================================
+  build-and-push:
+    name: Build & Push Docker Image to Scaleway
+    runs-on: ubuntu-latest
+    needs: unit-tests
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Scaleway Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: rg.fr-par.scw.cloud
+          username: nologin
+          password: ${{ secrets.SCW_SECRET_KEY }}
+
+      - name: Build and Push Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.SCALEWAY_REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+            ${{ env.SCALEWAY_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+
+  # =========================================================
+  # Job 4: Serverless Deploy on Scaleway
+  # =========================================================
+  deploy-scaleway:
+    name: Deploy to Scaleway Serverless Containers
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Scaleway CLI
+        uses: scaleway/action-scw@v2
+        with:
+          secret-key: ${{ secrets.SCW_SECRET_KEY }}
+          default-project-id: ${{ secrets.SCW_DEFAULT_PROJECT_ID }}
+          default-organization-id: ${{ secrets.SCW_DEFAULT_PROJECT_ID }}
+          default-region: fr-par
+
+      - name: Deploy Serverless Container
+        run: |
+          chmod +x ./scripts/deploy-scaleway.sh
+          ./scripts/deploy-scaleway.sh
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
