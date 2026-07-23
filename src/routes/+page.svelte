@@ -1,48 +1,13 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
+	import SearchEngine from '$lib/components/SearchEngine.svelte';
 	import Badge from '$lib/components/ui/badge/badge.svelte';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import * as Card from '$lib/components/ui/card/index.js';
-	import * as InputGroup from '$lib/components/ui/input-group/index.js';
-	import Label from '$lib/components/ui/label/label.svelte';
-	import { Search, MapPin, Calendar, Users, ShieldCheck, Sparkles, ArrowRight, Star } from '@lucide/svelte';
+	import { ShieldCheck, Sparkles, ArrowRight, Star, MapPin, Users } from '@lucide/svelte';
 
 	let { data } = $props();
-
-	let city = $state('');
-	let eventDate = $state('');
-	let capacity = $state<number | undefined>(undefined);
-
-	const todayIso = new Date().toISOString().split('T')[0];
-
-	function handleSearch(event: Event) {
-		event.preventDefault();
-		const params = new URLSearchParams();
-		if (city) params.set('city', city);
-		if (eventDate) {
-			params.set('startDate', eventDate);
-			const end = new Date(eventDate);
-			end.setUTCDate(end.getUTCDate() + 1);
-			params.set('endDate', end.toISOString().split('T')[0]);
-		}
-		if (capacity) params.set('minCapacity', capacity.toString());
-
-		goto(`/listings?${params.toString()}`);
-	}
-
 	const featuredListings = $derived(data.featuredListings || []);
 </script>
-
-<datalist id="cities-list">
-	<option value="Paris"></option>
-	<option value="Lyon"></option>
-	<option value="Marseille"></option>
-	<option value="Aix-en-Provence"></option>
-	<option value="Bordeaux"></option>
-	<option value="Toulouse"></option>
-	<option value="Lille"></option>
-	<option value="Nice"></option>
-</datalist>
 
 <div class="space-y-16 pb-20 bg-white">
 	<!-- Hero Section -->
@@ -56,67 +21,9 @@
 				Faites la fête l'esprit tranquille. Chaque réservation inclut nativement une <strong class="text-slate-950 font-semibold">assurance bris & dégradations Wakam</strong>.
 			</p>
 
-			<!-- Search Form Widget using InputGroup -->
-			<div class="mt-10 max-w-4xl mx-auto">
-				<Card.Root class="p-4 md:p-6 text-left border-slate-200">
-					<form onsubmit={handleSearch} class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-						<!-- City Input Group -->
-						<div class="flex w-full max-w-sm flex-col gap-1.5">
-							<Label for="home-search-city">Où fêter ?</Label>
-							<InputGroup.Root>
-								<InputGroup.Addon>
-									<MapPin />
-								</InputGroup.Addon>
-								<InputGroup.Input
-									id="home-search-city"
-									list="cities-list"
-									bind:value={city}
-									placeholder="Paris, Lyon, Aix..."
-								/>
-							</InputGroup.Root>
-						</div>
-
-						<!-- Date Input Group -->
-						<div class="flex w-full max-w-sm flex-col gap-1.5">
-							<Label for="home-search-date">Date de l'événement</Label>
-							<InputGroup.Root>
-								<InputGroup.Addon>
-									<Calendar />
-								</InputGroup.Addon>
-								<InputGroup.Input
-									id="home-search-date"
-									type="date"
-									min={todayIso}
-									bind:value={eventDate}
-								/>
-							</InputGroup.Root>
-						</div>
-
-						<!-- Guests Capacity Input Group -->
-						<div class="flex w-full max-w-sm flex-col gap-1.5">
-							<Label for="home-search-capacity">Nombre d'invités</Label>
-							<InputGroup.Root>
-								<InputGroup.Addon>
-									<Users />
-								</InputGroup.Addon>
-								<InputGroup.Input
-									id="home-search-capacity"
-									type="number"
-									min="1"
-									step="1"
-									bind:value={capacity}
-									placeholder="Ex: 30 convives"
-								/>
-							</InputGroup.Root>
-						</div>
-
-						<!-- Submit Button Component -->
-						<Button type="submit" size="lg" class="hover:cursor-pointer">
-							<Search />
-							Rechercher
-						</Button>
-					</form>
-				</Card.Root>
+			<!-- Reusable SearchEngine Component -->
+			<div class="mt-10 max-w-5xl mx-auto">
+				<SearchEngine variant="hero" />
 			</div>
 		</div>
 	</section>
