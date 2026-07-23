@@ -18,7 +18,9 @@
 		Wallet,
 		Building2,
 		FileText,
-		AlertTriangle
+		AlertTriangle,
+		Pencil,
+		Trash2
 	} from '@lucide/svelte';
 
 	let { data } = $props();
@@ -102,11 +104,40 @@
 				body: JSON.stringify({ bookingId })
 			});
 
-			if (res.ok) {
+			const data = await res.json();
+
+			if (!res.ok || !data.success) {
+				alert(data.error || 'Erreur lors de l\'annulation.');
+			} else {
 				window.location.reload();
 			}
+		} catch (e: any) {
+			alert(e.message || 'Erreur réseau.');
 		} finally {
 			cancellingId = null;
+		}
+	}
+
+	let deletingListingId = $state<string | null>(null);
+
+	async function handleDeleteListing(listingId: string) {
+		if (!confirm('Êtes-vous sûr de vouloir supprimer cette annonce ? Cette action est irréversible.')) return;
+		deletingListingId = listingId;
+
+		try {
+			const res = await fetch(`/api/listings/${listingId}`, {
+				method: 'DELETE'
+			});
+			const resData = await res.json();
+			if (!res.ok || !resData.success) {
+				alert(resData.error || 'Erreur lors de la suppression.');
+			} else {
+				window.location.reload();
+			}
+		} catch (e: any) {
+			alert(e.message || 'Erreur réseau.');
+		} finally {
+			deletingListingId = null;
 		}
 	}
 </script>
@@ -116,7 +147,6 @@
 	<div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
 		<div>
 			<h1 class="flex items-center gap-2 text-3xl font-extrabold tracking-tight text-slate-950">
-				<LayoutDashboard class="h-7 w-7" />
 				Mon Espace
 			</h1>
 			<p class="mt-1 text-sm text-slate-500">
@@ -127,6 +157,11 @@
 			<Button href="/listings/new" class="gap-2">
 				<PlusCircle class="h-4 w-4" />
 				Publier une annonce
+			</Button>
+		{:else}
+			<Button href="/become-host" variant="outline" class="gap-2 border-purple-300 text-purple-900 hover:bg-purple-50">
+				<PlusCircle class="h-4 w-4" />
+				Devenir Hôte & Publier
 			</Button>
 		{/if}
 	</div>
@@ -342,10 +377,24 @@
 									</div>
 								</div>
 							</Card.Content>
-							<Card.Footer class="gap-2">
-								<Button href={`/listings/${listing.id}`} variant="outline" size="sm" class="w-full gap-1">
+							<Card.Footer class="grid grid-cols-3 gap-2">
+								<Button href={`/listings/${listing.id}`} variant="outline" size="sm" class="gap-1">
 									<Eye class="h-3.5 w-3.5" />
-									Voir la fiche
+									Voir
+								</Button>
+								<Button href={`/listings/${listing.id}/edit`} variant="outline" size="sm" class="gap-1">
+									<Pencil class="h-3.5 w-3.5" />
+									Éditer
+								</Button>
+								<Button
+									variant="destructive"
+									size="sm"
+									class="gap-1 hover:cursor-pointer"
+									disabled={deletingListingId === listing.id}
+									onclick={() => handleDeleteListing(listing.id)}
+								>
+									<Trash2 class="h-3.5 w-3.5" />
+									{deletingListingId === listing.id ? '...' : 'Suppr.'}
 								</Button>
 							</Card.Footer>
 						</Card.Root>

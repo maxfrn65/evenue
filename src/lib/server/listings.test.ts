@@ -6,13 +6,15 @@ vi.mock('./db', () => ({
 		listing: {
 			findMany: vi.fn(),
 			findUnique: vi.fn(),
-			create: vi.fn()
+			create: vi.fn(),
+			update: vi.fn(),
+			delete: vi.fn()
 		}
 	}
 }));
 
 import { prisma } from './db';
-import { getListings, getListingById, createListing } from './listings';
+import { getListings, getListingById, createListing, updateListing, deleteListing } from './listings';
 
 describe('Listings Service — Event Search & Filtering', () => {
 	beforeEach(() => {
@@ -80,5 +82,66 @@ describe('Listings Service — Event Search & Filtering', () => {
 		const listing = await getListingById('villa-aix-01');
 		expect(listing).not.toBeNull();
 		expect(listing?.title).toContain('Villa');
+	});
+
+	it('should update listing successfully if user is the host owner', async () => {
+		vi.mocked(prisma.listing.findUnique).mockResolvedValue({
+			id: 'listing-1',
+			hostId: 'host-1',
+			title: 'Old title'
+		} as any);
+
+		vi.mocked(prisma.listing.update).mockResolvedValue({
+			id: 'listing-1',
+			hostId: 'host-1',
+			title: 'New title',
+			pricePerNight: 900
+		} as any);
+
+		const updated = await updateListing('listing-1', 'host-1', {
+			title: 'New title',
+			pricePerNight: 900
+		});
+
+		expect(updated.title).toBe('New title');
+		expect(updated.pricePerNight).toBe(900);
+	});
+
+	it('should throw error when updating listing owned by another host', async () => {
+		vi.mocked(prisma.listing.findUnique).mockResolvedValue({
+			id: 'listing-1',
+			hostId: 'host-other',
+			title: 'Old title'
+		} as any);
+
+		await expect(
+			updateListing('listing-1', 'host-1', { title: 'New title' })
+		).rejects.toThrow('Vous n\'êtes pas autorisé à modifier cette annonce.');
+	});
+
+	it('should delete listing if owned by host and no active bookings exist', async () => {
+		vi.mocked(prisma.listing.findUnique).mockResolvedValue({
+			id: 'listing-1',
+			hostId: 'host-1',
+			bookings: []
+		} as any);
+
+		vi.mocked(prisma.listing.delete).mockResolvedValue({} as any);
+
+		const res = await deleteListing('listing-1', 'host-1');
+		expect(res.success).toBe(true);
+		expect(prisma.listing.delete).toHaveBeenCalledWith({ where: { id: 'listing-1' } });
+	});
+
+	it('should throw error when deleting listing with active bookings', async () => {
+		vi.mocked(prisma.listing.findUnique).mockResolvedValue({
+			id: 'listing-1',
+			hostId: 'host-1',
+			bookings: [{ id: 'b-1', status: 'CONFIRMED' }]
+		} as any);
+
+		await expect(deleteListing('listing-1', 'host-1')).rejects.toThrow(
+			'Impossible de supprimer une annonce ayant des réservations actives en cours.'
+		);
 	});
 });

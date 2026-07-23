@@ -1,8 +1,8 @@
 # Suivi d'Avancement & Consommation J/H (Evenue — Bloc 2)
 
 **Enveloppe globale attribuée** : **71 J/H**  
-**Consommé à ce jour** : **18 J/H**  
-**Reste à faire (RAF)** : **53 J/H**  
+**Consommé à ce jour** : **20 J/H**  
+**Reste à faire (RAF)** : **51 J/H**  
 
 ---
 
@@ -14,12 +14,12 @@
 | Lot 2 | UI/UX Design & Design System | 8 | 3 | 5 | 🚀 En cours |
 | Lot 3 | Backend & BDD PostgreSQL/Prisma | 12 | 2 | 10 | 🚀 En cours |
 | Lot 4 | Auth & KYC (Stripe Connect) | 6 | 2 | 4 | 🚀 En cours |
-| Lot 5 | Frontend SvelteKit & UI | 12 | 8 | 4 | 🚀 En cours |
-| Lot 6 | Réservation & Séquestre Financier | 10 | 2 | 8 | 🚀 En cours |
+| Lot 5 | Frontend SvelteKit & UI | 12 | 9 | 3 | 🚀 En cours |
+| Lot 6 | Réservation & Séquestre Financier | 10 | 3 | 7 | 🚀 En cours |
 | Lot 7 | API Assurance (Wakam & Circuit Breaker) | 8 | 2 | 6 | 🚀 En cours |
 | Lot 8 | Tests & Qualité (Coverage > 80%) | 7 | 0 | 7 | ⏳ En attente |
 | Lot 9 | Déploiement & CI/CD Scaleway | 3 | 0 | 3 | ⏳ En attente |
-| **TOTAL** | | **71 J/H** | **23 J/H** | **48 J/H** | **En progression** |
+| **TOTAL** | | **71 J/H** | **25 J/H** | **46 J/H** | **En progression** |
 
 ---
 
@@ -37,6 +37,7 @@
 | **CU-008** | Dashboard Utilisateur: Mes Réservations, Annonces & Migration Prisma v7 | Lot 5 | 2 J/H | 2 J/H | Thomas Moreau | `complete` | [#6](https://github.com/maxfrn65/evenue/pull/6) | `main` |
 | **CU-009** | API Assurance: Déclaration de Sinistre & Attestation Wakam PDF | Lot 7 | 2 J/H | 2 J/H | Sarah Chen | `complete` | [#7](https://github.com/maxfrn65/evenue/pull/7) | `main` |
 | **CU-010** | CRUD complet des Annonces Hôte & Édition sur Fiche Logement | Lot 5 | 2 J/H | 2 J/H | Thomas Moreau | `complete` | [#8](https://github.com/maxfrn65/evenue/pull/8) | `main` |
+| **CU-011** | Synchronisation iCal Bidirectionnelle Anti Double-Booking | Lot 5 / 6 | 2 J/H | 2 J/H | Thomas Moreau | `complete` | [#9](https://github.com/maxfrn65/evenue/pull/9) | `main` |
 
 ---
 
@@ -44,7 +45,6 @@
 
 | Ticket ID | Titre | Lot | Estimé | Assignataire | Statut ClickUp | ClickUp ID |
 |---|---|---|---|---|---|---|
-| **CU-011** | Synchronisation iCal Bidirectionnelle Anti Double-Booking | Lot 5 / 6 | 2 J/H | Thomas Moreau | `to do` | `86caw1vn2` |
 | **CU-012** | Messagerie Instantanée & Notifications Temps Réel | Lot 5 | 2 J/H | Julie Dupuis | `to do` | `86caw1vp3` |
 | **CU-013** | Système d'Avis & Évaluations avec Vérification d'Occupation | Lot 5 | 2 J/H | Thomas Moreau | `to do` | `86caw1vq2` |
 | **CU-014** | Automated Test Suite & Coverage Reports (>80%) | Lot 8 | 3 J/H | Marc Dupont | `to do` | `86caw1vqp` |

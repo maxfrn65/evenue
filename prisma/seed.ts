@@ -75,7 +75,12 @@ async function main() {
 			maxCapacity: 40,
 			eventTypeAllowed: ['SOIRÉE', 'ANNIVERSAIRE', 'COCKTAIL'],
 			imageUrl:
-				'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80'
+				'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80',
+			imageUrls: [
+				'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80',
+				'https://images.unsplash.com/photo-1613977257363-707ba9348227?auto=format&fit=crop&w=800&q=80',
+				'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=800&q=80'
+			]
 		}
 	});
 
@@ -96,7 +101,12 @@ async function main() {
 			maxCapacity: 60,
 			eventTypeAllowed: ['COCKTAIL', 'SOIRÉE', 'ANNIVERSAIRE'],
 			imageUrl:
-				'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80'
+				'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80',
+			imageUrls: [
+				'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80',
+				'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=800&q=80',
+				'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=800&q=80'
+			]
 		}
 	});
 
@@ -117,7 +127,12 @@ async function main() {
 			maxCapacity: 80,
 			eventTypeAllowed: ['MARIAGE', 'ANNIVERSAIRE', 'SOIRÉE'],
 			imageUrl:
-				'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=800&q=80'
+				'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=800&q=80',
+			imageUrls: [
+				'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=800&q=80',
+				'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&w=800&q=80',
+				'https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?auto=format&fit=crop&w=800&q=80'
+			]
 		}
 	});
 
@@ -138,7 +153,12 @@ async function main() {
 			maxCapacity: 120,
 			eventTypeAllowed: ['MARIAGE', 'SOIRÉE', 'COCKTAIL'],
 			imageUrl:
-				'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=800&q=80'
+				'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=800&q=80',
+			imageUrls: [
+				'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=800&q=80',
+				'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=800&q=80',
+				'https://images.unsplash.com/photo-1507652313519-d4e9174996dd?auto=format&fit=crop&w=800&q=80'
+			]
 		}
 	});
 
