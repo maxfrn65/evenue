@@ -16,13 +16,17 @@
 		Pencil,
 		ChevronLeft,
 		ChevronRight,
-		Calendar
+		Calendar,
+		MessageSquare,
+		FileText,
+		AlertTriangle
 	} from '@lucide/svelte';
 
-	let { data }: { data: { listing: any; user?: any } } = $props();
+	let { data }: { data: { listing: any; user?: any; existingUserBooking?: any } } = $props();
 
 	const listing = $derived(data.listing);
 	const user = $derived(data.user);
+	const existingBooking = $derived(data.existingUserBooking);
 	const isOwner = $derived(
 		user && (user.id === listing.hostId || (listing.host && user.id === listing.host.id))
 	);
@@ -261,15 +265,70 @@
 							Exporter Calendrier iCal (.ics)
 						</Button>
 					</div>
+				{:else if existingBooking}
+					<!-- Guest already booked this listing -->
+					<div class="space-y-3 rounded-xl border border-emerald-200 bg-emerald-50/50 p-4">
+						<div class="flex items-center gap-2 text-xs font-bold text-emerald-800">
+							<CheckCircle2 class="h-4 w-4 text-emerald-600" />
+							Réservation confirmée sur ce lieu
+						</div>
+						<p class="text-[11px] text-slate-600">
+							Du {new Date(existingBooking.startDate).toLocaleDateString()} au {new Date(existingBooking.endDate).toLocaleDateString()}
+						</p>
+
+						<div class="space-y-2 pt-1">
+							<Button
+								href={`/bookings/${existingBooking.id}/certificate`}
+								target="_blank"
+								variant="default"
+								class="w-full gap-2 bg-emerald-700 text-xs font-bold text-white hover:bg-emerald-800"
+							>
+								<FileText class="h-4 w-4" />
+								Attestation Wakam (PDF)
+							</Button>
+
+							<Button
+								href={`/claims/new?bookingId=${existingBooking.id}`}
+								variant="outline"
+								size="sm"
+								class="w-full gap-2 border-rose-200 text-xs font-semibold text-rose-700 hover:bg-rose-50"
+							>
+								<AlertTriangle class="h-3.5 w-3.5" />
+								Déclarer un sinistre
+							</Button>
+
+							<Button
+								href={`/messages?hostId=${listing.hostId}&bookingId=${existingBooking.id}`}
+								variant="outline"
+								size="sm"
+								class="w-full gap-2 border-slate-200 text-xs text-slate-700"
+							>
+								<MessageSquare class="h-3.5 w-3.5 text-purple-600" />
+								Contacter l'Hôte
+							</Button>
+						</div>
+					</div>
 				{:else}
-					<Button
-						href={`/bookings/new?listingId=${listing.id}`}
-						variant="default"
-						class="w-full gap-2 bg-slate-950 py-3.5 text-sm font-bold text-white hover:bg-slate-800"
-					>
-						Continuer vers la réservation
-						<ArrowRight class="h-4 w-4" />
-					</Button>
+					<div class="space-y-2">
+						<Button
+							href={`/bookings/new?listingId=${listing.id}`}
+							variant="default"
+							class="w-full gap-2 bg-slate-950 py-3.5 text-sm font-bold text-white hover:bg-slate-800"
+						>
+							Continuer vers la réservation
+							<ArrowRight class="h-4 w-4" />
+						</Button>
+
+						<Button
+							href={`/messages?hostId=${listing.hostId}`}
+							variant="outline"
+							size="sm"
+							class="w-full gap-2 border-slate-200 text-slate-700"
+						>
+							<MessageSquare class="h-3.5 w-3.5 text-purple-600" />
+							Contacter l'Hôte
+						</Button>
+					</div>
 				{/if}
 
 				<p class="text-center text-[10px] text-slate-500">

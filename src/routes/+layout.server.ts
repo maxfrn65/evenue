@@ -1,29 +1,8 @@
 import type { LayoutServerLoad } from './$types';
-import { prisma } from '$lib/server/db';
+import { getUnreadCount } from '$lib/server/messages';
 
-export const load: LayoutServerLoad = async ({ cookies }) => {
-	const userId = cookies.get('evenue_session');
+export const load: LayoutServerLoad = async ({ locals }) => {
+	const unreadMessageCount = locals.user ? await getUnreadCount(locals.user.id) : 0;
 
-	if (!userId) {
-		return { user: null };
-	}
-
-	try {
-		const user = await prisma.user.findUnique({
-			where: { id: userId },
-			select: {
-				id: true,
-				email: true,
-				firstName: true,
-				lastName: true,
-				role: true,
-				kycStatus: true,
-				stripeAccountId: true
-			}
-		});
-
-		return { user: user || null };
-	} catch (error) {
-		return { user: null };
-	}
+	return { user: locals.user, unreadMessageCount };
 };

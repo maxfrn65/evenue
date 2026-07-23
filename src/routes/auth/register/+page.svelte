@@ -6,6 +6,8 @@
 	import Card from '$lib/components/ui/card/card.svelte';
 	import { User, Mail, Lock, ShieldCheck, ArrowRight } from '@lucide/svelte';
 
+	import { page } from '$app/state';
+
 	let firstName = $state('');
 	let lastName = $state('');
 	let email = $state('');
@@ -13,6 +15,8 @@
 	let role = $state<'GUEST' | 'HOST'>('GUEST');
 	let errorMessage = $state('');
 	let loading = $state(false);
+
+	const targetRedirect = $derived(page.url.searchParams.get('redirectTo') || (role === 'HOST' ? '/become-host' : '/dashboard'));
 
 	async function handleSubmit(event: Event) {
 		event.preventDefault();
@@ -32,7 +36,7 @@
 				throw new Error(data.error || "Erreur lors de l'inscription.");
 			}
 
-			window.location.href = role === 'HOST' ? '/become-host' : '/listings';
+			window.location.href = targetRedirect;
 		} catch (err: any) {
 			errorMessage = err.message;
 		} finally {

@@ -6,10 +6,14 @@
 	import Card from '$lib/components/ui/card/card.svelte';
 	import { Lock, Mail, ArrowRight } from '@lucide/svelte';
 
+	import { page } from '$app/state';
+
 	let email = $state('');
 	let password = $state('');
 	let errorMessage = $state('');
 	let loading = $state(false);
+
+	const targetRedirect = $derived(page.url.searchParams.get('redirectTo') || '/dashboard');
 
 	async function handleSubmit(event: Event) {
 		event.preventDefault();
@@ -29,7 +33,7 @@
 				throw new Error(data.error || 'Erreur de connexion.');
 			}
 
-			window.location.href = '/listings';
+			window.location.href = targetRedirect;
 		} catch (err: any) {
 			errorMessage = err.message;
 		} finally {
