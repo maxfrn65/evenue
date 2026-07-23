@@ -84,14 +84,28 @@ const sampleDetails: Record<string, any> = {
 	}
 };
 
+import { prisma } from '$lib/server/db';
+
 export const load: PageServerLoad = async ({ params, parent }) => {
 	const { user } = await parent();
 	const dbListing = await getListingById(params.id);
 
+	let existingUserBooking: any = null;
+	if (user) {
+		existingUserBooking = await prisma.booking.findFirst({
+			where: {
+				listingId: params.id,
+				guestId: user.id,
+				status: { in: ['CONFIRMED', 'PENDING_PAYMENT', 'COMPLETED', 'DISPUTED'] }
+			},
+			orderBy: { createdAt: 'desc' }
+		});
+	}
+
 	if (dbListing) {
-		return { listing: dbListing, user };
+		return { listing: dbListing, user, existingUserBooking };
 	}
 
 	const fallback = sampleDetails[params.id] || sampleDetails['villa-aix-01'];
-	return { listing: fallback, user };
+	return { listing: fallback, user, existingUserBooking };
 };

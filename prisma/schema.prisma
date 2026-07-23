@@ -58,6 +58,8 @@ model User {
 
   listings        Listing[]   @relation("HostListings")
   bookings        Booking[]   @relation("GuestBookings")
+  sentMessages    Message[]   @relation("SentMessages")
+  receivedMessages Message[]  @relation("ReceivedMessages")
 }
 
 model Listing {
@@ -105,6 +107,7 @@ model Booking {
   guest                User             @relation("GuestBookings", fields: [guestId], references: [id], onDelete: Cascade)
   insurancePolicy      InsurancePolicy?
   payout               Payout?
+  messages             Message[]
 }
 
 model InsurancePolicy {
@@ -134,4 +137,20 @@ model Payout {
   updatedAt       DateTime     @updatedAt
 
   booking         Booking      @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+}
+
+model Message {
+  id          String    @id @default(uuid())
+  senderId    String
+  sender      User      @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  receiverId  String
+  receiver    User      @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
+  bookingId   String?
+  booking     Booking?  @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+  content     String
+  read        Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+
+  @@index([senderId])
+  @@index([receiverId])
 }

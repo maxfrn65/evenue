@@ -11,10 +11,15 @@ const adapter = new PrismaPg(pool);
 
 const globalForPrisma = globalThis as unknown as { prisma: PrismaClient };
 
-export const prisma = globalForPrisma.prisma || new PrismaClient({ adapter });
+// During development, Vite preserves `globalThis` across hot reloads. Recreate
+// the client if it predates the Message model so newly added delegates are
+// available without forcing every developer to restart the server manually.
+const cachedPrisma = globalForPrisma.prisma;
+const hasMessageDelegate = cachedPrisma && 'message' in cachedPrisma;
+
+export const prisma = hasMessageDelegate ? cachedPrisma : new PrismaClient({ adapter });
 
 if (process.env.NODE_ENV !== 'production') {
 	globalForPrisma.prisma = prisma;
 }
 // Prisma Client v7 initialized
-
