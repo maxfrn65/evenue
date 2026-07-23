@@ -4,7 +4,7 @@ import pg from 'pg';
 
 const connectionString =
 	process.env.DATABASE_URL ||
-	'postgresql://evenue_user:evenue_password@localhost:5433/evenue_db?schema=public';
+	'postgresql://neondb_owner:npg_8ja2xQiocYAI@ep-odd-rice-as2pdpcy.c-4.eu-central-1.aws.neon.tech/neondb?sslmode=require';
 
 const isProduction =
 	process.env.NODE_ENV === 'production' ||
