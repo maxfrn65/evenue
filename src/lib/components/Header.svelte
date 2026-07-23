@@ -1,7 +1,17 @@
 <script lang="ts">
 	import Button from '$lib/components/ui/button/button.svelte';
 	import Badge from '$lib/components/ui/badge/badge.svelte';
-	import { PartyPopper, ShieldCheck, User, Search, PlusCircle, LogOut, Calendar, Home, ChevronDown } from '@lucide/svelte';
+	import {
+		PartyPopper,
+		ShieldCheck,
+		User,
+		Search,
+		PlusCircle,
+		LogOut,
+		Calendar,
+		Home,
+		ChevronDown
+	} from '@lucide/svelte';
 
 	interface UserData {
 		id: string;
@@ -21,28 +31,36 @@
 	}
 </script>
 
-<header class="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200 transition-all shadow-xs">
-	<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+<header
+	class="sticky top-0 z-50 border-b border-slate-200 bg-white/95 shadow-xs backdrop-blur-md transition-all"
+>
+	<div class="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
 		<!-- Brand Logo -->
-		<a href="/" class="flex items-center gap-3 group">
-			<div class="w-10 h-10 rounded-xl bg-slate-950 text-white flex items-center justify-center shadow-sm group-hover:bg-slate-800 transition-colors">
-				<PartyPopper class="w-5 h-5 text-white" />
+		<a href="/" class="group flex items-center gap-3">
+			<div
+				class="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-950 text-white shadow-sm transition-colors group-hover:bg-slate-800"
+			>
+				<PartyPopper class="h-5 w-5 text-white" />
 			</div>
 			<div class="flex flex-col">
-				<span class="text-xl font-extrabold tracking-tight text-slate-950 flex items-center gap-1.5">
+				<span
+					class="flex items-center gap-1.5 text-xl font-extrabold tracking-tight text-slate-950"
+				>
 					Evenue
 				</span>
-				<span class="text-[10px] text-slate-500 tracking-wide font-medium">Locations & Soirées Couvertes</span>
+				<span class="text-[10px] font-medium tracking-wide text-slate-500"
+					>Locations & Soirées Couvertes</span
+				>
 			</div>
 		</a>
 
 		<!-- Navigation Links -->
-		<nav class="hidden md:flex items-center gap-8 text-sm font-medium text-slate-600">
-			<a href="/listings" class="hover:text-slate-950 transition-colors flex items-center gap-1.5">
-				<Search class="w-4 h-4 text-slate-400" />
+		<nav class="hidden items-center gap-8 text-sm font-medium text-slate-600 md:flex">
+			<a href="/listings" class="flex items-center gap-1.5 transition-colors hover:text-slate-950">
+				<Search class="h-4 w-4 text-slate-400" />
 				Explorer les lieux
 			</a>
-			<a href="/comment-ca-marche" class="hover:text-slate-950 transition-colors">
+			<a href="/comment-ca-marche" class="transition-colors hover:text-slate-950">
 				Comment ça marche
 			</a>
 		</nav>
@@ -56,54 +74,62 @@
 						variant="outline"
 						size="sm"
 						onclick={() => (menuOpen = !menuOpen)}
-						class="gap-2.5 bg-white border-slate-200"
+						class="gap-2.5 border-slate-200 bg-white"
 					>
-						<div class="w-6 h-6 rounded-full bg-slate-950 text-white flex items-center justify-center text-xs font-bold">
+						<div
+							class="flex h-6 w-6 items-center justify-center rounded-full bg-slate-950 text-xs font-bold text-white"
+						>
 							{user.firstName[0]}
 						</div>
 						<span class="text-xs font-semibold text-slate-900">{user.firstName}</span>
-						<ChevronDown class="w-3.5 h-3.5 text-slate-500" />
+						<ChevronDown class="h-3.5 w-3.5 text-slate-500" />
 					</Button>
 
 					{#if menuOpen}
-						<div class="absolute right-0 mt-2 w-56 bg-white rounded-xl border border-slate-200 shadow-xl py-2 z-50 text-xs">
-							<div class="px-4 py-2 border-b border-slate-100">
+						<div
+							class="absolute right-0 z-50 mt-2 w-56 rounded-xl border border-slate-200 bg-white py-2 text-xs shadow-xl"
+						>
+							<div class="border-b border-slate-100 px-4 py-2">
 								<p class="font-bold text-slate-900">{user.firstName} {user.lastName}</p>
-								<p class="text-[11px] text-slate-500 line-clamp-1">{user.email}</p>
+								<p class="line-clamp-1 text-[11px] text-slate-500">{user.email}</p>
 								<Badge variant={user.role === 'HOST' ? 'purple' : 'secondary'} class="mt-1">
 									{user.role === 'HOST' ? 'Compte Hôte' : 'Compte Invité'}
 								</Badge>
 							</div>
 
 							{#if user.role === 'HOST'}
-								<a href="/listings/new" class="flex items-center gap-2 px-4 py-2.5 text-slate-700 hover:bg-slate-50 font-medium">
-									<PlusCircle class="w-4 h-4 text-purple-600" />
+								<a
+									href="/listings/new"
+									class="flex items-center gap-2 px-4 py-2.5 font-medium text-slate-700 hover:bg-slate-50"
+								>
+									<PlusCircle class="h-4 w-4 text-purple-600" />
 									Publier une annonce
 								</a>
 							{:else}
-								<a href="/become-host" class="flex items-center gap-2 px-4 py-2.5 text-slate-700 hover:bg-slate-50 font-medium">
-									<PlusCircle class="w-4 h-4 text-purple-600" />
+								<a
+									href="/become-host"
+									class="flex items-center gap-2 px-4 py-2.5 font-medium text-slate-700 hover:bg-slate-50"
+								>
+									<PlusCircle class="h-4 w-4 text-purple-600" />
 									Devenir Hôte
 								</a>
 							{/if}
 
-							<a href="/dashboard" class="flex items-center gap-2 px-4 py-2.5 text-slate-700 hover:bg-slate-50 font-medium">
-								<Home class="w-4 h-4 text-slate-500" />
+							<a
+								href="/dashboard"
+								class="flex items-center gap-2 px-4 py-2.5 font-medium text-slate-700 hover:bg-slate-50"
+							>
+								<Home class="h-4 w-4 text-slate-500" />
 								Mon Espace
 							</a>
 
-							<a href="/dashboard" class="flex items-center gap-2 px-4 py-2.5 text-slate-700 hover:bg-slate-50 font-medium">
-								<Calendar class="w-4 h-4 text-slate-500" />
-								Mes Réservations
-							</a>
-
-							<div class="border-t border-slate-100 my-1"></div>
+							<div class="my-1 border-t border-slate-100"></div>
 
 							<button
 								onclick={handleLogout}
-								class="w-full flex items-center gap-2 px-4 py-2.5 text-rose-600 hover:bg-rose-50 font-medium text-left"
+								class="flex w-full items-center gap-2 px-4 py-2.5 text-left font-medium text-rose-600 hover:bg-rose-50"
 							>
-								<LogOut class="w-4 h-4" />
+								<LogOut class="h-4 w-4" />
 								Se déconnecter
 							</button>
 						</div>
@@ -111,13 +137,13 @@
 				</div>
 			{:else}
 				<!-- Anonymous State -->
-				<Button href="/become-host" variant="outline" size="sm" class="hidden sm:inline-flex gap-2">
-					<PlusCircle class="w-4 h-4 text-slate-700" />
+				<Button href="/become-host" variant="outline" size="sm" class="hidden gap-2 sm:inline-flex">
+					<PlusCircle class="h-4 w-4 text-slate-700" />
 					Devenir Hôte
 				</Button>
 
 				<Button href="/auth/login" variant="default" size="sm" class="gap-2">
-					<User class="w-4 h-4" />
+					<User class="h-4 w-4" />
 					Se connecter
 				</Button>
 			{/if}

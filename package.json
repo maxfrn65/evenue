@@ -56,5 +56,8 @@
 		"pg": "^8.22.0",
 		"prisma": "^7.9.0",
 		"stripe": "^22.3.2"
+	},
+	"prisma": {
+		"seed": "npx tsx prisma/seed.ts"
 	}
 }

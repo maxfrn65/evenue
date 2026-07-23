@@ -7,6 +7,8 @@
 	import Label from '$lib/components/ui/label/label.svelte';
 	import { Search, MapPin, Calendar, Users, ShieldCheck, Sparkles, ArrowRight, Star } from '@lucide/svelte';
 
+	let { data } = $props();
+
 	let city = $state('');
 	let eventDate = $state('');
 	let capacity = $state<number | undefined>(undefined);
@@ -23,35 +25,7 @@
 		goto(`/listings?${params.toString()}`);
 	}
 
-	const sampleListings = [
-		{
-			id: 'villa-aix-01',
-			title: 'Villa d\'Exception avec Piscine & Sound System',
-			city: 'Aix-en-Provence',
-			pricePerNight: 850,
-			maxCapacity: 40,
-			rating: 4.95,
-			imageUrl: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80'
-		},
-		{
-			id: 'loft-paris-02',
-			title: 'Loft Industriel & Rooftop Privatif',
-			city: 'Paris (11e)',
-			pricePerNight: 1200,
-			maxCapacity: 60,
-			rating: 4.88,
-			imageUrl: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80'
-		},
-		{
-			id: 'domaine-lyon-03',
-			title: 'Domaine de la Roseraie & Grange Aménagée',
-			city: 'Lyon (Périphérie)',
-			pricePerNight: 950,
-			maxCapacity: 80,
-			rating: 4.98,
-			imageUrl: 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=800&q=80'
-		}
-	];
+	const featuredListings = $derived(data.featuredListings || []);
 </script>
 
 <datalist id="cities-list">
@@ -156,16 +130,17 @@
 		</div>
 
 		<div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-			{#each sampleListings as item (item.id)}
+			{#each featuredListings as item (item.id)}
 				<Card.Root class="relative mx-auto w-full max-w-sm pt-0 h-full flex flex-col">
 					<img
-						src={item.imageUrl}
+						src={item.imageUrl || 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80'}
 						alt={item.title}
+						referrerpolicy="no-referrer"
 						class="relative z-20 aspect-video w-full object-cover"
 					/>
 					<Card.Header class="flex-1">
 						<Card.Action>
-							<Badge variant="secondary">★ {item.rating}</Badge>
+							<Badge variant="secondary">★ 4.95</Badge>
 						</Card.Action>
 						<Card.Title>{item.title}</Card.Title>
 						<Card.Description>
