@@ -7,6 +7,8 @@
  * - HALF_OPEN: Trial state after reset timeout. One request tests if the service recovered.
  */
 
+import { logger } from './logger';
+
 export type CircuitState = 'CLOSED' | 'OPEN' | 'HALF_OPEN';
 
 export interface CircuitBreakerOptions<T> {
@@ -96,6 +98,23 @@ export class CircuitBreaker<T = unknown> {
 			const oldState = this.state;
 			this.state = newState;
 			this.lastStateChangeTime = Date.now();
+
+			if (newState === 'OPEN') {
+				logger.alert(`Circuit Breaker tripped to OPEN. Partner service is unreachable.`, {
+					context: 'CIRCUIT_BREAKER',
+					metadata: { fromState: oldState, toState: newState, failureCount: this.failureCount }
+				});
+			} else if (newState === 'HALF_OPEN') {
+				logger.warn(`Circuit Breaker transitioning to HALF_OPEN to test recovery.`, {
+					context: 'CIRCUIT_BREAKER',
+					metadata: { fromState: oldState, toState: newState }
+				});
+			} else if (newState === 'CLOSED' && oldState !== 'CLOSED') {
+				logger.info(`Circuit Breaker restored to CLOSED. Partner service recovered.`, {
+					context: 'CIRCUIT_BREAKER',
+					metadata: { fromState: oldState, toState: newState }
+				});
+			}
 
 			if (this.onStateChange) {
 				this.onStateChange(oldState, newState);
