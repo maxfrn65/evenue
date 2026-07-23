@@ -1,17 +1,36 @@
-import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { getListingById } from '$lib/server/listings';
+import { json } from '@sveltejs/kit';
+import { updateListing, deleteListing } from '$lib/server/listings';
 
-export const GET: RequestHandler = async ({ params }) => {
+export const PUT: RequestHandler = async ({ params, request, cookies }) => {
+	const userId = cookies.get('evenue_session');
+
+	if (!userId) {
+		return json({ success: false, error: 'Non authentifié.' }, { status: 401 });
+	}
+
 	try {
-		const listing = await getListingById(params.id);
+		const body = await request.json();
+		const updated = await updateListing(params.id, userId, body);
 
-		if (!listing) {
-			return json({ error: 'Logement introuvable.' }, { status: 404 });
-		}
-
-		return json({ success: true, listing });
+		return json({ success: true, listing: updated });
 	} catch (error: any) {
-		return json({ error: error.message || 'Erreur lors de la récupération du logement.' }, { status: 500 });
+		return json({ success: false, error: error.message || 'Erreur lors de la mise à jour.' }, { status: 400 });
+	}
+};
+
+export const DELETE: RequestHandler = async ({ params, cookies }) => {
+	const userId = cookies.get('evenue_session');
+
+	if (!userId) {
+		return json({ success: false, error: 'Non authentifié.' }, { status: 401 });
+	}
+
+	try {
+		const result = await deleteListing(params.id, userId);
+
+		return json({ success: true, deletedId: result.deletedId });
+	} catch (error: any) {
+		return json({ success: false, error: error.message || 'Erreur lors de la suppression.' }, { status: 400 });
 	}
 };

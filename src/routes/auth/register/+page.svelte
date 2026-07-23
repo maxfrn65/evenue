@@ -1,4 +1,5 @@
 <script lang="ts">
+	import logoFull from '$lib/assets/full.png';
 	import Button from '$lib/components/ui/button/button.svelte';
 	import * as InputGroup from '$lib/components/ui/input-group/index.js';
 	import Label from '$lib/components/ui/label/label.svelte';
@@ -43,11 +44,9 @@
 <div class="mx-auto my-12 max-w-md px-4">
 	<Card class="space-y-6 border-slate-200 p-8 shadow-md">
 		<div class="space-y-2 text-center">
-			<div
-				class="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-slate-950 text-white shadow-sm"
-			>
-				<ShieldCheck class="h-6 w-6 text-emerald-400" />
-			</div>
+			<a href="/" class="inline-block">
+				<img src={logoFull} alt="Evenue Logo" class="h-12 w-auto mx-auto object-contain mb-2" />
+			</a>
 			<h1 class="text-2xl font-bold text-slate-950">Créer un compte Evenue</h1>
 			<p class="text-xs text-slate-500">
 				Garantie d'assurance Wakam incluse dès la première réservation

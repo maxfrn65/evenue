@@ -201,7 +201,7 @@ export async function generateWakamCertificateHTML(bookingId: string, userId: st
 		</div>
 
 		<div class="footer">
-			Certificat généré automatiquement par la plateforme Evenue (SvelteKit & Prisma Engine).<br>
+			Certificat généré automatiquement par la plateforme Evenue.<br>
 			Wakam SA — Entreprise d'assurance immatriculée au RCS Paris 562 028 812 — Regulated by ACPR France.
 		</div>
 	</div>

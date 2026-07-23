@@ -84,13 +84,14 @@ const sampleDetails: Record<string, any> = {
 	}
 };
 
-export const load: PageServerLoad = async ({ params }) => {
+export const load: PageServerLoad = async ({ params, parent }) => {
+	const { user } = await parent();
 	const dbListing = await getListingById(params.id);
 
 	if (dbListing) {
-		return { listing: dbListing };
+		return { listing: dbListing, user };
 	}
 
 	const fallback = sampleDetails[params.id] || sampleDetails['villa-aix-01'];
-	return { listing: fallback };
+	return { listing: fallback, user };
 };

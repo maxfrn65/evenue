@@ -133,7 +133,7 @@
 			{#each featuredListings as item (item.id)}
 				<Card.Root class="relative mx-auto w-full max-w-sm pt-0 h-full flex flex-col">
 					<img
-						src={item.imageUrl || 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80'}
+						src={item.imageUrl}
 						alt={item.title}
 						referrerpolicy="no-referrer"
 						class="relative z-20 aspect-video w-full object-cover"
@@ -148,7 +148,7 @@
 						</Card.Description>
 					</Card.Header>
 					<Card.Footer>
-						<Button href={`/listings/${item.id}`} class="w-full">Réserver</Button>
+						<Button href={`/listings/${item.id}`} class="w-full">Voir plus</Button>
 					</Card.Footer>
 				</Card.Root>
 			{/each}

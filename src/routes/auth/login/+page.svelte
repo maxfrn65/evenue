@@ -1,9 +1,10 @@
 <script lang="ts">
+	import logoFull from '$lib/assets/full.png';
 	import Button from '$lib/components/ui/button/button.svelte';
 	import * as InputGroup from '$lib/components/ui/input-group/index.js';
 	import Label from '$lib/components/ui/label/label.svelte';
 	import Card from '$lib/components/ui/card/card.svelte';
-	import { Lock, Mail, ArrowRight, PartyPopper } from '@lucide/svelte';
+	import { Lock, Mail, ArrowRight } from '@lucide/svelte';
 
 	let email = $state('');
 	let password = $state('');
@@ -40,9 +41,9 @@
 <div class="max-w-md mx-auto my-16 px-4">
 	<Card class="p-8 space-y-6 border-slate-200">
 		<div class="text-center space-y-2">
-			<div class="w-12 h-12 rounded-xl bg-slate-950 text-white mx-auto flex items-center justify-center shadow-sm">
-				<PartyPopper class="w-6 h-6" />
-			</div>
+			<a href="/" class="inline-block">
+				<img src={logoFull} alt="Evenue Logo" class="h-12 w-auto mx-auto object-contain mb-2" />
+			</a>
 			<h1 class="text-2xl font-bold text-slate-950">Connexion à Evenue</h1>
 			<p class="text-xs text-slate-500">Accédez à votre espace réservations et vos assurances Wakam</p>
 		</div>

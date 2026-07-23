@@ -12,12 +12,35 @@
 		CheckCircle2,
 		Lock,
 		ArrowRight,
-		ArrowLeft
+		ArrowLeft,
+		Pencil,
+		ChevronLeft,
+		ChevronRight,
+		Calendar
 	} from '@lucide/svelte';
 
-	let { data }: { data: { listing: any } } = $props();
+	let { data }: { data: { listing: any; user?: any } } = $props();
 
 	const listing = $derived(data.listing);
+	const user = $derived(data.user);
+	const isOwner = $derived(
+		user && (user.id === listing.hostId || (listing.host && user.id === listing.host.id))
+	);
+
+	let activeImageIndex = $state(0);
+	const galleryImages = $derived(
+		listing.imageUrls && listing.imageUrls.length > 0
+			? listing.imageUrls
+			: [listing.imageUrl || 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1200&q=80']
+	);
+
+	function prevImage() {
+		activeImageIndex = (activeImageIndex - 1 + galleryImages.length) % galleryImages.length;
+	}
+
+	function nextImage() {
+		activeImageIndex = (activeImageIndex + 1) % galleryImages.length;
+	}
 </script>
 
 <div class="mx-auto max-w-7xl space-y-10 px-4 py-10 sm:px-6 lg:px-8">
@@ -58,24 +81,70 @@
 			>
 		</div>
 
-		<Card class="relative h-96 overflow-hidden rounded-2xl border-slate-200">
-			<img
-				src={listing.imageUrl ||
-					'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1200&q=80'}
-				alt={listing.title}
-				referrerpolicy="no-referrer"
-				class="h-full w-full object-cover"
-			/>
-			<div class="absolute bottom-4 left-4">
-				<Badge
-					variant="purple"
-					class="gap-2 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur-md"
-				>
-					<Sparkles class="h-4 w-4 text-amber-400" />
-					Lieu pré-équipé pour la musique et les événements
-				</Badge>
-			</div>
-		</Card>
+		<!-- Interactive Image Carousel -->
+		<div class="space-y-3">
+			<Card class="group relative h-96 overflow-hidden rounded-2xl border-slate-200">
+				<img
+					src={galleryImages[activeImageIndex]}
+					alt={`${listing.title} - Photo ${activeImageIndex + 1}`}
+					referrerpolicy="no-referrer"
+					class="h-full w-full object-cover transition-all duration-300"
+				/>
+
+				{#if galleryImages.length > 1}
+					<!-- Prev / Next Controls -->
+					<button
+						type="button"
+						onclick={prevImage}
+						aria-label="Image précédente"
+						class="absolute left-4 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/80 text-slate-900 shadow-md backdrop-blur-md transition-all hover:bg-white hover:scale-110"
+					>
+						<ChevronLeft class="h-6 w-6" />
+					</button>
+
+					<button
+						type="button"
+						onclick={nextImage}
+						aria-label="Image suivante"
+						class="absolute right-4 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/80 text-slate-900 shadow-md backdrop-blur-md transition-all hover:bg-white hover:scale-110"
+					>
+						<ChevronRight class="h-6 w-6" />
+					</button>
+
+					<!-- Image Counter Badge -->
+					<div class="absolute bottom-4 right-4 rounded-full bg-slate-950/70 px-3 py-1 text-xs font-semibold text-white backdrop-blur-md">
+						{activeImageIndex + 1} / {galleryImages.length}
+					</div>
+				{/if}
+
+				<div class="absolute bottom-4 left-4">
+					<Badge
+						variant="purple"
+						class="gap-2 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur-md"
+					>
+						<Sparkles class="h-4 w-4 text-amber-400" />
+						Lieu pré-équipé pour la musique et les événements
+					</Badge>
+				</div>
+			</Card>
+
+			<!-- Gallery Thumbnails Bar -->
+			{#if galleryImages.length > 1}
+				<div class="flex items-center gap-3 pb-1">
+					{#each galleryImages as imgUrl, idx (idx)}
+						<button
+							type="button"
+							onclick={() => (activeImageIndex = idx)}
+							class={`h-20 w-28 flex-shrink-0 overflow-hidden rounded-xl border-2 transition-all ${
+								activeImageIndex === idx ? 'border-slate-600 scale-105 shadow-md' : 'border-transparent opacity-60 hover:opacity-100'
+							}`}
+						>
+							<img src={imgUrl} alt={`Vignette ${idx + 1}`} referrerpolicy="no-referrer" class="h-full w-full object-cover" />
+						</button>
+					{/each}
+				</div>
+			{/if}
+		</div>
 	</div>
 
 	<!-- Content Grid: Details vs Booking Widget -->
@@ -170,14 +239,38 @@
 					<span class="text-xl text-slate-950">{listing.pricePerNight} €</span>
 				</div>
 
-				<Button
-					href={`/bookings/new?listingId=${listing.id}`}
-					variant="default"
-					class="w-full gap-2 bg-slate-950 py-3.5 text-sm font-bold text-white hover:bg-slate-800"
-				>
-					Continuer vers la réservation
-					<ArrowRight class="h-4 w-4" />
-				</Button>
+				{#if isOwner}
+					<div class="space-y-2">
+						<Button
+							href={`/listings/${listing.id}/edit`}
+							variant="default"
+							class="w-full gap-2 bg-purple-700 py-3.5 text-sm font-bold text-white hover:bg-purple-800"
+						>
+							<Pencil class="h-4 w-4" />
+							Éditer mon annonce
+						</Button>
+
+						<Button
+							href={`/listings/${listing.id}/ical`}
+							target="_blank"
+							variant="outline"
+							size="sm"
+							class="w-full gap-2 border-slate-200 text-slate-700"
+						>
+							<Calendar class="h-3.5 w-3.5 text-purple-600" />
+							Exporter Calendrier iCal (.ics)
+						</Button>
+					</div>
+				{:else}
+					<Button
+						href={`/bookings/new?listingId=${listing.id}`}
+						variant="default"
+						class="w-full gap-2 bg-slate-950 py-3.5 text-sm font-bold text-white hover:bg-slate-800"
+					>
+						Continuer vers la réservation
+						<ArrowRight class="h-4 w-4" />
+					</Button>
+				{/if}
 
 				<p class="text-center text-[10px] text-slate-500">
 					Séquestre sécurisé via Stripe Connect. L'assurance Wakam est générée au paiement.

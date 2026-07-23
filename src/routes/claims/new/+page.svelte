@@ -188,8 +188,6 @@
 						<InputGroup.Input
 							id="claim-cost"
 							type="number"
-							min="1"
-							step="50"
 							bind:value={estimatedCost}
 							required
 							placeholder="Ex: 850 €"

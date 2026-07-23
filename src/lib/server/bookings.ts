@@ -1,6 +1,7 @@
 import { prisma } from './db';
 import { issueWakamInsurancePolicy } from './wakam';
 import { createBookingPaymentIntent } from './stripe';
+import { isListingAvailable } from './ical';
 
 export interface CreateBookingInput {
 	listingId: string;
@@ -36,22 +37,10 @@ export async function createBooking(input: CreateBookingInput) {
 		throw new Error(`Le nombre d'invités (${input.guestCount}) dépasse la capacité maximale du lieu (${listing.maxCapacity}).`);
 	}
 
-	// 2. Check overlap with existing confirmed or pending bookings
-	const existingOverlap = await prisma.booking.findFirst({
-		where: {
-			listingId: input.listingId,
-			status: { in: ['CONFIRMED', 'PENDING_PAYMENT'] },
-			OR: [
-				{
-					startDate: { lte: end },
-					endDate: { gte: start }
-				}
-			]
-		}
-	});
-
-	if (existingOverlap) {
-		throw new Error('Le lieu est déjà réservé pour ces dates.');
+	// 2. Check overlap with internal bookings and external iCal calendars
+	const availability = await isListingAvailable(input.listingId, start, end);
+	if (!availability.available) {
+		throw new Error(availability.reason || 'Le logement est indisponible sur ces dates.');
 	}
 
 	// Calculate breakdown
