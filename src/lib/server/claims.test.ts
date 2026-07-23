@@ -14,6 +14,7 @@ vi.mock('./db', () => ({
 		claim: {
 			create: vi.fn(),
 			findUnique: vi.fn(),
+			findFirst: vi.fn(),
 			update: vi.fn()
 		}
 	}
@@ -176,6 +177,41 @@ describe('Claims Service — Host RBAC, 48h Window & Guest Dispute', () => {
 					disputeReason: 'Motif de contestation valide de plus de dix caracteres'
 				})
 			).rejects.toThrow('Seul le locataire de la réservation peut contester ce sinistre.');
+		});
+	});
+
+	describe('getClaimByBookingId & generateWakamCertificateHTML', () => {
+		it('should return claim with history by bookingId', async () => {
+			vi.mocked(prisma.claim.findFirst).mockResolvedValue({ id: 'claim-1', bookingId: 'b-1' } as any);
+
+			const claim = await import('./claims').then((m) => m.getClaimByBookingId('b-1'));
+			expect(claim?.id).toBe('claim-1');
+		});
+
+		it('should generate official Wakam certificate HTML', async () => {
+			const mockBooking = {
+				id: 'booking-1',
+				startDate: new Date('2026-08-15'),
+				endDate: new Date('2026-08-16'),
+				guest: { firstName: 'Alexandre', lastName: 'Rivière', email: 'alex@evenue.fr' },
+				listing: {
+					title: 'Villa Test',
+					address: '10 rue test',
+					city: 'Paris',
+					host: { firstName: 'Jean', lastName: 'Dupont', kycStatus: 'VERIFIED' }
+				},
+				insurancePolicy: {
+					policyNumber: 'WAK-2026-999',
+					status: 'ACTIVE'
+				}
+			};
+
+			vi.mocked(prisma.booking.findFirst).mockResolvedValue(mockBooking as any);
+
+			const html = await import('./claims').then((m) => m.generateWakamCertificateHTML('booking-1', 'guest-1'));
+			expect(html).toContain('WAK-2026-999');
+			expect(html).toContain('10 000,00 €');
+			expect(html).toContain('Alexandre Rivière');
 		});
 	});
 });

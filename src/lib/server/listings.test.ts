@@ -144,4 +144,29 @@ describe('Listings Service — Event Search & Filtering', () => {
 			'Impossible de supprimer une annonce ayant des réservations actives en cours.'
 		);
 	});
+
+	it('should create listing successfully', async () => {
+		vi.mocked(prisma.listing.create).mockResolvedValue({
+			id: 'new-listing-1',
+			title: 'Maison avec Jardin',
+			pricePerNight: 400
+		} as any);
+
+		const created = await createListing({
+			hostId: 'host-1',
+			title: 'Maison avec Jardin',
+			description: 'Superbe maison',
+			address: '12 rue des fleurs',
+			city: 'Lyon',
+			zipCode: '69001',
+			latitude: 45.75,
+			longitude: 4.85,
+			pricePerNight: 400,
+			maxCapacity: 30,
+			eventTypeAllowed: ['SOIRÉE']
+		});
+
+		expect(created.id).toBe('new-listing-1');
+		expect(prisma.listing.create).toHaveBeenCalled();
+	});
 });
