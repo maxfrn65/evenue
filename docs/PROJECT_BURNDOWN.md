@@ -47,7 +47,7 @@
 
 | Ticket ID | Titre | Lot | Estimé | Assignataire | Statut ClickUp | ClickUp ID |
 |---|---|---|---|---|---|---|
-| **CU-014** | Restreindre la Déclaration de Sinistre Wakam aux Seuls Hôtes Propriétaires | Lot 7 | 1 J/H | Sarah Chen | `to do` | `86caw6nht` |
+| **CU-014** | Déclaration & Gestion des Sinistres Wakam (Fenêtre 48h Hôte, Contestation Locataire & Gel Séquestre) | Lot 7 | 2 J/H | Sarah Chen | `to do` | `86caw6nht` |
 | **CU-015** | Automated Test Suite & Coverage Reports (>80%) | Lot 8 | 3 J/H | Marc Dupont | `to do` | `86caw1vqp` |
 | **CU-016** | Pipeline CI/CD GitHub Actions & Serverless Deploy Scaleway | Lot 9 | 3 J/H | Alexandre Rivière | `to do` | `86caw1vrz` |
 | **CU-017** | Monitoring, Logging Centralisé & Alertes Circuit Breaker | Lot 9 | 2 J/H | Alexandre Rivière | `to do` | `86caw1vtu` |
