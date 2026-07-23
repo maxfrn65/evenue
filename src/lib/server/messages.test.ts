@@ -119,4 +119,5 @@ describe('Messaging Service', () => {
 				where: { receiverId: 'user-guest-01', read: false }
 			});
 		});
+	});
 });

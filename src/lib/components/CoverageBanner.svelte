@@ -29,7 +29,7 @@
 			<div>
 				<h3 class="flex items-center gap-2 text-lg font-bold text-slate-950">
 					Assurance Événementielle Embarquée Wakam
-					<Badge variant="emerald">Native & Sans Frais</Badge>
+					<Badge variant="emerald">Native et sans frais</Badge>
 				</h3>
 				<p class="mt-0.5 text-xs text-slate-500">
 					Chaque réservation inclut une police d'assurance automatique émise par Wakam AssurTech.

@@ -85,10 +85,12 @@ const sampleDetails: Record<string, any> = {
 };
 
 import { prisma } from '$lib/server/db';
+import { getListingDisabledDates } from '$lib/server/listings';
 
 export const load: PageServerLoad = async ({ params, parent }) => {
 	const { user } = await parent();
 	const dbListing = await getListingById(params.id);
+	const availabilityInfo = await getListingDisabledDates(params.id);
 
 	let existingUserBooking: any = null;
 	if (user) {
@@ -103,9 +105,9 @@ export const load: PageServerLoad = async ({ params, parent }) => {
 	}
 
 	if (dbListing) {
-		return { listing: dbListing, user, existingUserBooking };
+		return { listing: dbListing, user, existingUserBooking, availabilityInfo };
 	}
 
 	const fallback = sampleDetails[params.id] || sampleDetails['villa-aix-01'];
-	return { listing: fallback, user, existingUserBooking };
+	return { listing: fallback, user, existingUserBooking, availabilityInfo };
 };

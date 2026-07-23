@@ -6,6 +6,7 @@
 	import Label from '$lib/components/ui/label/label.svelte';
 	import Badge from '$lib/components/ui/badge/badge.svelte';
 	import Card from '$lib/components/ui/card/card.svelte';
+	import CalendarWidget from '$lib/components/ui/calendar/calendar.svelte';
 	import {
 		ShieldCheck,
 		Lock,
@@ -16,7 +17,12 @@
 		ArrowRight
 	} from '@lucide/svelte';
 
-	let listingId = $state(page.url.searchParams.get('listingId') || 'villa-aix-01');
+	let { data } = $props();
+
+	const listing = $derived(data.listing);
+	const availabilityInfo = $derived(data.availabilityInfo || { disabledRanges: [] });
+
+	let listingId = $state(listing.id);
 	let startDate = $state('');
 	let endDate = $state('');
 	let guestCount = $state(25);
@@ -27,14 +33,35 @@
 
 	const todayIso = new Date().toISOString().split('T')[0];
 
-	const listing = {
-		id: 'villa-aix-01',
-		title: "Villa d'Exception avec Piscine & Sound System",
-		city: 'Aix-en-Provence',
-		pricePerNight: 850,
-		securityDeposit: 500,
-		maxCapacity: 40
-	};
+	function isDateDisabled(dateVal: any) {
+		const dateStr = `${dateVal.year}-${String(dateVal.month).padStart(2, '0')}-${String(dateVal.day).padStart(2, '0')}`;
+		if (dateStr < todayIso) return true;
+
+		const ranges = availabilityInfo.availabilityRanges || [];
+		if (ranges.length > 0) {
+			const isInsideAnyRange = ranges.some(
+				(r: any) => dateStr >= r.startDate && dateStr <= r.endDate
+			);
+			if (!isInsideAnyRange) return true;
+		} else {
+			if (availabilityInfo.availableStartDate && dateStr < availabilityInfo.availableStartDate) {
+				return true;
+			}
+			if (availabilityInfo.availableEndDate && dateStr > availabilityInfo.availableEndDate) {
+				return true;
+			}
+		}
+
+		if (availabilityInfo.disabledRanges) {
+			for (const range of availabilityInfo.disabledRanges) {
+				if (dateStr >= range.startDate && dateStr < range.endDate) {
+					return true;
+				}
+			}
+		}
+
+		return false;
+	}
 
 	async function handleBooking(e: Event) {
 		e.preventDefault();
@@ -159,6 +186,19 @@
 						</div>
 					</div>
 
+					<!-- Visual Availability Calendar -->
+					<div class="space-y-1.5 pt-2">
+						<Label class="text-xs font-semibold text-slate-700">Calendrier des jours réservables</Label>
+						<p class="text-[11px] text-slate-500">Les jours grisés sont occupés ou hors plage de disponibilité de l'hôte.</p>
+						<div class="flex justify-center bg-slate-50/50 rounded-xl p-2 border border-slate-200">
+							<CalendarWidget
+								type="single"
+								{isDateDisabled}
+								class="rounded-md"
+							/>
+						</div>
+					</div>
+
 					<div class="flex flex-col gap-1.5">
 						<Label for="booking-guests">Nombre d'Invités prévus (Max {listing.maxCapacity})</Label>
 						<InputGroup.Root>
@@ -212,7 +252,7 @@
 						</div>
 						<div class="flex justify-between font-semibold text-emerald-700">
 							<span>Police Wakam Événement</span>
-							<span>Offerte (0 €)</span>
+							<span>Incluse</span>
 						</div>
 						<div class="flex justify-between text-slate-700">
 							<span>Caution sous séquestre</span>

@@ -2,6 +2,7 @@
 	import Button from '$lib/components/ui/button/button.svelte';
 	import Card from '$lib/components/ui/card/card.svelte';
 	import Badge from '$lib/components/ui/badge/badge.svelte';
+	import CalendarWidget from '$lib/components/ui/calendar/calendar.svelte';
 	import {
 		MapPin,
 		Users,
@@ -22,11 +23,43 @@
 		AlertTriangle
 	} from '@lucide/svelte';
 
-	let { data }: { data: { listing: any; user?: any; existingUserBooking?: any } } = $props();
+	let { data }: { data: { listing: any; user?: any; existingUserBooking?: any; availabilityInfo?: any } } = $props();
 
 	const listing = $derived(data.listing);
 	const user = $derived(data.user);
 	const existingBooking = $derived(data.existingUserBooking);
+	const availabilityInfo = $derived(data.availabilityInfo || { disabledRanges: [] });
+
+	function isDateDisabled(dateVal: any) {
+		const dateStr = `${dateVal.year}-${String(dateVal.month).padStart(2, '0')}-${String(dateVal.day).padStart(2, '0')}`;
+		const todayStr = new Date().toISOString().split('T')[0];
+		if (dateStr < todayStr) return true;
+
+		const ranges = availabilityInfo.availabilityRanges || [];
+		if (ranges.length > 0) {
+			const isInsideAnyRange = ranges.some(
+				(r: any) => dateStr >= r.startDate && dateStr <= r.endDate
+			);
+			if (!isInsideAnyRange) return true;
+		} else {
+			if (availabilityInfo.availableStartDate && dateStr < availabilityInfo.availableStartDate) {
+				return true;
+			}
+			if (availabilityInfo.availableEndDate && dateStr > availabilityInfo.availableEndDate) {
+				return true;
+			}
+		}
+
+		if (availabilityInfo.disabledRanges) {
+			for (const range of availabilityInfo.disabledRanges) {
+				if (dateStr >= range.startDate && dateStr < range.endDate) {
+					return true;
+				}
+			}
+		}
+
+		return false;
+	}
 	const isOwner = $derived(
 		user && (user.id === listing.hostId || (listing.host && user.id === listing.host.id))
 	);
@@ -233,6 +266,21 @@
 							><Lock class="h-3.5 w-3.5" /> Caution Séquestrée (Stripe)</span
 						>
 						<span class="font-semibold">{listing.securityDeposit || 500} €</span>
+					</div>
+				</div>
+
+				<!-- Interactive Calendar Availability Preview -->
+				<div class="space-y-2 border-t border-slate-100 pt-4">
+					<div class="flex items-center justify-between text-xs font-bold text-slate-900">
+						<span>Calendrier des disponibilités</span>
+						<span class="text-[10px] font-normal text-slate-500">Grisé = Indisponible</span>
+					</div>
+					<div class="flex justify-center rounded-xl border border-slate-200 bg-slate-50/50 p-2">
+						<CalendarWidget
+							type="single"
+							{isDateDisabled}
+							class="rounded-md"
+						/>
 					</div>
 				</div>
 
