@@ -20,7 +20,10 @@
 		FileText,
 		AlertTriangle,
 		Pencil,
-		Trash2
+		Trash2,
+
+		CirclePlus
+
 	} from '@lucide/svelte';
 
 	let { data } = $props();
@@ -341,11 +344,11 @@
 			</div>
 
 			{#if dashboard.listings.length === 0}
-				<Card.Root class="border-slate-200 p-8 text-center">
+				<Card.Root class="border-slate-200 p-8 text-center flex justify-center items-center">
 					<p class="text-sm text-slate-500">Vous n'avez publié aucune annonce.</p>
-					<Button href="/listings/new" class="mt-4 gap-2">
-						<PlusCircle class="h-4 w-4" />
-						Publier ma première annonce
+					<Button href="/listings/new" class="w-fit">
+						<CirclePlus class="h-4 w-4" />
+						Publier une annonce
 					</Button>
 				</Card.Root>
 			{:else}

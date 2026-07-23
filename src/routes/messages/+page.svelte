@@ -53,6 +53,14 @@
 		}
 	}
 
+	async function loadConversations() {
+		const res = await fetch('/api/messages');
+		const resData = await res.json();
+		if (res.ok && resData.success) {
+			conversations = resData.conversations;
+		}
+	}
+
 	async function selectPartner(partner: any) {
 		activePartner = partner;
 		await loadMessages(partner.id);
@@ -62,6 +70,7 @@
 		e.preventDefault();
 		if (!newMessage.trim() || !activePartner || sending) return;
 
+		loadConversations();
 		sending = true;
 		const contentToSend = newMessage.trim();
 		newMessage = '';
@@ -117,10 +126,6 @@
 				Échangez en direct avec vos hôtes et invités pour l'organisation de vos événements.
 			</p>
 		</div>
-		<Button href="/dashboard" variant="outline" size="sm" class="gap-1">
-			<ArrowLeft class="h-4 w-4" />
-			Retour au Dashboard
-		</Button>
 	</div>
 
 	<div class="grid grid-cols-1 gap-6 md:grid-cols-3">

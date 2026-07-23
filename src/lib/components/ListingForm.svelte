@@ -13,11 +13,14 @@
 		MapPin,
 		Euro,
 		Users,
-		Image as ImageIcon,
-		Plus,
+		Upload, 
+		X, 
+		Loader2, 
+		Image as ImageIcon, 
+		Calendar, 
+		Plus, 
 		Trash2,
-		UploadCloud,
-		Calendar
+		UploadCloud
 	} from '@lucide/svelte';
 
 	export interface ListingFormData {
@@ -33,6 +36,9 @@
 		imageUrl: string;
 		imageUrls: string[];
 		icalSyncUrl?: string;
+		availableStartDate?: string;
+		availableEndDate?: string;
+		availabilityRanges?: Array<{ startDate: string; endDate: string }>;
 	}
 
 	interface Props {
@@ -66,9 +72,20 @@
 	let imagesList = $state<string[]>([]);
 	let eventTypesList = $state<string[]>(['SOIRÉE', 'ANNIVERSAIRE']);
 	let icalSyncUrl = $state('');
+	let availableStartDate = $state('');
+	let availableEndDate = $state('');
+	let availabilityRanges = $state<Array<{ startDate: string; endDate: string }>>([]);
 
 	let uploading = $state(false);
 	let uploadError = $state('');
+
+	function addAvailabilityRange() {
+		availabilityRanges = [...availabilityRanges, { startDate: '', endDate: '' }];
+	}
+
+	function removeAvailabilityRange(index: number) {
+		availabilityRanges = availabilityRanges.filter((_, i) => i !== index);
+	}
 
 	$effect(() => {
 		if (listing) {
@@ -88,6 +105,14 @@
 						: [];
 			eventTypesList = listing.eventTypeAllowed || ['SOIRÉE', 'ANNIVERSAIRE'];
 			icalSyncUrl = listing.icalSyncUrl || '';
+			availableStartDate = listing.availableStartDate ? new Date(listing.availableStartDate).toISOString().split('T')[0] : '';
+			availableEndDate = listing.availableEndDate ? new Date(listing.availableEndDate).toISOString().split('T')[0] : '';
+			
+			if (listing.availabilityRanges && Array.isArray(listing.availabilityRanges) && listing.availabilityRanges.length > 0) {
+				availabilityRanges = [...listing.availabilityRanges];
+			} else if (availableStartDate || availableEndDate) {
+				availabilityRanges = [{ startDate: availableStartDate, endDate: availableEndDate }];
+			}
 		}
 	});
 
@@ -154,7 +179,10 @@
 			eventTypeAllowed: eventTypesList,
 			imageUrl: imagesList[0] || 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80',
 			imageUrls: imagesList.length > 0 ? imagesList : ['https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80'],
-			icalSyncUrl: icalSyncUrl.trim()
+			icalSyncUrl: icalSyncUrl.trim(),
+			availableStartDate: availableStartDate || undefined,
+			availableEndDate: availableEndDate || undefined,
+			availabilityRanges: availabilityRanges.filter((r) => r.startDate && r.endDate)
 		});
 	}
 </script>
@@ -273,8 +301,8 @@
 				{/if}
 
 				<!-- File Dropzone Input -->
-				<label class="flex flex-col items-center justify-center border-2 border-dashed border-purple-200 bg-purple-50/30 hover:bg-purple-50/70 rounded-2xl p-6 cursor-pointer transition-all">
-					<UploadCloud class="h-8 w-8 text-purple-600 mb-2" />
+				<label class="flex flex-col items-center justify-center border-2 border-dashed rounded-2xl p-6 cursor-pointer transition-all">
+					<Upload class="h-8 w-8 mb-2" />
 					<span class="text-xs font-semibold text-slate-900">
 						{uploading ? 'Téléversement en cours...' : 'Cliquez ou glissez-déposez vos images ici'}
 					</span>
@@ -308,6 +336,76 @@
 						</button>
 					{/each}
 				</div>
+			</div>
+
+			<!-- Host Availability Ranges (Multiple) -->
+			<div class="flex flex-col gap-3 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
+				<div class="flex items-center justify-between">
+					<div>
+						<Label class="text-sm font-bold text-slate-950">Plages de disponibilité du logement</Label>
+					</div>
+					<Button
+						type="button"
+						variant="outline"
+						size="sm"
+						onclick={addAvailabilityRange}
+						class="gap-1 border-slate-300 text-xs font-semibold text-slate-800 hover:bg-white"
+					>
+						<Plus class="h-3.5 w-3.5" />
+						Ajouter une plage
+					</Button>
+				</div>
+
+				{#if availabilityRanges.length === 0}
+					<div class="rounded-lg border border-dashed border-slate-200 bg-white p-3 text-center text-xs text-slate-500">
+						Aucune restriction configurée (disponible toute l'année). Cliquez sur « Ajouter une plage » pour limiter les disponibilités.
+					</div>
+				{:else}
+					<div class="space-y-3">
+						{#each availabilityRanges as range, index (index)}
+							<div class="flex items-center gap-3 rounded-lg border border-slate-200 bg-white p-3">
+								<div class="grid flex-1 grid-cols-1 gap-3 sm:grid-cols-2">
+									<div class="flex flex-col gap-1">
+										<Label for={`avail-start-${index}`} class="text-[11px]">Début de la plage</Label>
+										<InputGroup.Root>
+											<InputGroup.Addon>
+												<Calendar class="h-3.5 w-3.5" />
+											</InputGroup.Addon>
+											<InputGroup.Input
+												id={`avail-start-${index}`}
+												type="date"
+												bind:value={range.startDate}
+											/>
+										</InputGroup.Root>
+									</div>
+									<div class="flex flex-col gap-1">
+										<Label for={`avail-end-${index}`} class="text-[11px]">Fin de la plage</Label>
+										<InputGroup.Root>
+											<InputGroup.Addon>
+												<Calendar class="h-3.5 w-3.5" />
+											</InputGroup.Addon>
+											<InputGroup.Input
+												id={`avail-end-${index}`}
+												type="date"
+												bind:value={range.endDate}
+											/>
+										</InputGroup.Root>
+									</div>
+								</div>
+
+								<Button
+									type="button"
+									variant="ghost"
+									size="icon"
+									onclick={() => removeAvailabilityRange(index)}
+									class="mt-4 text-slate-400 hover:bg-rose-50 hover:text-rose-600"
+								>
+									<Trash2 class="h-4 w-4" />
+								</Button>
+							</div>
+						{/each}
+					</div>
+				{/if}
 			</div>
 
 			<!-- iCal Sync URL -->

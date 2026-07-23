@@ -7,10 +7,13 @@ export const load: PageServerLoad = async ({ url }) => {
 	const maxPrice = url.searchParams.get('maxPrice') ? Number(url.searchParams.get('maxPrice')) : undefined;
 	const minCapacity = url.searchParams.get('minCapacity') ? Number(url.searchParams.get('minCapacity')) : undefined;
 	const eventType = url.searchParams.get('eventType') || undefined;
+	const startDate = url.searchParams.get('startDate') || undefined;
+	const endDate = url.searchParams.get('endDate') || undefined;
 
-	const listings = await getListings({ city, minPrice, maxPrice, minCapacity, eventType });
+	const listings = await getListings({ city, minPrice, maxPrice, minCapacity, eventType, startDate, endDate });
 
 	return {
-		listings
+		listings,
+		filters: { city, minPrice, maxPrice, minCapacity, eventType, startDate, endDate }
 	};
 };

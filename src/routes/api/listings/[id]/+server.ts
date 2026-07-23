@@ -27,9 +27,9 @@ export const DELETE: RequestHandler = async ({ params, cookies }) => {
 	}
 
 	try {
-		const result = await deleteListing(params.id, userId);
+		await deleteListing(params.id, userId);
 
-		return json({ success: true, deletedId: result.deletedId });
+		return json({ success: true });
 	} catch (error: any) {
 		return json({ success: false, error: error.message || 'Erreur lors de la suppression.' }, { status: 400 });
 	}

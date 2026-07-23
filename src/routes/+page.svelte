@@ -19,7 +19,12 @@
 		event.preventDefault();
 		const params = new URLSearchParams();
 		if (city) params.set('city', city);
-		if (eventDate) params.set('date', eventDate);
+		if (eventDate) {
+			params.set('startDate', eventDate);
+			const end = new Date(eventDate);
+			end.setUTCDate(end.getUTCDate() + 1);
+			params.set('endDate', end.toISOString().split('T')[0]);
+		}
 		if (capacity) params.set('minCapacity', capacity.toString());
 
 		goto(`/listings?${params.toString()}`);
