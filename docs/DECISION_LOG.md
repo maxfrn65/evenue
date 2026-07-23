@@ -108,6 +108,20 @@ Ce registre consigne l'ensemble des décisions d'architecture, de sécurité et 
 
 ---
 
+## Arbitrage #009 — Gestion des Sinistres & Génération d'Attestations Wakam PDF/HTML
+
+- **Date** : 23 Juillet 2026
+- **Ticket ClickUp** : [[CU-009]](https://app.clickup.com/t/86cavycmp) | **GitHub PR** : [#7](https://github.com/maxfrn65/evenue/pull/7)
+- **Contexte** : Finalisation du Lot 7 (API Assurance Wakam) avec un parcours de déclaration de sinistre et la mise à disposition des attestations d'assurance officielles.
+- **Options envisagées** :
+  1. Traiter les sinistres uniquement par email sans suivi en BDD.
+  2. Créer un service dédié `src/lib/server/claims.ts` avec formulaire Svelte 5, mise à jour des statuts de police (`CLAIMED`) et rendu d'attestations imprimables PDF/HTML.
+- **Décision & Justification** :
+  - **Attestation PDF/HTML dynamique (`/bookings/[id]/certificate`)** : Délivre immédiatement un document officiel avec les numéros de police et plafonds de garantie (10 000 €).
+  - **Formulaire de déclaration `/claims/new`** : Permet une saisie structurée des dégradations et fait passer automatiquement la réservation en statut `DISPUTED`.
+
+---
+
 ## Suivi des Arbitrages
 
 | ID | Domaine | Description / Sujet | Statut |
@@ -120,3 +134,4 @@ Ce registre consigne l'ensemble des décisions d'architecture, de sécurité et 
 | ARB-006 | UI/UX / DA | Thème clair minimaliste, Session Header & Fiche Dynamique | ✅ Validé |
 | ARB-007 | Backend / Finance | Moteur de réservation, Séquestre Stripe & Circuit Breaker Wakam | ✅ Validé |
 | ARB-008 | Frontend / Dashboard | Espace Dashboard complet, annulation & Générateur Prisma 7 | ✅ Validé |
+| ARB-009 | Backend / Assurance | Déclaration de sinistre & Attestations Wakam PDF/HTML | ✅ Validé |
