@@ -2,6 +2,7 @@ import { prisma } from './db';
 
 export interface DashboardData {
 	bookings: DashboardBooking[];
+	hostReceivedBookings?: DashboardBooking[];
 	listings: DashboardListing[];
 	stats: DashboardStats;
 }
@@ -16,6 +17,12 @@ export interface DashboardBooking {
 		id: string;
 		title: string;
 		city: string;
+	};
+	guest?: {
+		id: string;
+		firstName: string;
+		lastName: string;
+		email: string;
 	};
 	insurancePolicy: {
 		policyNumber: string;
@@ -46,7 +53,7 @@ export interface DashboardStats {
 
 /**
  * Get dashboard data for the connected user.
- * Includes their bookings (as guest) and their listings (as host).
+ * Includes their bookings (as guest) and their listings/received bookings (as host).
  */
 export async function getDashboardData(userId: string, userRole: string): Promise<DashboardData> {
 	const now = new Date();
@@ -72,8 +79,10 @@ export async function getDashboardData(userId: string, userRole: string): Promis
 		orderBy: { startDate: 'desc' }
 	});
 
-	// Fetch host listings (only if user is HOST)
+	// Fetch host listings & received bookings (only if user is HOST)
 	let listings: DashboardListing[] = [];
+	let hostReceivedBookings: DashboardBooking[] = [];
+
 	if (userRole === 'HOST') {
 		const rawListings = await prisma.listing.findMany({
 			where: { hostId: userId },
@@ -99,6 +108,35 @@ export async function getDashboardData(userId: string, userRole: string): Promis
 			_count: l._count,
 			totalRevenue: l.bookings.reduce((sum: number, b: { hostEarnings: number }) => sum + b.hostEarnings, 0)
 		}));
+
+		// Received bookings on listings owned by this host
+		hostReceivedBookings = await prisma.booking.findMany({
+			where: { listing: { hostId: userId } },
+			include: {
+				listing: {
+					select: {
+						id: true,
+						title: true,
+						city: true
+					}
+				},
+				guest: {
+					select: {
+						id: true,
+						firstName: true,
+						lastName: true,
+						email: true
+					}
+				},
+				insurancePolicy: {
+					select: {
+						policyNumber: true,
+						status: true
+					}
+				}
+			},
+			orderBy: { startDate: 'desc' }
+		});
 	}
 
 	// Compute stats
@@ -110,6 +148,7 @@ export async function getDashboardData(userId: string, userRole: string): Promis
 
 	return {
 		bookings,
+		hostReceivedBookings,
 		listings,
 		stats: {
 			totalBookings: bookings.length,

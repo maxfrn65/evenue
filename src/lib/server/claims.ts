@@ -3,9 +3,17 @@ import { prisma } from './db';
 export interface SubmitClaimInput {
 	bookingId: string;
 	userId: string;
-	damageType: 'SOUND_SYSTEM' | 'FURNITURE' | 'STRUCTURE' | 'OTHER';
+	damageType?: 'SOUND_SYSTEM' | 'FURNITURE' | 'STRUCTURE' | 'OTHER';
 	description: string;
 	estimatedCost: number;
+	evidenceUrls?: string[];
+}
+
+export interface DisputeClaimInput {
+	claimId: string;
+	userId: string;
+	disputeReason: string;
+	disputeEvidenceUrls?: string[];
 }
 
 export interface ClaimResult {
@@ -13,14 +21,14 @@ export interface ClaimResult {
 	claimNumber: string;
 	bookingId: string;
 	policyNumber: string;
-	status: 'SUBMITTED' | 'UNDER_REVIEW';
+	status: 'SUBMITTED' | 'UNDER_REVIEW' | 'CLAIMED';
 	estimatedCost: number;
 	submittedAt: Date;
 }
 
 /**
  * Submit an insurance claim for a covered booking.
- * Updates the associated Wakam Insurance Policy status to CLAIMED.
+ * RESTRICTED TO HOST OWNER ONLY within 48 hours post-event.
  */
 export async function submitClaim(input: SubmitClaimInput): Promise<ClaimResult> {
 	if (!input.description || input.description.trim().length < 10) {
@@ -31,12 +39,9 @@ export async function submitClaim(input: SubmitClaimInput): Promise<ClaimResult>
 		throw new Error('Le montant estimé des dommages doit être supérieur à 0 €.');
 	}
 
-	// 1. Fetch booking with guest, host and insurance policy
-	const booking = await prisma.booking.findFirst({
-		where: {
-			id: input.bookingId,
-			OR: [{ guestId: input.userId }, { listing: { hostId: input.userId } }]
-		},
+	// 1. Fetch booking with listing host & insurance policy
+	const booking = await prisma.booking.findUnique({
+		where: { id: input.bookingId },
 		include: {
 			listing: true,
 			insurancePolicy: true
@@ -44,11 +49,29 @@ export async function submitClaim(input: SubmitClaimInput): Promise<ClaimResult>
 	});
 
 	if (!booking) {
-		throw new Error('Réservation introuvable ou vous n\'êtes pas autorisé à déclarer un sinistre pour cette réservation.');
+		throw new Error('Réservation introuvable.');
+	}
+
+	// RBAC Check: Only Host owner can submit a claim
+	if (booking.listing.hostId !== input.userId) {
+		throw new Error("Seul l'hôte propriétaire du logement peut déclarer un sinistre.");
+	}
+
+	// 7 Days Post-Event Window Check (168h)
+	const now = new Date();
+	const eventEnd = new Date(booking.endDate);
+	const hoursDiff = (now.getTime() - eventEnd.getTime()) / (1000 * 60 * 60);
+
+	if (hoursDiff < 0) {
+		throw new Error("L'événement n'est pas encore terminé. La déclaration de sinistre sera disponible à la fin de la réservation.");
+	}
+
+	if (hoursDiff > 7 * 24) {
+		throw new Error("La fenêtre de déclaration de sinistre de 7 jours post-événement est expirée.");
 	}
 
 	if (!booking.insurancePolicy) {
-		throw new Error('Aucune police d\'assurance Wakam rattachée à cette réservation.');
+		throw new Error("Aucune police d'assurance Wakam rattachée à cette réservation.");
 	}
 
 	// 2. Update insurance policy status to CLAIMED
@@ -57,24 +80,110 @@ export async function submitClaim(input: SubmitClaimInput): Promise<ClaimResult>
 		data: { status: 'CLAIMED' }
 	});
 
-	// Also set booking status to DISPUTED
+	// Set booking status to DISPUTED (freezing escrow payout)
 	await prisma.booking.update({
 		where: { id: booking.id },
 		data: { status: 'DISPUTED' }
 	});
 
-	const claimId = `claim-${Date.now()}`;
 	const claimNumber = `SIN-WAK-${Math.floor(100000 + Math.random() * 900000)}`;
 
+	// 3. Create Claim record and ClaimHistory entry
+	const claim = await prisma.claim.create({
+		data: {
+			bookingId: booking.id,
+			policyNumber: updatedPolicy.policyNumber,
+			declarantId: input.userId,
+			declarantRole: 'HOST',
+			description: input.description.trim(),
+			estimatedDamage: input.estimatedCost,
+			evidenceUrls: input.evidenceUrls || [],
+			status: 'CLAIMED',
+			history: {
+				create: {
+					authorId: input.userId,
+					oldStatus: 'ACTIVE',
+					newStatus: 'CLAIMED',
+					notes: 'Déclaration de sinistre initiale soumise par le propriétaire (Hôte)'
+				}
+			}
+		}
+	});
+
 	return {
-		claimId,
+		claimId: claim.id,
 		claimNumber,
 		bookingId: booking.id,
 		policyNumber: updatedPolicy.policyNumber,
 		status: 'SUBMITTED',
 		estimatedCost: input.estimatedCost,
-		submittedAt: new Date()
+		submittedAt: claim.createdAt
 	};
+}
+
+/**
+ * Dispute a claim (RESTRICTED TO GUEST/LOCATAIRE ONLY).
+ */
+export async function disputeClaim(input: DisputeClaimInput) {
+	if (!input.disputeReason || input.disputeReason.trim().length < 10) {
+		throw new Error('Le motif de contestation doit comporter au moins 10 caractères.');
+	}
+
+	const claim = await prisma.claim.findUnique({
+		where: { id: input.claimId },
+		include: {
+			booking: true
+		}
+	});
+
+	if (!claim) {
+		throw new Error('Sinistre introuvable.');
+	}
+
+	// RBAC Check: Only Guest locataire can dispute a claim
+	if (claim.booking.guestId !== input.userId) {
+		throw new Error('Seul le locataire de la réservation peut contester ce sinistre.');
+	}
+
+	if (claim.isDisputed) {
+		throw new Error('Ce sinistre a déjà fait l\'objet d\'une contestation.');
+	}
+
+	const updatedClaim = await prisma.claim.update({
+		where: { id: claim.id },
+		data: {
+			isDisputed: true,
+			disputeReason: input.disputeReason.trim(),
+			disputeEvidenceUrls: input.disputeEvidenceUrls || [],
+			disputedAt: new Date(),
+			status: 'CLAIMED',
+			history: {
+				create: {
+					authorId: input.userId,
+					oldStatus: claim.status,
+					newStatus: 'UNDER_REVIEW',
+					notes: `Contestation soumise par le locataire : ${input.disputeReason.trim()}`
+				}
+			}
+		},
+		include: { history: true }
+	});
+
+	return updatedClaim;
+}
+
+/**
+ * Get claim by booking ID with history.
+ */
+export async function getClaimByBookingId(bookingId: string) {
+	const claim = await prisma.claim.findFirst({
+		where: { bookingId },
+		include: {
+			history: { orderBy: { createdAt: 'desc' } }
+		}
+	});
+
+	return claim;
 }
 
 /**

@@ -10,12 +10,16 @@
 
 	let { data } = $props();
 	const user = $derived(data.user);
-	const bookings = $derived(data.bookings);
+	const hostBookings = $derived(data.hostBookings || []);
+	const isHostOfSelected = $derived(data.isHostOfSelected);
+	const hoursSinceEnd = $derived(data.hoursSinceEnd);
+	const isWindowExpired = $derived(hoursSinceEnd > 7 * 24);
+	const isNotEndedYet = $derived(hoursSinceEnd < 0);
 
 	let selectedBookingId = $state('');
 
 	$effect(() => {
-		selectedBookingId = data.selectedBookingId || (data.bookings[0]?.id ?? '');
+		selectedBookingId = data.selectedBookingId || (hostBookings[0]?.id ?? '');
 	});
 	let damageType = $state('SOUND_SYSTEM');
 	let description = $state('');
@@ -35,7 +39,7 @@
 		damageTypes.find((d) => d.value === damageType)?.label ?? 'Type de dégât'
 	);
 
-	const selectedBooking = $derived(bookings.find((b: any) => b.id === selectedBookingId));
+	const selectedBooking = $derived(hostBookings.find((b: any) => b.id === selectedBookingId));
 
 	async function handleSubmit(e: Event) {
 		e.preventDefault();
@@ -43,7 +47,7 @@
 		errorMessage = '';
 
 		if (!selectedBookingId) {
-			errorMessage = 'Veuillez sélectionner une réservation.';
+			errorMessage = 'Veuillez sélectionner une réservation dont vous êtes l\'hôte propriétaire.';
 			loading = false;
 			return;
 		}
@@ -85,13 +89,24 @@
 	<div class="space-y-2 text-center">
 		<Badge variant="emerald" class="gap-1 px-3 py-1">
 			<ShieldCheck class="h-4 w-4" />
-			Garantie Wakam — Déclaration de Sinistre
+			Garantie Wakam — Déclaration de Sinistre Hôte
 		</Badge>
 		<h1 class="text-3xl font-extrabold tracking-tight text-slate-950">
-			Déclarer un Sinistre ou une Dégradation
+			Espace Déclaration Hôte Propriétaire
 		</h1>
 		<p class="text-xs text-slate-500">
-			Protection Wakam embarquée jusqu'à 10 000 € de dommages matériels.
+			Protection Wakam jusqu'à 10 000 € pour les hôtes mettant leur bien à disposition. Fenêtre de déclaration : 7 jours post-événement.
+		</p>
+	</div>
+
+	<!-- RBAC Info Banner -->
+	<div class="rounded-xl border border-purple-200 bg-purple-50/60 p-4 text-xs text-purple-950 space-y-1.5">
+		<div class="flex items-center gap-2 font-bold text-purple-900">
+			<AlertTriangle class="h-4 w-4 text-purple-700" />
+			Notice importante — Contrôle des Rôles (Hôte vs Convive)
+		</div>
+		<p class="leading-relaxed">
+			La déclaration de sinistre est <strong>strictement réservée aux propriétaires (Hôtes)</strong> ayant mis leur bien à disposition. Les convives/locataires ne peuvent pas déclarer de sinistre. En tant que convive, vous disposez d'un droit de contestation avec pièces justificatives depuis votre tableau de bord.
 		</p>
 	</div>
 
@@ -140,19 +155,21 @@
 				<!-- Booking Selection -->
 				<div class="flex flex-col gap-1.5">
 					<Label>Réservation concernée</Label>
-					{#if bookings.length === 0}
-						<p class="text-xs text-slate-500">Aucune réservation éligible trouvée.</p>
+					{#if hostBookings.length === 0}
+						<p class="text-xs text-rose-600 bg-rose-50 border border-rose-200 rounded-lg p-3">
+							Aucune réservation trouvée pour laquelle vous êtes l'hôte propriétaire. Seul le propriétaire du logement mis à disposition peut déclarer un sinistre.
+						</p>
 					{:else}
 						<Select.Root type="single" name="bookingId" bind:value={selectedBookingId}>
 							<Select.Trigger class="w-full">
-								{selectedBooking ? `${selectedBooking.listing.title} (${selectedBooking.listing.city})` : 'Sélectionner une réservation'}
+								{selectedBooking ? `${selectedBooking.listing.title} (${selectedBooking.listing.city}) — Invité: ${selectedBooking.guest?.firstName} ${selectedBooking.guest?.lastName}` : 'Sélectionner une réservation'}
 							</Select.Trigger>
 							<Select.Content>
 								<Select.Group>
-									<Select.Label>Réservations Couvertes</Select.Label>
-									{#each bookings as b (b.id)}
+									<Select.Label>Vos Réservations Hôte Couvertes</Select.Label>
+									{#each hostBookings as b (b.id)}
 										<Select.Item value={b.id} label={b.listing.title}>
-											{b.listing.title} ({b.listing.city}) — {b.insurancePolicy?.policyNumber || 'Police Active'}
+											{b.listing.title} ({b.listing.city}) — Invité : {b.guest?.firstName} {b.guest?.lastName}
 										</Select.Item>
 									{/each}
 								</Select.Group>
@@ -208,10 +225,20 @@
 				</div>
 
 				<!-- Submit Button -->
+				{#if isNotEndedYet}
+					<div class="rounded-lg border border-amber-200 bg-amber-50 p-3 text-center text-xs text-amber-800 font-medium">
+						L'événement n'est pas encore terminé. La déclaration de sinistre sera disponible dès la fin de la réservation.
+					</div>
+				{:else if isWindowExpired && selectedBooking}
+					<div class="rounded-lg border border-rose-200 bg-rose-50 p-3 text-center text-xs text-rose-800 font-medium">
+						La fenêtre de déclaration de sinistre de 7 jours post-événement est expirée pour cette réservation.
+					</div>
+				{/if}
+
 				<Button
 					type="submit"
 					variant="default"
-					disabled={loading || bookings.length === 0}
+					disabled={loading || hostBookings.length === 0 || isWindowExpired || isNotEndedYet}
 					class="w-full gap-2 bg-slate-950 py-3.5 text-sm font-bold text-white hover:bg-slate-800"
 				>
 					{loading ? 'Enregistrement du dossier...' : 'Transmettre la Déclaration à Wakam'}
