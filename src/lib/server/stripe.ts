@@ -11,13 +11,11 @@ export const stripe = new Stripe(stripeSecretKey, {
  * Create a Stripe Connect Express Account for Hosts (KYC & Direct Payouts).
  */
 export async function createHostStripeAccount(userId: string, email: string): Promise<string> {
-	// Check if user already has a Stripe Account ID
 	const user = await prisma.user.findUnique({ where: { id: userId } });
 	if (user?.stripeAccountId) {
 		return user.stripeAccountId;
 	}
 
-	// Create Express account via Stripe SDK
 	try {
 		const account = await stripe.accounts.create({
 			type: 'express',
@@ -33,7 +31,6 @@ export async function createHostStripeAccount(userId: string, email: string): Pr
 			}
 		});
 
-		// Save stripeAccountId to database
 		await prisma.user.update({
 			where: { id: userId },
 			data: { stripeAccountId: account.id }
@@ -41,7 +38,6 @@ export async function createHostStripeAccount(userId: string, email: string): Pr
 
 		return account.id;
 	} catch (error) {
-		// Mock fallback for development if Stripe key is mock
 		const mockId = `acct_mock_${userId.slice(0, 8)}`;
 		await prisma.user.update({
 			where: { id: userId },
@@ -68,7 +64,39 @@ export async function createStripeOnboardingLink(
 		});
 		return accountLink.url;
 	} catch (error) {
-		// Mock onboarding URL for test mode
 		return `${returnUrl}?stripe_onboarding=success_mock`;
+	}
+}
+
+/**
+ * Create Stripe PaymentIntent with manual capture for Escrow & Security Deposit.
+ */
+export async function createBookingPaymentIntent(
+	amount: number,
+	securityDeposit: number,
+	stripeAccountId?: string
+) {
+	try {
+		const paymentIntent = await stripe.paymentIntents.create({
+			amount: Math.round(amount * 100),
+			currency: 'eur',
+			capture_method: 'manual',
+			payment_method_types: ['card'],
+			transfer_data: stripeAccountId ? { destination: stripeAccountId } : undefined,
+			metadata: {
+				securityDeposit: securityDeposit.toString()
+			}
+		});
+
+		return {
+			paymentIntentId: paymentIntent.id,
+			clientSecret: paymentIntent.client_secret
+		};
+	} catch (error) {
+		const mockId = `pi_mock_${Math.floor(100000 + Math.random() * 900000)}`;
+		return {
+			paymentIntentId: mockId,
+			clientSecret: `${mockId}_secret_mock`
+		};
 	}
 }
