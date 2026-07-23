@@ -3,7 +3,7 @@
 	import * as InputGroup from '$lib/components/ui/input-group/index.js';
 	import Label from '$lib/components/ui/label/label.svelte';
 	import Card from '$lib/components/ui/card/card.svelte';
-	import { User, Mail, Lock, ShieldCheck, ArrowRight } from 'lucide-svelte';
+	import { User, Mail, Lock, ShieldCheck, ArrowRight } from '@lucide/svelte';
 
 	let firstName = $state('');
 	let lastName = $state('');

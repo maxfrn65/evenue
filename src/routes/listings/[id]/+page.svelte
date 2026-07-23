@@ -2,7 +2,7 @@
 	import Button from '$lib/components/ui/button/button.svelte';
 	import Card from '$lib/components/ui/card/card.svelte';
 	import Badge from '$lib/components/ui/badge/badge.svelte';
-	import { MapPin, Users, ShieldCheck, Star, Music, Sparkles, CheckCircle2, Lock, ArrowRight, ArrowLeft } from 'lucide-svelte';
+	import { MapPin, Users, ShieldCheck, Star, Music, Sparkles, CheckCircle2, Lock, ArrowRight, ArrowLeft } from '@lucide/svelte';
 
 	let { data }: { data: { listing: any } } = $props();
 
