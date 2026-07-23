@@ -1,8 +1,8 @@
 # Suivi d'Avancement & Consommation J/H (Evenue — Bloc 2)
 
 **Enveloppe globale attribuée** : **71 J/H**  
-**Consommé à ce jour** : **30 J/H**  
-**Reste à faire (RAF)** : **41 J/H**  
+**Consommé à ce jour** : **33 J/H**  
+**Reste à faire (RAF)** : **38 J/H**  
 
 ---
 
@@ -17,9 +17,9 @@
 | Lot 5 | Frontend SvelteKit & UI | 12 | 12 | 0 | ✅ Terminé (MVP) |
 | Lot 6 | Réservation & Séquestre Financier | 10 | 4 | 6 | 🚀 En cours |
 | Lot 7 | API Assurance (Wakam & Circuit Breaker) | 8 | 4 | 4 | 🚀 En cours |
-| Lot 8 | Tests & Qualité (Coverage > 80%) | 7 | 0 | 7 | ⏳ En attente |
+| Lot 8 | Tests & Qualité (Coverage > 80%) | 7 | 3 | 4 | 🚀 En cours |
 | Lot 9 | Déploiement & CI/CD Scaleway | 3 | 0 | 3 | ⏳ En attente |
-| **TOTAL** | | **71 J/H** | **35 J/H** | **36 J/H** | **En progression** |
+| **TOTAL** | | **71 J/H** | **38 J/H** | **33 J/H** | **En progression** |
 
 ---
 
@@ -43,6 +43,7 @@
 | **CU-014** | Déclaration & Gestion Sinistres Wakam (Fenêtre 7j, Contestation & RBAC) | Lot 7 | 2 J/H | 2 J/H | Sarah Chen | `complete` | [#12](https://github.com/maxfrn65/evenue/pull/12) | `main` |
 | **CU-015** | Pages d'Information, "Comment ça Marche" & Liens Morts Footer | Lot 5 | 2 J/H | 2 J/H | Julie Dupuis | `complete` | [#13](https://github.com/maxfrn65/evenue/pull/13) | `main` |
 | **CU-016** | Refacto Moteur de Recherche Réutilisable (Tag Ville & DatePicker Airbnb) | Lot 5 | 2 J/H | 2 J/H | Thomas Moreau | `complete` | [#14](https://github.com/maxfrn65/evenue/pull/14) | `main` |
+| **CU-017** | Automated Test Suite & Coverage Reports (>80%) | Lot 8 | 3 J/H | 3 J/H | Marc Dupont | `complete` | [#15](https://github.com/maxfrn65/evenue/pull/15) | `main` |
 
 ---
 
@@ -50,6 +51,5 @@
 
 | Ticket ID | Titre | Lot | Estimé | Assignataire | Statut ClickUp | ClickUp ID |
 |---|---|---|---|---|---|---|
-| **CU-017** | Automated Test Suite & Coverage Reports (>80%) | Lot 8 | 3 J/H | Marc Dupont | `to do` | `86caw1vqp` |
 | **CU-018** | Pipeline CI/CD GitHub Actions & Serverless Deploy Scaleway | Lot 9 | 3 J/H | Alexandre Rivière | `to do` | `86caw1vrz` |
 | **CU-019** | Monitoring, Logging Centralisé & Alertes Circuit Breaker | Lot 9 | 2 J/H | Alexandre Rivière | `to do` | `86caw1vtu` |
