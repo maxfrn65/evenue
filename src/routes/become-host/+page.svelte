@@ -1,70 +1,61 @@
 <script lang="ts">
 	import Badge from '$lib/components/ui/badge/badge.svelte';
 	import { Button } from '$lib/components/ui/button/index.js';
-	import Card from '$lib/components/ui/card/card.svelte';
-	import { Building2, ShieldCheck, Sparkles, ArrowRight, CheckCircle2 } from '@lucide/svelte';
-
-	let { data, form } = $props();
-	const user = $derived(data.user);
+	import * as Card from '$lib/components/ui/card/index.js';
+	import { Building2, ShieldCheck, Lock, Sparkles, ArrowRight, CheckCircle2 } from '@lucide/svelte';
 </script>
 
-<div class="mx-auto max-w-2xl space-y-8 px-4 py-12 sm:px-6 lg:px-8">
-	<div class="space-y-3 text-center">
-		<Badge variant="purple" class="gap-1.5 px-3 py-1">
-			<Sparkles class="h-4 w-4 text-amber-400" />
-			Programme Hôte Evenue
+<div class="mx-auto max-w-5xl space-y-12 px-4 py-12 sm:px-6 lg:px-8">
+	<!-- Hero Section -->
+	<div class="space-y-4 text-center">
+		<Badge variant="purple" class="gap-1.5 px-3 py-1 text-xs">
+			<Sparkles class="h-3.5 w-3.5" />
+			Propriétaires de Bastides, Lofts & Domaines
 		</Badge>
-		<h1 class="text-3xl font-extrabold tracking-tight text-slate-950 sm:text-4xl">
-			Devenez Hôte & Rentabilisez votre Lieu
+		<h1 class="text-3xl font-extrabold tracking-tight text-slate-950 sm:text-5xl">
+			Rentabilisez votre logement pour des événements d'exception
 		</h1>
-		<p class="text-xs text-slate-600">
-			Bénéficiez d'une protection Wakam jusqu'à 10 000 €, du séquestre de caution automatique et de versements sécurisés Stripe Connect.
+		<p class="mx-auto max-w-2xl text-sm text-slate-600 leading-relaxed">
+			Rejoignez Evenue. Bénéficiez d'une protection complète jusqu'à 10 000 € de dégradations matérielles Wakam et du séquestre bancaire Stripe Connect sur chaque réservation.
 		</p>
+
+		<div class="pt-4 flex justify-center gap-4">
+			<Button href="/listings/new" variant="default" class="gap-2 bg-purple-900 text-white hover:bg-purple-800 px-6 py-3 text-sm font-bold">
+				Publier mon logement gratuitement <ArrowRight class="h-4 w-4" />
+			</Button>
+		</div>
 	</div>
 
-	{#if form?.error}
-		<div class="rounded-lg border border-rose-200 bg-rose-50 p-3 text-center text-xs font-medium text-rose-700">
-			{form.error}
-		</div>
-	{/if}
-
-	<Card class="space-y-6 border-purple-200 bg-purple-50/40 p-8">
-		<div class="space-y-4 text-xs text-slate-700">
-			<h3 class="text-sm font-bold text-slate-950">Avantages exclusifs Hôtes Evenue :</h3>
-			<div class="flex items-start gap-3">
-				<CheckCircle2 class="h-5 w-5 flex-shrink-0 text-purple-600" />
-				<div>
-					<strong class="font-bold text-slate-900">Assurance Dommages Wakam 100% Intégrée</strong>
-					<p class="text-[11px] text-slate-500">Couverture jusqu'à 10 000 € pour chaque soirée ou réception réservée.</p>
-				</div>
+	<!-- Key Advantages -->
+	<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+		<Card.Root class="border-purple-200 bg-purple-50/40 p-6 space-y-3">
+			<div class="flex h-12 w-12 items-center justify-center rounded-xl bg-purple-900 text-white">
+				<ShieldCheck class="h-6 w-6" />
 			</div>
+			<h3 class="font-bold text-slate-950 text-base">Assurance Wakam 10 000 €</h3>
+			<p class="text-xs text-slate-600 leading-relaxed">
+				Chaque événement est automatiquement assuré contre les dégradations matérielles et la responsabilité civile événementielle jusqu'à 1 000 000 €.
+			</p>
+		</Card.Root>
 
-			<div class="flex items-start gap-3">
-				<ShieldCheck class="h-5 w-5 flex-shrink-0 text-purple-600" />
-				<div>
-					<strong class="font-bold text-slate-900">Caution Séquestrée Automatique</strong>
-					<p class="text-[11px] text-slate-500">Empreinte bancaire bloquée par Stripe sans démarche de votre part.</p>
-				</div>
+		<Card.Root class="border-purple-200 bg-purple-50/40 p-6 space-y-3">
+			<div class="flex h-12 w-12 items-center justify-center rounded-xl bg-purple-900 text-white">
+				<Lock class="h-6 w-6" />
 			</div>
+			<h3 class="font-bold text-slate-950 text-base">Séquestre Stripe Connect</h3>
+			<p class="text-xs text-slate-600 leading-relaxed">
+				Les fonds de vos réservations sont verrouillés en toute sécurité sur un compte de cantonnement et transférés directement sur votre compte bancaire.
+			</p>
+		</Card.Root>
 
-			<div class="flex items-start gap-3">
-				<Building2 class="h-5 w-5 flex-shrink-0 text-purple-600" />
-				<div>
-					<strong class="font-bold text-slate-900">Gestion Simplifiée du Calendrier</strong>
-					<p class="text-[11px] text-slate-500">Synchronisation iCal bidirectionnelle et contrôle des créneaux autorisés.</p>
-				</div>
+		<Card.Root class="border-purple-200 bg-purple-50/40 p-6 space-y-3">
+			<div class="flex h-12 w-12 items-center justify-center rounded-xl bg-purple-900 text-white">
+				<Building2 class="h-6 w-6" />
 			</div>
-		</div>
-
-		<form method="POST" class="pt-4">
-			<Button
-				type="submit"
-				variant="default"
-				class="w-full gap-2 bg-purple-700 py-3.5 text-sm font-bold text-white hover:bg-purple-800"
-			>
-				Activer mon Compte Hôte & Publier une Annonce
-				<ArrowRight class="h-4 w-4" />
-			</Button>
-		</form>
-	</Card>
+			<h3 class="font-bold text-slate-950 text-base">Contrôle des Disponibilités</h3>
+			<p class="text-xs text-slate-600 leading-relaxed">
+				Définissez précisément les plages de dates auxquelles votre lieu est disponible et synchronisez votre calendrier avec iCal.
+			</p>
+		</Card.Root>
+	</div>
 </div>
