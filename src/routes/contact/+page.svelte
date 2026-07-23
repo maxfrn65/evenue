@@ -77,22 +77,22 @@
 			{:else}
 				<form onsubmit={handleSubmit} class="space-y-4">
 					<div class="space-y-1.5">
-						<Label>Votre Adresse Email</Label>
+						<Label for="contact-email">Votre Adresse Email</Label>
 						<InputGroup.Root>
-							<InputGroup.Input type="email" bind:value={email} placeholder="nom@domaine.fr" required />
+							<InputGroup.Input id="contact-email" type="email" bind:value={email} placeholder="nom@domaine.fr" required />
 						</InputGroup.Root>
 					</div>
 
 					<div class="space-y-1.5">
-						<Label>Sujet de votre demande</Label>
+						<Label for="contact-subject">Sujet de votre demande</Label>
 						<InputGroup.Root>
-							<InputGroup.Input type="text" bind:value={subject} placeholder="Question sur ma réservation, l'assurance Wakam..." required />
+							<InputGroup.Input id="contact-subject" type="text" bind:value={subject} placeholder="Question sur ma réservation, l'assurance Wakam..." required />
 						</InputGroup.Root>
 					</div>
 
 					<div class="space-y-1.5">
-						<Label>Votre Message</Label>
-						<Textarea bind:value={message} rows={4} placeholder="Détaillez votre demande ici..." required />
+						<Label for="contact-message">Votre Message</Label>
+						<Textarea id="contact-message" bind:value={message} rows={4} placeholder="Détaillez votre demande ici..." required />
 					</div>
 
 					<Button type="submit" variant="default" class="w-full gap-2 bg-purple-900 text-white hover:bg-purple-800 font-bold">

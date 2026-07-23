@@ -1,9 +1,20 @@
 import Stripe from 'stripe';
 import { prisma } from './db';
+import { env } from '$env/dynamic/private';
 
-const stripeSecretKey = process.env.STRIPE_SECRET_KEY || 'sk_test_mock_evenue_key';
+const stripeSecretKey = env.STRIPE_SECRET_KEY || process.env.STRIPE_SECRET_KEY;
 
-export const stripe = new Stripe(stripeSecretKey, {
+if (!stripeSecretKey && process.env.NODE_ENV === 'production') {
+	// No secret key must ever fall back to a hardcoded value in production
+	// (OWASP A02: Cryptographic Failures).
+	throw new Error('STRIPE_SECRET_KEY is not set in production.');
+}
+
+// Outside production, allow an obviously-fake placeholder so the app boots
+// without live Stripe credentials (test keys are non-sensitive by design).
+const resolvedStripeKey = stripeSecretKey || 'sk_test_placeholder_dev_only';
+
+export const stripe = new Stripe(resolvedStripeKey, {
 	apiVersion: '2025-02-24.acacia' as Stripe.LatestApiVersion
 });
 

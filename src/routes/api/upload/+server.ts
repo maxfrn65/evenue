@@ -2,12 +2,27 @@ import type { RequestHandler } from './$types';
 import { json } from '@sveltejs/kit';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { rateLimit, clientKey } from '$lib/server/rate-limit';
 
-export const POST: RequestHandler = async ({ request, cookies }) => {
+const MAX_FILE_BYTES = 5 * 1024 * 1024; // 5 MB per image
+
+export const POST: RequestHandler = async ({ request, cookies, getClientAddress }) => {
 	const userId = cookies.get('evenue_session');
 
 	if (!userId) {
 		return json({ success: false, error: 'Non authentifié.' }, { status: 401 });
+	}
+
+	// Abuse protection: 30 uploads / 10 min / IP (OWASP A04).
+	const limit = rateLimit(clientKey(getClientAddress, request, 'upload'), {
+		limit: 30,
+		windowMs: 10 * 60 * 1000
+	});
+	if (!limit.allowed) {
+		return json(
+			{ success: false, error: 'Trop de fichiers envoyés. Patientez quelques minutes.' },
+			{ status: 429, headers: { 'Retry-After': String(limit.retryAfterSeconds) } }
+		);
 	}
 
 	try {
@@ -33,6 +48,14 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 		for (const file of files) {
 			if (!file.type.startsWith('image/')) {
 				continue;
+			}
+
+			// Reject oversized files (defense against resource-exhaustion abuse).
+			if (file.size > MAX_FILE_BYTES) {
+				return json(
+					{ success: false, error: 'Chaque image doit faire moins de 5 Mo.' },
+					{ status: 413 }
+				);
 			}
 
 			const sanitizeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');

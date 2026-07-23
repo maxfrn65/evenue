@@ -46,14 +46,19 @@
 	<Card class="p-8 space-y-6 border-slate-200">
 		<div class="text-center space-y-2">
 			<a href="/" class="inline-block">
-				<img src={logoFull} alt="Evenue Logo" class="h-12 w-auto mx-auto object-contain mb-2" />
+				<img src={logoFull} alt="Evenue" class="h-12 w-auto mx-auto object-contain mb-2" />
 			</a>
 			<h1 class="text-2xl font-bold text-slate-950">Connexion à Evenue</h1>
 			<p class="text-xs text-slate-500">Accédez à votre espace réservations et vos assurances Wakam</p>
 		</div>
 
 		{#if errorMessage}
-			<div class="p-3 bg-rose-50 border border-rose-200 rounded-lg text-rose-700 text-xs text-center font-medium">
+			<div
+				id="login-error"
+				role="alert"
+				aria-live="assertive"
+				class="p-3 bg-rose-50 border border-rose-200 rounded-lg text-rose-700 text-xs text-center font-medium"
+			>
 				{errorMessage}
 			</div>
 		{/if}
@@ -70,6 +75,8 @@
 						type="email"
 						bind:value={email}
 						required
+						aria-invalid={errorMessage ? 'true' : undefined}
+						aria-describedby={errorMessage ? 'login-error' : undefined}
 						placeholder="nom@exemple.com"
 					/>
 				</InputGroup.Root>
@@ -86,6 +93,8 @@
 						type="password"
 						bind:value={password}
 						required
+						aria-invalid={errorMessage ? 'true' : undefined}
+						aria-describedby={errorMessage ? 'login-error' : undefined}
 						placeholder="••••••••"
 					/>
 				</InputGroup.Root>

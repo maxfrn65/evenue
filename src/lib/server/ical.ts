@@ -1,4 +1,5 @@
 import { prisma } from './db';
+import { isSafeExternalUrl } from './url-safety';
 
 export interface ICalEvent {
 	startDate: Date;
@@ -124,6 +125,13 @@ export function parseICalEvents(icalContent: string): ICalEvent[] {
  * Fetch and parse external iCal stream with graceful 3-second timeout fallback.
  */
 export async function fetchAndParseExternalICal(url: string): Promise<ICalEvent[]> {
+	// SSRF guard (OWASP A10): never fetch a host-supplied URL without validating
+	// it points to a public http(s) endpoint. Defense-in-depth — the same check
+	// runs at the listing input boundary.
+	if (!isSafeExternalUrl(url).safe) {
+		return [];
+	}
+
 	try {
 		const controller = new AbortController();
 		const timeoutId = setTimeout(() => controller.abort(), 3000);
