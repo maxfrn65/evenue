@@ -1,5 +1,6 @@
 import type { PageServerLoad } from './$types';
 import { getListings } from '$lib/server/listings';
+import { logger } from '$lib/server/logger';
 
 export const load: PageServerLoad = async ({ url }) => {
 	const city = url.searchParams.get('city') || undefined;
@@ -10,10 +11,22 @@ export const load: PageServerLoad = async ({ url }) => {
 	const startDate = url.searchParams.get('startDate') || undefined;
 	const endDate = url.searchParams.get('endDate') || undefined;
 
-	const listings = await getListings({ city, minPrice, maxPrice, minCapacity, eventType, startDate, endDate });
+	try {
+		const listings = await getListings({ city, minPrice, maxPrice, minCapacity, eventType, startDate, endDate });
+		return {
+			listings,
+			filters: { city, minPrice, maxPrice, minCapacity, eventType, startDate, endDate }
+		};
+	} catch (err: any) {
+		logger.error(`Error loading listings for catalogue page: ${err?.message || err}`, {
+			context: 'LISTINGS_PAGE_LOAD',
+			error: err?.message || String(err),
+			stack: err?.stack
+		});
 
-	return {
-		listings,
-		filters: { city, minPrice, maxPrice, minCapacity, eventType, startDate, endDate }
-	};
+		return {
+			listings: [],
+			filters: { city, minPrice, maxPrice, minCapacity, eventType, startDate, endDate }
+		};
+	}
 };
