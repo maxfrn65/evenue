@@ -1,0 +1,14 @@
+.git
+.gitignore
+.svelte-kit
+build
+coverage
+node_modules
+npm-debug.log
+.env
+.env.*
+!.env.example
+README.md
+docs
+.agents
+scratch
