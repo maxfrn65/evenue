@@ -45,9 +45,10 @@
 			<div>
 				<h4 class="font-semibold mb-4 text-sm">Mentions & Conformité</h4>
 				<ul class="space-y-2.5 text-xs">
-					<li><a href="/mentions-legales">Mentions légales</a></li>
-					<li><a href="/confidentialite">Politique RGPD</a></li>
-					<li><a href="/securite">OWASP & Security by Design</a></li>
+					<li><a href="/mentions-legales" class="hover:text-purple-900 transition-colors">Mentions légales & CGU</a></li>
+					<li><a href="/confidentialite" class="hover:text-purple-900 transition-colors">Politique RGPD</a></li>
+					<li><a href="/securite" class="hover:text-purple-900 transition-colors">OWASP & Security by Design</a></li>
+					<li><a href="/contact" class="hover:text-purple-900 transition-colors font-semibold text-purple-800">Support & Contact</a></li>
 				</ul>
 			</div>
 		</div>
