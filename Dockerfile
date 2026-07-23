@@ -5,7 +5,7 @@ FROM node:22-alpine AS deps
 WORKDIR /app
 
 # Install openssl for Prisma binaries
-RUN apk add --no-co-cache openssl libc6-compat
+RUN apk add --no-cache openssl libc6-compat
 
 COPY package.json package-lock.json ./
 COPY prisma ./prisma/
@@ -31,7 +31,7 @@ RUN npm run build
 FROM node:22-alpine AS runner
 WORKDIR /app
 
-RUN apk add --no-co-cache openssl curl
+RUN apk add --no-cache openssl curl
 
 ENV NODE_ENV=production
 ENV PORT=5173

@@ -94,7 +94,7 @@ jobs:
           password: ${{ secrets.SCW_SECRET_KEY }}
 
       - name: Build and Push Image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: .
           push: true
