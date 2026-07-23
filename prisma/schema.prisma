@@ -111,6 +111,7 @@ model Booking {
   insurancePolicy      InsurancePolicy?
   payout               Payout?
   messages             Message[]
+  claims               Claim[]
 }
 
 model InsurancePolicy {
@@ -125,6 +126,41 @@ model InsurancePolicy {
   updatedAt       DateTime        @updatedAt
 
   booking         Booking         @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+}
+
+model Claim {
+  id                  String          @id @default(uuid())
+  bookingId           String
+  policyNumber        String
+  declarantId         String
+  declarantRole       String          @default("HOST")
+  description         String
+  estimatedDamage     Float
+  evidenceUrls        String[]        @default([])
+  status              InsuranceStatus @default(CLAIMED)
+  isDisputed          Boolean         @default(false)
+  disputeReason       String?
+  disputeEvidenceUrls String[]        @default([])
+  disputedAt          DateTime?
+  resolvedAt          DateTime?
+  resolutionNotes     String?
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+
+  booking             Booking         @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  history             ClaimHistory[]
+}
+
+model ClaimHistory {
+  id        String   @id @default(uuid())
+  claimId   String
+  authorId  String
+  oldStatus String
+  newStatus String
+  notes     String?
+  createdAt DateTime @default(now())
+
+  claim     Claim    @relation(fields: [claimId], references: [id], onDelete: Cascade)
 }
 
 model Payout {

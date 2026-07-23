@@ -6,29 +6,59 @@ export const load: PageServerLoad = async ({ url, parent }) => {
 	const { user } = await parent();
 
 	if (!user) {
-		throw redirect(303, '/auth/login');
+		const redirectTo = encodeURIComponent(url.pathname + url.search);
+		throw redirect(303, `/auth/login?redirectTo=${redirectTo}`);
 	}
 
 	const bookingId = url.searchParams.get('bookingId');
 
-	// Fetch confirmed or completed user bookings
-	const bookings = await prisma.booking.findMany({
+	// Fetch host listings bookings where user is the HOST
+	const hostBookings = await prisma.booking.findMany({
 		where: {
-			OR: [{ guestId: user.id }, { listing: { hostId: user.id } }],
+			listing: { hostId: user.id },
 			status: { in: ['CONFIRMED', 'COMPLETED', 'DISPUTED'] }
 		},
 		include: {
 			listing: {
-				select: { id: true, title: true, city: true }
+				select: { id: true, title: true, city: true, hostId: true }
+			},
+			guest: {
+				select: { id: true, firstName: true, lastName: true }
 			},
 			insurancePolicy: true
 		},
 		orderBy: { startDate: 'desc' }
 	});
 
+	// If a specific bookingId is provided, check its details and user's role on it
+	let selectedBooking: any = null;
+	let isHostOfSelected = false;
+	let hoursSinceEnd = 0;
+
+	if (bookingId) {
+		selectedBooking = await prisma.booking.findUnique({
+			where: { id: bookingId },
+			include: {
+				listing: { select: { id: true, title: true, city: true, hostId: true } },
+				guest: { select: { id: true, firstName: true, lastName: true } },
+				insurancePolicy: true
+			}
+		});
+
+		if (selectedBooking) {
+			isHostOfSelected = selectedBooking.listing.hostId === user.id;
+			const now = new Date();
+			const eventEnd = new Date(selectedBooking.endDate);
+			hoursSinceEnd = (now.getTime() - eventEnd.getTime()) / (1000 * 60 * 60);
+		}
+	}
+
 	return {
 		user,
-		bookings,
+		hostBookings,
+		selectedBooking,
+		isHostOfSelected,
+		hoursSinceEnd,
 		selectedBookingId: bookingId
 	};
 };

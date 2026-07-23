@@ -1,8 +1,8 @@
 # Suivi d'Avancement & Consommation J/H (Evenue — Bloc 2)
 
 **Enveloppe globale attribuée** : **71 J/H**  
-**Consommé à ce jour** : **24 J/H**
-**Reste à faire (RAF)** : **47 J/H**
+**Consommé à ce jour** : **26 J/H**  
+**Reste à faire (RAF)** : **45 J/H**  
 
 ---
 
@@ -16,10 +16,10 @@
 | Lot 4 | Auth & KYC (Stripe Connect) | 6 | 2 | 4 | 🚀 En cours |
 | Lot 5 | Frontend SvelteKit & UI | 12 | 12 | 0 | ✅ Terminé (MVP) |
 | Lot 6 | Réservation & Séquestre Financier | 10 | 4 | 6 | 🚀 En cours |
-| Lot 7 | API Assurance (Wakam & Circuit Breaker) | 8 | 2 | 6 | 🚀 En cours |
+| Lot 7 | API Assurance (Wakam & Circuit Breaker) | 8 | 4 | 4 | 🚀 En cours |
 | Lot 8 | Tests & Qualité (Coverage > 80%) | 7 | 0 | 7 | ⏳ En attente |
 | Lot 9 | Déploiement & CI/CD Scaleway | 3 | 0 | 3 | ⏳ En attente |
-| **TOTAL** | | **71 J/H** | **29 J/H** | **42 J/H** | **En progression** |
+| **TOTAL** | | **71 J/H** | **31 J/H** | **40 J/H** | **En progression** |
 
 ---
 
@@ -40,6 +40,7 @@
 | **CU-011** | Synchronisation iCal Bidirectionnelle Anti Double-Booking | Lot 5 / 6 | 2 J/H | 2 J/H | Thomas Moreau | `complete` | [#9](https://github.com/maxfrn65/evenue/pull/9) | `main` |
 | **CU-012** | Messagerie Instantanée & Notifications Temps Réel | Lot 5 | 2 J/H | 2 J/H | Julie Dupuis | `complete` | [#10](https://github.com/maxfrn65/evenue/pull/10) | `main` |
 | **CU-013** | Plages de Disponibilité Hôte, Filtre de Recherche & DatePicker Shadcn | Lot 5 / 6 | 2 J/H | 2 J/H | Thomas Moreau | `complete` | [#11](https://github.com/maxfrn65/evenue/pull/11) | `main` |
+| **CU-014** | Déclaration & Gestion Sinistres Wakam (Fenêtre 48h, Contestation & RBAC) | Lot 7 | 2 J/H | 2 J/H | Sarah Chen | `complete` | [#12](https://github.com/maxfrn65/evenue/pull/12) | `main` |
 
 ---
 
@@ -47,7 +48,6 @@
 
 | Ticket ID | Titre | Lot | Estimé | Assignataire | Statut ClickUp | ClickUp ID |
 |---|---|---|---|---|---|---|
-| **CU-014** | Déclaration & Gestion des Sinistres Wakam (Fenêtre 48h Hôte, Contestation Locataire & Gel Séquestre) | Lot 7 | 2 J/H | Sarah Chen | `to do` | `86caw6nht` |
 | **CU-015** | Automated Test Suite & Coverage Reports (>80%) | Lot 8 | 3 J/H | Marc Dupont | `to do` | `86caw1vqp` |
 | **CU-016** | Pipeline CI/CD GitHub Actions & Serverless Deploy Scaleway | Lot 9 | 3 J/H | Alexandre Rivière | `to do` | `86caw1vrz` |
 | **CU-017** | Monitoring, Logging Centralisé & Alertes Circuit Breaker | Lot 9 | 2 J/H | Alexandre Rivière | `to do` | `86caw1vtu` |

@@ -3,6 +3,7 @@
 	import { Button } from '$lib/components/ui/button/index.js';
 	import * as Card from '$lib/components/ui/card/index.js';
 	import Separator from '$lib/components/ui/separator/separator.svelte';
+	import * as Tooltip from "$lib/components/ui/tooltip/index.js";
 	import {
 		Calendar,
 		Home,
@@ -42,6 +43,20 @@
 
 	function formatCurrency(amount: number): string {
 		return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(amount);
+	}
+
+	function isClaimWindowActive(endDateStr: string | Date): { active: boolean; reason?: string } {
+		const now = new Date();
+		const end = new Date(endDateStr);
+		const diffHours = (now.getTime() - end.getTime()) / (1000 * 60 * 60);
+
+		if (diffHours < 0) {
+			return { active: false, reason: 'Réservation non terminée' };
+		}
+		if (diffHours > 7 * 24) {
+			return { active: false, reason: 'Délai 7j expiré' };
+		}
+		return { active: true };
 	}
 
 	function getStatusVariant(
@@ -150,7 +165,7 @@
 	<div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
 		<div>
 			<h1 class="flex items-center gap-2 text-3xl font-extrabold tracking-tight text-slate-950">
-				Mon Espace
+				Mon espace
 			</h1>
 			<p class="mt-1 text-sm text-slate-500">
 				Bienvenue, {user.firstName}. Gérez vos réservations et vos annonces.
@@ -162,9 +177,9 @@
 				Publier une annonce
 			</Button>
 		{:else}
-			<Button href="/become-host" variant="outline" class="gap-2 border-purple-300 text-purple-900 hover:bg-purple-50">
-				<PlusCircle class="h-4 w-4" />
-				Devenir Hôte & Publier
+			<Button href="/become-host" variant="outline">
+				<CirclePlus class="h-4 w-4" />
+				Devenir hôte et publier
 			</Button>
 		{/if}
 	</div>
@@ -241,7 +256,7 @@
 		<div class="flex items-center justify-between">
 			<h2 class="flex items-center gap-2 text-xl font-bold text-slate-950">
 				<Calendar class="h-5 w-5" />
-				Mes Réservations
+				Mes réservations
 			</h2>
 			<Badge variant="secondary">{dashboard.bookings.length} réservation{dashboard.bookings.length > 1 ? 's' : ''}</Badge>
 		</div>
@@ -302,11 +317,11 @@
 										Attestation PDF
 									</Button>
 
-									{#if booking.insurancePolicy.status !== 'CLAIMED'}
-										<Button href={`/claims/new?bookingId=${booking.id}`} variant="outline" size="sm" class="gap-1 text-amber-700 hover:text-amber-800">
-											<AlertTriangle class="h-3.5 w-3.5" />
-											Sinistre
-										</Button>
+									{#if booking.status === 'DISPUTED'}
+										<Badge variant="amber" class="gap-1">
+											<AlertTriangle class="h-3 w-3" />
+											Sinistre déclaré par l'hôte
+										</Badge>
 									{/if}
 								{/if}
 
@@ -330,15 +345,101 @@
 		{/if}
 	</section>
 
-	<!-- Host Listings Section (only for HOST role) -->
+	<!-- Host Received Bookings Section (Claims Host Portal) -->
 	{#if user.role === 'HOST'}
 		<Separator />
 
 		<section class="space-y-4">
 			<div class="flex items-center justify-between">
 				<h2 class="flex items-center gap-2 text-xl font-bold text-slate-950">
+					<ShieldCheck class="h-5 w-5" />
+					Réservations reçues
+				</h2>
+			</div>
+
+			{#if !dashboard.hostReceivedBookings || dashboard.hostReceivedBookings.length === 0}
+				<Card.Root class="border-slate-200 p-6 text-center">
+					<p class="text-xs text-slate-500">Aucune réservation reçue sur vos annonces pour le moment.</p>
+				</Card.Root>
+				{:else}
+				<div class="space-y-3">
+					{#each dashboard.hostReceivedBookings as rBooking (rBooking.id)}
+						<Card.Root>
+							<div class="flex flex-col gap-4 p-4 md:flex-row md:items-center md:justify-between">
+								<div class="flex-1 space-y-1">
+									<div class="flex items-center gap-2">
+										<a href={`/listings/${rBooking.listing.id}`} class="text-sm font-bold text-slate-950 hover:underline">
+											{rBooking.listing.title}
+										</a>
+										<Badge variant={getStatusVariant(rBooking.status)}>{getStatusLabel(rBooking.status)}</Badge>
+									</div>
+									<div class="flex flex-wrap items-center gap-3 text-xs text-slate-600">
+										<span class="font-semibold">
+											Invité : {rBooking.guest?.firstName} {rBooking.guest?.lastName}
+										</span>
+										<span class="flex items-center gap-1 text-slate-500">
+											<Calendar class="h-3 w-3" />
+											{formatDate(rBooking.startDate)} — {formatDate(rBooking.endDate)}
+										</span>
+										{#if rBooking.insurancePolicy}
+											<span class="flex items-center gap-1 text-emerald-700 font-medium">
+												<ShieldCheck class="h-3 w-3" />
+												Police Wakam {rBooking.insurancePolicy.policyNumber}
+											</span>
+										{/if}
+									</div>
+								</div>
+
+								<div class="flex items-center gap-3">
+									<span class="text-sm font-bold text-slate-950">
+										{formatCurrency(rBooking.totalPrice)}
+									</span>
+
+									{#if isClaimWindowActive(rBooking.endDate).active}
+										<Button
+											href={`/claims/new?bookingId=${rBooking.id}`}
+											variant="default"
+											size="sm"
+											class="gap-1.5 bg-purple-700 text-white hover:bg-purple-800 font-semibold"
+										>
+											<AlertTriangle class="h-3.5 w-3.5" />
+											Déclarer un sinistre
+										</Button>
+									{:else}
+										<Tooltip.Provider>
+											<Tooltip.Root>
+												<Tooltip.Trigger>
+													<Button
+														disabled={true}
+														variant="outline"
+														size="sm"
+														class="gap-1.5 text-slate-400 border-slate-200 cursor-not-allowed opacity-60"
+													>
+														<AlertTriangle class="h-3.5 w-3.5" />
+														Sinistre indisponible
+													</Button>
+												</Tooltip.Trigger>
+												<Tooltip.Content>
+													<p>{isClaimWindowActive(rBooking.endDate).reason}</p>
+												</Tooltip.Content>
+											</Tooltip.Root>
+										</Tooltip.Provider>
+									{/if}
+								</div>
+							</div>
+						</Card.Root>
+					{/each}
+				</div>
+			{/if}
+		</section>
+
+		<Separator />
+
+		<section class="space-y-4">
+			<div class="flex items-center justify-between">
+				<h2 class="flex items-center gap-2 text-xl font-bold text-slate-950">
 					<Building2 class="h-5 w-5" />
-					Mes Annonces
+					Mes annonces
 				</h2>
 				<Badge variant="secondary">{dashboard.listings.length} annonce{dashboard.listings.length > 1 ? 's' : ''}</Badge>
 			</div>
