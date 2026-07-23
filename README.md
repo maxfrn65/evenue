@@ -45,6 +45,7 @@ docker compose up -d
 ```
 
 > **Note** : Le fichier `.env` par défaut est déjà préconfiguré pour se connecter à cette instance Docker :
+>
 > ```env
 > DATABASE_URL="postgresql://evenue_user:evenue_password@localhost:5433/evenue_db?schema=public"
 > ```
@@ -84,11 +85,11 @@ Ouvrez votre navigateur sur **[http://localhost:5173](http://localhost:5173)** !
 
 Pour tester immédiatement l'ensemble des fonctionnalités de la plateforme (réservation, dashboard hôte, déclaration de sinistre, messagerie) :
 
-| Rôle | Adresse Email | Mot de Passe | Fonctionnalités accessibles |
-|---|---|---|---|
-| **Hôte Propriétaire** | `jean.dupont@evenue.fr` | `password123` | Création/Édition d'annonces, réservations reçues, déclaration de sinistres Wakam 7j, synchronisation iCal. |
-| **Hôte Propriétaire** | `sophie.martin@evenue.fr` | `password123` | Gestion de lofts & villas, acceptation de réservations. |
-| **Invité / Locataire** | `alexandre.riviere@evenue.fr` | `password123` | Recherche géolocalisée, réservation avec séquestre Stripe, contestation de sinistre 7j, messagerie. |
+| Rôle                   | Adresse Email                 | Mot de Passe  | Fonctionnalités accessibles                                                                                |
+| ---------------------- | ----------------------------- | ------------- | ---------------------------------------------------------------------------------------------------------- |
+| **Hôte Propriétaire**  | `jean.dupont@evenue.fr`       | `password123` | Création/Édition d'annonces, réservations reçues, déclaration de sinistres Wakam 7j, synchronisation iCal. |
+| **Hôte Propriétaire**  | `sophie.martin@evenue.fr`     | `password123` | Gestion de lofts & villas, acceptation de réservations.                                                    |
+| **Invité / Locataire** | `alexandre.riviere@evenue.fr` | `password123` | Recherche géolocalisée, réservation avec séquestre Stripe, contestation de sinistre 7j, messagerie.        |
 
 ---
 
@@ -130,10 +131,3 @@ evenue/
 ├── Dockerfile               # Multi-stage Dockerfile pour Scaleway Serverless Containers
 └── vite.config.ts           # Configuration Vite & Vitest
 ```
-
----
-
-## 📄 Licence & Conformité
-
-Projet opéré par **Evenue SAS** — Tous droits réservés.  
-Partenariat AssurTech **Wakam SA** & Séquestre Financier **Stripe Connect Express**.
