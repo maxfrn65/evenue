@@ -93,6 +93,21 @@ Ce registre consigne l'ensemble des décisions d'architecture, de sécurité et 
 
 ---
 
+## Arbitrage #008 — Dashboard Utilisateur, Métriques Hôte & Migration Générateur Prisma v7
+
+- **Date** : 23 Juillet 2026
+- **Ticket ClickUp** : [[CU-008]](https://app.clickup.com/t/86cavw5zt) | **GitHub PR** : [#6](https://github.com/maxfrn65/evenue/pull/6)
+- **Contexte** : Création de l'espace dashboard utilisateur (réservations invité, annonces hôte, annulation) et migration complète vers le générateur `prisma-client` v7.
+- **Options envisagées** :
+  1. Créer deux tableaux de bord séparés pour invités et hôtes.
+  2. Créer un espace unique `/dashboard` avec affichage conditionnel basé sur le rôle utilisateur (`GUEST` vs `HOST`).
+  3. Conserver le générateur legacy `prisma-client-js`.
+- **Décision & Justification** :
+  - **Espace unique `/dashboard` réactif** : Simplifie l'expérience utilisateur tout en affichant la section « Mes Annonces » et le bilan financier uniquement si le rôle est `HOST`.
+  - **Générateur `prisma-client` v7 (`output = "../generated/prisma"`)** : Résout les erreurs d'importation CJS/ESM et s'aligne strictement avec l'architecture Prisma 7 + Driver Adapters.
+
+---
+
 ## Suivi des Arbitrages
 
 | ID | Domaine | Description / Sujet | Statut |
@@ -104,3 +119,4 @@ Ce registre consigne l'ensemble des décisions d'architecture, de sécurité et 
 | ARB-005 | UI/UX / System | Composants Shadcn-Svelte, Carte Leaflet & Scope Wakam | ✅ Validé |
 | ARB-006 | UI/UX / DA | Thème clair minimaliste, Session Header & Fiche Dynamique | ✅ Validé |
 | ARB-007 | Backend / Finance | Moteur de réservation, Séquestre Stripe & Circuit Breaker Wakam | ✅ Validé |
+| ARB-008 | Frontend / Dashboard | Espace Dashboard complet, annulation & Générateur Prisma 7 | ✅ Validé |
