@@ -1,39 +1,21 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import InteractiveMap from '$lib/components/InteractiveMap.svelte';
+	import SearchEngine from '$lib/components/SearchEngine.svelte';
 	import { Button } from '$lib/components/ui/button/index.js';
-	import * as InputGroup from '$lib/components/ui/input-group/index.js';
-	import Label from '$lib/components/ui/label/label.svelte';
 	import Badge from '$lib/components/ui/badge/badge.svelte';
 	import * as Card from '$lib/components/ui/card/index.js';
-	import * as Select from '$lib/components/ui/select/index.js';
-	import { MapPin, Users, Funnel, SlidersHorizontal } from '@lucide/svelte';
+	import { MapPin, Users } from '@lucide/svelte';
 
 	let { data } = $props();
 
 	let city = $state(page.url.searchParams.get('city') || '');
+	let startDate = $state(page.url.searchParams.get('startDate') || '');
+	let endDate = $state(page.url.searchParams.get('endDate') || '');
 	let minCapacity = $state<number | undefined>(
 		page.url.searchParams.get('minCapacity')
 			? Number(page.url.searchParams.get('minCapacity'))
 			: undefined
-	);
-	let maxPrice = $state<number | undefined>(
-		page.url.searchParams.get('maxPrice')
-			? Number(page.url.searchParams.get('maxPrice'))
-			: undefined
-	);
-	const eventTypes = [
-		{ value: '', label: 'Tous événements' },
-		{ value: 'SOIRÉE', label: 'Soirée privée' },
-		{ value: 'ANNIVERSAIRE', label: 'Anniversaire' },
-		{ value: 'MARIAGE', label: 'Mariage / Réception' },
-		{ value: 'COCKTAIL', label: 'Cocktail professionnel' }
-	];
-
-	let eventType = $state('');
-
-	const triggerEventTypeLabel = $derived(
-		eventTypes.find((e) => e.value === eventType)?.label ?? 'Tous événements'
 	);
 
 	let listings = $state<any[]>(data.listings || []);
@@ -45,19 +27,18 @@
 		}
 	});
 
-	async function fetchListings() {
+	async function handleFilterSearch(filters: Record<string, string>) {
 		loading = true;
 		try {
-			const params = new URLSearchParams();
-			if (city) params.set('city', city);
-			if (minCapacity) params.set('minCapacity', minCapacity.toString());
-			if (maxPrice) params.set('maxPrice', maxPrice.toString());
-			if (eventType) params.set('eventType', eventType);
-
+			const params = new URLSearchParams(filters);
 			const res = await fetch(`/api/listings?${params.toString()}`);
 			const resData = await res.json();
 			if (resData.success && Array.isArray(resData.listings)) {
 				listings = resData.listings;
+			}
+			if (typeof window !== 'undefined') {
+				const newUrl = params.toString() ? `/listings?${params.toString()}` : '/listings';
+				window.history.replaceState({}, '', newUrl);
 			}
 		} catch (e) {
 			console.error(e);
@@ -67,17 +48,6 @@
 	}
 </script>
 
-<datalist id="cities-list">
-	<option value="Paris"></option>
-	<option value="Lyon"></option>
-	<option value="Marseille"></option>
-	<option value="Aix-en-Provence"></option>
-	<option value="Bordeaux"></option>
-	<option value="Toulouse"></option>
-	<option value="Lille"></option>
-	<option value="Nice"></option>
-</datalist>
-
 <div class="mx-auto max-w-7xl space-y-8 bg-white px-4 py-10 sm:px-6 lg:px-8">
 	<!-- Header -->
 	<div class="flex flex-col justify-between gap-4 pb-6 md:flex-row md:items-center">
@@ -86,98 +56,20 @@
 				Catalogue des lieux d'événements
 			</h1>
 			<p class="mt-1 text-sm text-slate-500">
-				Trouvez le lieu idéal adapté à la capacité et au type de votre soirée.
+				Trouvez le lieu idéal adapté à la capacité et aux dates de votre soirée.
 			</p>
 		</div>
 	</div>
 
-	<!-- Filter Widget Bar with Explicit Labels -->
-	<Card.Root class="flex items-center border-slate-200 p-4 md:p-6">
-		<form
-			onsubmit={(e) => {
-				e.preventDefault();
-				fetchListings();
-			}}
-			class="grid grid-cols-1 items-end gap-4 sm:grid-cols-2 lg:grid-cols-5"
-		>
-			<!-- City -->
-			<div class="flex w-full max-w-sm flex-col gap-1.5">
-				<Label for="filter-city">Ville</Label>
-				<InputGroup.Root class="relative">
-					<InputGroup.Addon>
-						<MapPin />
-					</InputGroup.Addon>
-					<InputGroup.Input
-						id="filter-city"
-						list="cities-list"
-						bind:value={city}
-						placeholder="Ex: Paris, Aix..."
-						class="pl-9"
-					/>
-				</InputGroup.Root>
-			</div>
-
-			<!-- Max Price -->
-			<div class="flex w-full max-w-sm flex-col gap-1.5">
-				<Label for="filter-max-price">Prix max / soirée (€)</Label>
-				<InputGroup.Root class="relative">
-					<InputGroup.Addon>
-						<SlidersHorizontal />
-					</InputGroup.Addon>
-					<InputGroup.Input
-						id="filter-max-price"
-						type="number"
-						min="0"
-						step="50"
-						bind:value={maxPrice}
-						placeholder="Ex: 1000 €"
-						class="pl-9"
-					/>
-				</InputGroup.Root>
-			</div>
-
-			<!-- Min Capacity -->
-			<div class="flex w-full max-w-sm flex-col gap-1.5">
-				<Label for="filter-capacity">Capacité min (invités)</Label>
-				<InputGroup.Root class="relative">
-					<InputGroup.Addon>
-						<Users />
-					</InputGroup.Addon>
-					<InputGroup.Input
-						id="filter-capacity"
-						type="number"
-						min="1"
-						step="1"
-						bind:value={minCapacity}
-						placeholder="Ex: 30 convives"
-					/>
-				</InputGroup.Root>
-			</div>
-
-			<!-- Event Type -->
-			<Select.Root type="single" name="eventType" bind:value={eventType}>
-				<Select.Trigger class="w-full">
-					{triggerEventTypeLabel}
-				</Select.Trigger>
-				<Select.Content>
-					<Select.Group>
-						<Select.Label>Événements</Select.Label>
-						{#each eventTypes as item (item.value)}
-							<Select.Item value={item.value} label={item.label}>
-								{item.label}
-							</Select.Item>
-						{/each}
-					</Select.Group>
-				</Select.Content>
-			</Select.Root>
-
-			<!-- Submit Button Component -->
-			<Button type="submit" variant="default">
-				<Funnel />
-				Filtrer
-			</Button>
-		</form>
-	</Card.Root>
+	<!-- Reusable SearchEngine Bar -->
+	<SearchEngine
+		variant="bar"
+		initialCity={city}
+		initialStartDate={startDate}
+		initialEndDate={endDate}
+		initialMinCapacity={minCapacity}
+		onsearch={handleFilterSearch}
+	/>
 
 	<!-- Main Layout: Grid + Map Section -->
 	<div class="grid grid-cols-1 gap-8 lg:grid-cols-3">
