@@ -1,20 +1,16 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import InteractiveMap from '$lib/components/InteractiveMap.svelte';
-	import Button from '$lib/components/ui/button/button.svelte';
-	import Input from '$lib/components/ui/input/input.svelte';
+	import { Button } from '$lib/components/ui/button/index.js';
+	import * as InputGroup from '$lib/components/ui/input-group/index.js';
 	import Label from '$lib/components/ui/label/label.svelte';
 	import Badge from '$lib/components/ui/badge/badge.svelte';
-	import Card from '$lib/components/ui/card/card.svelte';
-	import Select from '$lib/components/ui/select/select.svelte';
+	import * as Card from '$lib/components/ui/card/index.js';
+	import * as Select from '$lib/components/ui/select/index.js';
 	import {
-		Search,
 		MapPin,
 		Users,
-		ShieldCheck,
-		Filter,
-		Star,
-		Sparkles,
+		Funnel,
 		SlidersHorizontal
 	} from 'lucide-svelte';
 
@@ -29,7 +25,19 @@
 			? Number(page.url.searchParams.get('maxPrice'))
 			: undefined
 	);
-	let eventType = $state(page.url.searchParams.get('eventType') || '');
+	const eventTypes = [
+		{ value: '', label: 'Tous événements' },
+		{ value: 'SOIRÉE', label: 'Soirée privée' },
+		{ value: 'ANNIVERSAIRE', label: 'Anniversaire' },
+		{ value: 'MARIAGE', label: 'Mariage / Réception' },
+		{ value: 'COCKTAIL', label: 'Cocktail professionnel' }
+	];
+
+	let eventType = $state('');
+	
+	const triggerEventTypeLabel = $derived(
+		eventTypes.find((e) => e.value === eventType)?.label ?? 'Tous événements'
+	);
 
 	let listings = $state<any[]>([
 		{
@@ -129,31 +137,23 @@
 	<option value="Nice"></option>
 </datalist>
 
-<div class="mx-auto max-w-7xl space-y-10 px-4 py-10 sm:px-6 lg:px-8">
+<div class="mx-auto max-w-7xl space-y-8 bg-white px-4 py-10 sm:px-6 lg:px-8">
 	<!-- Header -->
 	<div
-		class="flex flex-col justify-between gap-4 border-b border-white/10 pb-6 md:flex-row md:items-center"
+		class="flex flex-col justify-between gap-4 pb-6 md:flex-row md:items-center"
 	>
 		<div>
-			<h1 class="flex items-center gap-2 text-3xl font-extrabold tracking-tight text-white">
+			<h1 class="flex items-center gap-2 text-3xl font-extrabold tracking-tight text-slate-950">
 				Catalogue des lieux d'événements
-				<Badge variant="purple" class="px-3 py-1">
-					{listings.length} lieux disponibles
-				</Badge>
 			</h1>
-			<p class="mt-1 text-sm text-slate-400">
+			<p class="mt-1 text-sm text-slate-500">
 				Trouvez le lieu idéal adapté à la capacité et au type de votre soirée.
 			</p>
 		</div>
-
-		<Button href="/listings/new" variant="gradient" size="sm" class="gap-2">
-			<Sparkles class="h-4 w-4 text-amber-400" />
-			Publier un lieu (Hôte)
-		</Button>
 	</div>
 
 	<!-- Filter Widget Bar with Explicit Labels -->
-	<Card class="p-4 md:p-6">
+	<Card.Root class="border-slate-200 p-4 md:p-6 flex items-center">
 		<form
 			onsubmit={(e) => {
 				e.preventDefault();
@@ -162,26 +162,30 @@
 			class="grid grid-cols-1 items-end gap-4 sm:grid-cols-2 lg:grid-cols-5"
 		>
 			<!-- City -->
-			<div>
+			<div class="flex w-full max-w-sm flex-col gap-1.5">
 				<Label for="filter-city">Ville</Label>
-				<div class="relative">
-					<MapPin class="absolute top-3 left-3 z-10 h-4 w-4 text-purple-400" />
-					<Input
+				<InputGroup.Root class="relative">
+					<InputGroup.Addon>
+						<MapPin />
+					</InputGroup.Addon>
+					<InputGroup.Input
 						id="filter-city"
 						list="cities-list"
 						bind:value={city}
 						placeholder="Ex: Paris, Aix..."
 						class="pl-9"
 					/>
-				</div>
+				</InputGroup.Root>
 			</div>
 
 			<!-- Max Price -->
-			<div>
+			<div class="flex w-full max-w-sm flex-col gap-1.5">
 				<Label for="filter-max-price">Prix max / soirée (€)</Label>
-				<div class="relative">
-					<SlidersHorizontal class="absolute top-3 left-3 z-10 h-4 w-4 text-purple-400" />
-					<Input
+				<InputGroup.Root class="relative">
+					<InputGroup.Addon>
+						<SlidersHorizontal />
+					</InputGroup.Addon>
+					<InputGroup.Input
 						id="filter-max-price"
 						type="number"
 						min="0"
@@ -190,45 +194,54 @@
 						placeholder="Ex: 1000 €"
 						class="pl-9"
 					/>
-				</div>
+				</InputGroup.Root>
 			</div>
 
 			<!-- Min Capacity -->
-			<div>
+			<div class="flex w-full max-w-sm flex-col gap-1.5">
 				<Label for="filter-capacity">Capacité min (invités)</Label>
-				<div class="relative">
-					<Users class="absolute top-3 left-3 z-10 h-4 w-4 text-purple-400" />
-					<Input
+				<InputGroup.Root class="relative">
+					<InputGroup.Addon>
+						<Users />
+					</InputGroup.Addon>
+					<InputGroup.Input
 						id="filter-capacity"
 						type="number"
 						min="1"
 						step="1"
 						bind:value={minCapacity}
 						placeholder="Ex: 30 convives"
-						class="pl-9"
 					/>
-				</div>
+				</InputGroup.Root>
 			</div>
 
 			<!-- Event Type -->
-			<div>
-				<Label for="filter-event-type">Type d'événement</Label>
-				<Select id="filter-event-type" bind:value={eventType}>
-					<option value="">Tous événements</option>
-					<option value="SOIRÉE">Soirée privée</option>
-					<option value="ANNIVERSAIRE">Anniversaire</option>
-					<option value="MARIAGE">Mariage / Réception</option>
-					<option value="COCKTAIL">Cocktail professionnel</option>
-				</Select>
-			</div>
+			<Select.Root type="single" name="eventType" bind:value={eventType}>
+				<Select.Trigger class="w-full">
+					{triggerEventTypeLabel}
+				</Select.Trigger>
+				<Select.Content>
+					<Select.Group>
+					<Select.Label>Événements</Select.Label>
+					{#each eventTypes as item (item.value)}
+						<Select.Item value={item.value} label={item.label}>
+						{item.label}
+						</Select.Item>
+					{/each}
+					</Select.Group>
+				</Select.Content>
+			</Select.Root>
 
 			<!-- Submit Button Component -->
-			<Button type="submit" variant="gradient" class="h-10 w-full gap-2">
-				<Filter class="h-4 w-4" />
+			<Button
+				type="submit"
+				variant="default"
+			>
+				<Funnel />
 				Filtrer
 			</Button>
 		</form>
-	</Card>
+	</Card.Root>
 
 	<!-- Main Layout: Grid + Map Section -->
 	<div class="grid grid-cols-1 gap-8 lg:grid-cols-3">
@@ -236,75 +249,44 @@
 		<div class="space-y-6 lg:col-span-2">
 			<div class="grid grid-cols-1 gap-6 md:grid-cols-2">
 				{#each listings as item (item.id)}
-					<Card class="group flex flex-col justify-between">
-						<div>
-							<div class="relative h-52 overflow-hidden">
-								<img
-									src={item.imageUrl ||
-										'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80'}
-									alt={item.title}
-									class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-								/>
-								<div class="absolute top-3 left-3">
-									<Badge variant="emerald" class="gap-1 backdrop-blur-md">
-										<ShieldCheck class="h-3.5 w-3.5" />
-										Assurance Incluses
-									</Badge>
-								</div>
-								<div class="absolute top-3 right-3">
-									<Badge variant="amber" class="gap-1 font-bold backdrop-blur-md">
-										<Star class="h-3 w-3 fill-amber-400" />
-										{item.rating || 4.9}
-									</Badge>
-								</div>
-							</div>
-
-							<div class="space-y-3 p-5">
-								<div class="flex items-center justify-between text-xs text-slate-400">
-									<span class="flex items-center gap-1"
-										><MapPin class="h-3.5 w-3.5 text-purple-400" /> {item.city}</span
-									>
-									<span class="flex items-center gap-1"
-										><Users class="h-3.5 w-3.5 text-indigo-400" /> Max {item.maxCapacity} convives</span
-									>
-								</div>
-
-								<h3
-									class="line-clamp-1 text-base font-bold text-white transition-colors group-hover:text-purple-300"
-								>
-									{item.title}
-								</h3>
-							</div>
-						</div>
-
-						<div class="flex items-center justify-between border-t border-white/5 p-5 pt-0">
-							<div>
-								<span class="text-xl font-extrabold text-white">{item.pricePerNight} €</span>
-								<span class="text-[10px] text-slate-400"> / soirée</span>
-							</div>
-
-							<Button href={`/listings/${item.id}`} variant="outline" size="sm">
-								Voir détails
-							</Button>
-						</div>
-					</Card>
+					<Card.Root class="relative mx-auto w-full max-w-sm pt-0 h-full flex flex-col">
+						<img
+							src={item.imageUrl ||
+								'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80'}
+							alt={item.title}
+							class="relative z-20 aspect-video w-full object-cover"
+						/>
+						<Card.Header class="flex-1">
+							<Card.Action>
+								<Badge variant="secondary">{item.rating ? `★ ${item.rating}` : 'Featured'}</Badge>
+							</Card.Action>
+							<Card.Title>{item.title}</Card.Title>
+							<Card.Description>
+								{item.city} • Max {item.maxCapacity} convives • {item.pricePerNight} € / soirée
+							</Card.Description>
+						</Card.Header>
+						<Card.Footer>
+							<Button href={`/listings/${item.id}`} class="w-full">Voir détails</Button>
+						</Card.Footer>
+					</Card.Root>
 				{/each}
 			</div>
 		</div>
 
 		<!-- Interactive Map Column (1 Col) -->
 		<div class="lg:col-span-1">
-			<Card class="sticky top-24 space-y-3 rounded-2xl border-purple-500/20 p-4">
+			<Card.Root class="sticky top-24 space-y-3 rounded-xl border-slate-200 p-4">
 				<div class="flex items-center justify-between">
-					<h3 class="flex items-center gap-2 text-sm font-bold text-white">
-						<MapPin class="h-4 w-4 text-purple-400" />
-						Carte
+					<h3 class="flex items-center gap-2 text-sm font-bold text-slate-950">
+						<MapPin class="h-4 w-4 text-slate-950" />
+						Carte Géolocalisée Interactive
 					</h3>
+					<Badge variant="secondary" class="text-[10px]">OpenStreetMap</Badge>
 				</div>
 
 				<!-- Real Interactive Leaflet Map -->
 				<InteractiveMap {listings} />
-			</Card>
+			</Card.Root>
 		</div>
 	</div>
 </div>

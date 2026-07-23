@@ -3,11 +3,11 @@
 	import Footer from '$lib/components/Footer.svelte';
 	import './layout.css';
 
-	let { children } = $props();
+	let { data, children } = $props();
 </script>
 
-<div class="min-h-screen flex flex-col bg-slate-950 text-slate-100 selection:bg-purple-500 selection:text-white">
-	<Header />
+<div class="min-h-screen flex flex-col bg-slate-50 text-slate-900 selection:bg-slate-900 selection:text-white">
+	<Header user={data.user} />
 	<main class="flex-grow">
 		{@render children()}
 	</main>
