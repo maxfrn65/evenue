@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Badge from '$lib/components/ui/badge/badge.svelte';
-	import { ShieldCheck, Lock, PartyPopper } from 'lucide-svelte';
+	import { ShieldCheck, Lock, PartyPopper } from '@lucide/svelte';
 </script>
 
 <footer class="bg-slate-950 border-t border-slate-800 pt-16 pb-12 text-slate-400 text-sm">

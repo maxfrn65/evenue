@@ -5,7 +5,7 @@
 	import * as Card from '$lib/components/ui/card/index.js';
 	import * as InputGroup from '$lib/components/ui/input-group/index.js';
 	import Label from '$lib/components/ui/label/label.svelte';
-	import { Search, MapPin, Calendar, Users, ShieldCheck, Sparkles, ArrowRight, Star } from 'lucide-svelte';
+	import { Search, MapPin, Calendar, Users, ShieldCheck, Sparkles, ArrowRight, Star } from '@lucide/svelte';
 
 	let city = $state('');
 	let eventDate = $state('');

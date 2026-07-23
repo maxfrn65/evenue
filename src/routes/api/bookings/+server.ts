@@ -33,7 +33,7 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 
 		const result = await createBooking({
 			listingId,
-			guestId,
+			guestId: guestId!,
 			startDate,
 			endDate,
 			guestCount: guestCount ? Number(guestCount) : 1

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Button from '$lib/components/ui/button/button.svelte';
 	import Badge from '$lib/components/ui/badge/badge.svelte';
-	import { PartyPopper, ShieldCheck, User, Search, PlusCircle, LogOut, Calendar, Home, ChevronDown } from 'lucide-svelte';
+	import { PartyPopper, ShieldCheck, User, Search, PlusCircle, LogOut, Calendar, Home, ChevronDown } from '@lucide/svelte';
 
 	interface UserData {
 		id: string;
@@ -87,7 +87,12 @@
 								</a>
 							{/if}
 
-							<a href="/bookings" class="flex items-center gap-2 px-4 py-2.5 text-slate-700 hover:bg-slate-50 font-medium">
+							<a href="/dashboard" class="flex items-center gap-2 px-4 py-2.5 text-slate-700 hover:bg-slate-50 font-medium">
+								<Home class="w-4 h-4 text-slate-500" />
+								Mon Espace
+							</a>
+
+							<a href="/dashboard" class="flex items-center gap-2 px-4 py-2.5 text-slate-700 hover:bg-slate-50 font-medium">
 								<Calendar class="w-4 h-4 text-slate-500" />
 								Mes Réservations
 							</a>

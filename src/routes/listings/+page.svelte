@@ -12,7 +12,7 @@
 		Users,
 		Funnel,
 		SlidersHorizontal
-	} from 'lucide-svelte';
+	} from '@lucide/svelte';
 
 	let city = $state(page.url.searchParams.get('city') || '');
 	let minCapacity = $state<number | undefined>(

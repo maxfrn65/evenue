@@ -1,6 +1,6 @@
 import { scryptSync, randomBytes, timingSafeEqual } from 'node:crypto';
 import { prisma } from './db';
-import type { UserRole, KycStatus } from '@prisma/client';
+import type { UserRole, KycStatus } from '../../../generated/prisma/client';
 
 /**
  * Hash password using Node.js scrypt with salt.

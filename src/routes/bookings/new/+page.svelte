@@ -6,7 +6,7 @@
 	import Label from '$lib/components/ui/label/label.svelte';
 	import Badge from '$lib/components/ui/badge/badge.svelte';
 	import Card from '$lib/components/ui/card/card.svelte';
-	import { ShieldCheck, Lock, CreditCard, Calendar, Users, CheckCircle2, ArrowRight } from 'lucide-svelte';
+	import { ShieldCheck, Lock, CreditCard, Calendar, Users, CheckCircle2, ArrowRight } from '@lucide/svelte';
 
 	let listingId = $state(page.url.searchParams.get('listingId') || 'villa-aix-01');
 	let startDate = $state('');
