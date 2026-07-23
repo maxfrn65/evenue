@@ -21,6 +21,7 @@ export interface CreateListingInput {
 	securityDeposit?: number;
 	maxCapacity: number;
 	eventTypeAllowed: string[];
+	imageUrl?: string;
 	icalSyncUrl?: string;
 }
 
@@ -107,6 +108,7 @@ export async function createListing(input: CreateListingInput) {
 			securityDeposit: input.securityDeposit ?? 500.0,
 			maxCapacity: input.maxCapacity,
 			eventTypeAllowed: input.eventTypeAllowed,
+			imageUrl: input.imageUrl?.trim(),
 			icalSyncUrl: input.icalSyncUrl?.trim()
 		}
 	});

@@ -16,7 +16,9 @@
 		LayoutDashboard,
 		CalendarDays,
 		Wallet,
-		Building2
+		Building2,
+		FileText,
+		AlertTriangle
 	} from '@lucide/svelte';
 
 	let { data } = $props();
@@ -255,6 +257,20 @@
 									<Eye class="h-3.5 w-3.5" />
 									Voir
 								</Button>
+
+								{#if booking.insurancePolicy}
+									<Button href={`/bookings/${booking.id}/certificate`} target="_blank" variant="outline" size="sm" class="gap-1">
+										<FileText class="h-3.5 w-3.5 text-emerald-600" />
+										Attestation PDF
+									</Button>
+
+									{#if booking.insurancePolicy.status !== 'CLAIMED'}
+										<Button href={`/claims/new?bookingId=${booking.id}`} variant="outline" size="sm" class="gap-1 text-amber-700 hover:text-amber-800">
+											<AlertTriangle class="h-3.5 w-3.5" />
+											Sinistre
+										</Button>
+									{/if}
+								{/if}
 
 								{#if booking.status === 'CONFIRMED' || booking.status === 'PENDING_PAYMENT'}
 									<Button

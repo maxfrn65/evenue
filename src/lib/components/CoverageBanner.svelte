@@ -19,7 +19,7 @@
 	];
 </script>
 
-<Card class="rounded-xl border-slate-200 p-6 shadow-sm md:p-8">
+<Card class="rounded-xl border-slate-200 p-6 md:p-8">
 	<!-- Header -->
 	<div class="mb-6 flex items-center justify-between gap-4 border-b border-slate-100 pb-4">
 		<div class="flex items-center gap-3">
@@ -35,12 +35,6 @@
 					Chaque réservation inclut une police d'assurance automatique émise par Wakam AssurTech.
 				</p>
 			</div>
-		</div>
-		<div class="hidden items-center gap-2 sm:flex">
-			<Badge variant="purple" class="gap-1 px-3 py-1 text-xs">
-				<Sparkles class="h-3.5 w-3.5 text-amber-400" />
-				<span>0 € de surcoût masqué</span>
-			</Badge>
 		</div>
 	</div>
 

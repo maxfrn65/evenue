@@ -28,7 +28,7 @@
 			const data = await response.json();
 
 			if (!response.ok) {
-				throw new Error(data.error || 'Erreur lors de l\'inscription.');
+				throw new Error(data.error || "Erreur lors de l'inscription.");
 			}
 
 			window.location.href = role === 'HOST' ? '/become-host' : '/listings';
@@ -40,25 +40,31 @@
 	}
 </script>
 
-<div class="max-w-md mx-auto my-12 px-4">
-	<Card class="p-8 space-y-6 border-slate-200 shadow-md">
-		<div class="text-center space-y-2">
-			<div class="w-12 h-12 rounded-xl bg-slate-950 text-white mx-auto flex items-center justify-center shadow-sm">
-				<ShieldCheck class="w-6 h-6 text-emerald-400" />
+<div class="mx-auto my-12 max-w-md px-4">
+	<Card class="space-y-6 border-slate-200 p-8 shadow-md">
+		<div class="space-y-2 text-center">
+			<div
+				class="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-slate-950 text-white shadow-sm"
+			>
+				<ShieldCheck class="h-6 w-6 text-emerald-400" />
 			</div>
 			<h1 class="text-2xl font-bold text-slate-950">Créer un compte Evenue</h1>
-			<p class="text-xs text-slate-500">Garantie d'assurance Wakam incluse dès la première réservation</p>
+			<p class="text-xs text-slate-500">
+				Garantie d'assurance Wakam incluse dès la première réservation
+			</p>
 		</div>
 
 		{#if errorMessage}
-			<div class="p-3 bg-rose-50 border border-rose-200 rounded-lg text-rose-700 text-xs text-center font-medium">
+			<div
+				class="rounded-lg border border-rose-200 bg-rose-50 p-3 text-center text-xs font-medium text-rose-700"
+			>
 				{errorMessage}
 			</div>
 		{/if}
 
 		<form onsubmit={handleSubmit} class="space-y-4">
 			<!-- Role Toggle -->
-			<div>
+			<div class="flex flex-col gap-1.5">
 				<Label>Type de compte</Label>
 				<div class="grid grid-cols-2 gap-3">
 					<Button
@@ -82,7 +88,7 @@
 
 			<!-- First & Last Name -->
 			<div class="grid grid-cols-2 gap-3">
-				<div>
+				<div class="flex flex-col gap-1.5">
 					<Label for="register-firstname">Prénom</Label>
 					<InputGroup.Root>
 						<InputGroup.Input
@@ -94,7 +100,7 @@
 						/>
 					</InputGroup.Root>
 				</div>
-				<div>
+				<div class="flex flex-col gap-1.5">
 					<Label for="register-lastname">Nom</Label>
 					<InputGroup.Root>
 						<InputGroup.Input
@@ -109,12 +115,12 @@
 			</div>
 
 			<!-- Email -->
-			<div>
+			<div class="flex flex-col gap-1.5">
 				<Label for="register-email">Adresse Email</Label>
 				<InputGroup.Root>
-					<InputGroup.Icon>
-						<Mail class="w-4 h-4 text-slate-400" />
-					</InputGroup.Icon>
+					<InputGroup.Addon>
+						<Mail />
+					</InputGroup.Addon>
 					<InputGroup.Input
 						id="register-email"
 						type="email"
@@ -126,12 +132,12 @@
 			</div>
 
 			<!-- Password -->
-			<div>
+			<div class="flex flex-col gap-1.5">
 				<Label for="register-password">Mot de passe (8 car. min)</Label>
 				<InputGroup.Root>
-					<InputGroup.Icon>
-						<Lock class="w-4 h-4 text-slate-400" />
-					</InputGroup.Icon>
+					<InputGroup.Addon>
+						<Lock />
+					</InputGroup.Addon>
 					<InputGroup.Input
 						id="register-password"
 						type="password"
@@ -147,16 +153,16 @@
 				type="submit"
 				variant="default"
 				disabled={loading}
-				class="w-full py-3 text-sm mt-4 gap-2 font-semibold bg-slate-950 hover:bg-slate-800 text-white"
+				class="mt-4 w-full gap-2 bg-slate-950 py-3 text-sm font-semibold text-white hover:bg-slate-800"
 			>
-				{loading ? 'Création du compte...' : 'S\'inscrire'}
-				<ArrowRight class="w-4 h-4" />
+				{loading ? 'Création du compte...' : "S'inscrire"}
+				<ArrowRight class="h-4 w-4" />
 			</Button>
 		</form>
 
-		<div class="pt-4 border-t border-slate-100 text-center text-xs text-slate-500">
+		<div class="border-t border-slate-100 pt-4 text-center text-xs text-slate-500">
 			Déjà un compte ?
-			<a href="/auth/login" class="text-slate-950 font-bold hover:underline ml-1">Se connecter</a>
+			<a href="/auth/login" class="ml-1 font-bold text-slate-950 hover:underline">Se connecter</a>
 		</div>
 	</Card>
 </div>

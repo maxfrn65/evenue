@@ -7,12 +7,9 @@
 	import Badge from '$lib/components/ui/badge/badge.svelte';
 	import * as Card from '$lib/components/ui/card/index.js';
 	import * as Select from '$lib/components/ui/select/index.js';
-	import {
-		MapPin,
-		Users,
-		Funnel,
-		SlidersHorizontal
-	} from '@lucide/svelte';
+	import { MapPin, Users, Funnel, SlidersHorizontal } from '@lucide/svelte';
+
+	let { data } = $props();
 
 	let city = $state(page.url.searchParams.get('city') || '');
 	let minCapacity = $state<number | undefined>(
@@ -34,71 +31,19 @@
 	];
 
 	let eventType = $state('');
-	
+
 	const triggerEventTypeLabel = $derived(
 		eventTypes.find((e) => e.value === eventType)?.label ?? 'Tous événements'
 	);
 
-	let listings = $state<any[]>([
-		{
-			id: 'villa-aix-01',
-			title: "Villa d'Exception avec Piscine & Sound System",
-			city: 'Aix-en-Provence',
-			pricePerNight: 850,
-			maxCapacity: 40,
-			eventTypeAllowed: ['SOIRÉE', 'ANNIVERSAIRE'],
-			latitude: 43.5297,
-			longitude: 5.4474,
-			rating: 4.95,
-			host: { firstName: 'Jean', kycStatus: 'VERIFIED' },
-			imageUrl:
-				'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80'
-		},
-		{
-			id: 'loft-paris-02',
-			title: 'Loft Industriel & Rooftop Privatif',
-			city: 'Paris',
-			pricePerNight: 1200,
-			maxCapacity: 60,
-			eventTypeAllowed: ['COCKTAIL', 'SOIRÉE'],
-			latitude: 48.8566,
-			longitude: 2.3522,
-			rating: 4.88,
-			host: { firstName: 'Sophie', kycStatus: 'VERIFIED' },
-			imageUrl:
-				'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80'
-		},
-		{
-			id: 'domaine-lyon-03',
-			title: 'Domaine de la Roseraie & Grange Aménagée',
-			city: 'Lyon',
-			pricePerNight: 950,
-			maxCapacity: 80,
-			eventTypeAllowed: ['MARIAGE', 'ANNIVERSAIRE'],
-			latitude: 45.764,
-			longitude: 4.8357,
-			rating: 4.98,
-			host: { firstName: 'Marc', kycStatus: 'VERIFIED' },
-			imageUrl:
-				'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=800&q=80'
-		},
-		{
-			id: 'chateau-bordeaux-04',
-			title: 'Château Viticole & Orangerie Événementielle',
-			city: 'Bordeaux',
-			pricePerNight: 1500,
-			maxCapacity: 120,
-			eventTypeAllowed: ['MARIAGE', 'SOIRÉE'],
-			latitude: 44.8378,
-			longitude: -0.5792,
-			rating: 4.99,
-			host: { firstName: 'Claire', kycStatus: 'VERIFIED' },
-			imageUrl:
-				'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=800&q=80'
-		}
-	]);
-
+	let listings = $state<any[]>(data.listings || []);
 	let loading = $state(false);
+
+	$effect(() => {
+		if (data.listings) {
+			listings = data.listings;
+		}
+	});
 
 	async function fetchListings() {
 		loading = true;
@@ -110,9 +55,9 @@
 			if (eventType) params.set('eventType', eventType);
 
 			const res = await fetch(`/api/listings?${params.toString()}`);
-			const data = await res.json();
-			if (data.success && data.listings.length > 0) {
-				listings = data.listings;
+			const resData = await res.json();
+			if (resData.success && Array.isArray(resData.listings)) {
+				listings = resData.listings;
 			}
 		} catch (e) {
 			console.error(e);
@@ -120,10 +65,6 @@
 			loading = false;
 		}
 	}
-
-	$effect(() => {
-		fetchListings();
-	});
 </script>
 
 <datalist id="cities-list">
@@ -139,9 +80,7 @@
 
 <div class="mx-auto max-w-7xl space-y-8 bg-white px-4 py-10 sm:px-6 lg:px-8">
 	<!-- Header -->
-	<div
-		class="flex flex-col justify-between gap-4 pb-6 md:flex-row md:items-center"
-	>
+	<div class="flex flex-col justify-between gap-4 pb-6 md:flex-row md:items-center">
 		<div>
 			<h1 class="flex items-center gap-2 text-3xl font-extrabold tracking-tight text-slate-950">
 				Catalogue des lieux d'événements
@@ -153,7 +92,7 @@
 	</div>
 
 	<!-- Filter Widget Bar with Explicit Labels -->
-	<Card.Root class="border-slate-200 p-4 md:p-6 flex items-center">
+	<Card.Root class="flex items-center border-slate-200 p-4 md:p-6">
 		<form
 			onsubmit={(e) => {
 				e.preventDefault();
@@ -222,21 +161,18 @@
 				</Select.Trigger>
 				<Select.Content>
 					<Select.Group>
-					<Select.Label>Événements</Select.Label>
-					{#each eventTypes as item (item.value)}
-						<Select.Item value={item.value} label={item.label}>
-						{item.label}
-						</Select.Item>
-					{/each}
+						<Select.Label>Événements</Select.Label>
+						{#each eventTypes as item (item.value)}
+							<Select.Item value={item.value} label={item.label}>
+								{item.label}
+							</Select.Item>
+						{/each}
 					</Select.Group>
 				</Select.Content>
 			</Select.Root>
 
 			<!-- Submit Button Component -->
-			<Button
-				type="submit"
-				variant="default"
-			>
+			<Button type="submit" variant="default">
 				<Funnel />
 				Filtrer
 			</Button>
@@ -249,11 +185,11 @@
 		<div class="space-y-6 lg:col-span-2">
 			<div class="grid grid-cols-1 gap-6 md:grid-cols-2">
 				{#each listings as item (item.id)}
-					<Card.Root class="relative mx-auto w-full max-w-sm pt-0 h-full flex flex-col">
+					<Card.Root class="relative mx-auto flex h-full w-full max-w-sm flex-col pt-0">
 						<img
-							src={item.imageUrl ||
-								'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80'}
+							src={item.imageUrl}
 							alt={item.title}
+							referrerpolicy="no-referrer"
 							class="relative z-20 aspect-video w-full object-cover"
 						/>
 						<Card.Header class="flex-1">
