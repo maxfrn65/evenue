@@ -71,20 +71,61 @@ latence, état du Circuit Breaker, échecs d'authentification, métriques proces
 endpoint est prêt à être scrapé — mais **Scaleway Cockpit ne scrape pas les applications** :
 il ingère les métriques en push (remote write / OTLP) avec un token.
 
-Trois options, par ordre de coût croissant :
+### Décision actée : aucun collecteur
 
-1. **Ne rien collecter** _(recommandé en l'état)_ — les mêmes KRI sont couverts par les
-   règles Loki, qui fonctionnent déjà et n'ajoutent aucune infrastructure. `/metrics` reste
-   consultable à la demande pour le diagnostic. C'est le choix retenu par défaut.
-2. **Déployer un collecteur Grafana Alloy** dans un second conteneur serverless, configuré
-   pour scraper `https://<url-app>/metrics` (avec `METRICS_TOKEN`) et faire un _remote write_
-   vers l'endpoint Cockpit `https://<data-source-id>.metrics.cockpit.fr-par.scw.cloud/api/v1/push`.
-   Coût réel : le collecteur doit tourner en continu (minimum 1 instance), il ne peut donc
-   pas descendre à zéro comme l'application.
-3. **Pousser depuis l'application** en OTLP vers Cockpit. Peu adapté ici : sur un conteneur
-   qui scale à zéro, une instance de courte durée peut mourir avant son premier envoi
-   périodique, et les points de mesure sont perdus.
+**Aucun collecteur n'est déployé, et c'est un choix assumé.** Les mêmes KRI sont couverts
+par les règles Loki, qui fonctionnent déjà et n'ajoutent aucune infrastructure ;
+`/metrics` reste exposé et exploité à la demande pour le diagnostic.
 
-Tant que l'option 1 est en vigueur, `alert-rules-prometheus.yaml` documente les règles
-cibles mais reste sans données : ne pas l'importer, pour éviter des règles en échec
-permanent dans l'interface d'alerting.
+Les deux options écartées, pour mémoire :
+
+- **Collecteur Grafana Alloy** dans un second conteneur serverless, scrapant
+  `https://<url-app>/metrics` puis faisant un _remote write_ vers
+  `https://<data-source-id>.metrics.cockpit.fr-par.scw.cloud/api/v1/push`. Écartée pour son
+  coût : le collecteur doit tourner en continu (minimum 1 instance) et ne peut donc pas
+  descendre à zéro comme l'application.
+- **Push OTLP depuis l'application**. Écartée pour son inadéquation au scale-to-zero : une
+  instance de courte durée peut mourir avant son premier envoi périodique, et les points de
+  mesure sont alors perdus.
+
+En conséquence, `alert-rules-prometheus.yaml` documente les règles cibles mais **ne doit pas
+être importé** : sans données, ses règles resteraient en échec permanent dans l'interface
+d'alerting. Le fichier est conservé pour le jour où un collecteur serait déployé.
+
+---
+
+## Rétention des logs (RGPD)
+
+Chaque ligne `HTTP_REQUEST` porte un `userId` et chaque ligne `AUTH_FAILURE` une adresse IP.
+Ce sont des données personnelles — pseudonymes pour le premier, directement identifiantes
+pour la seconde — et leur conservation doit être **bornée et justifiée**.
+
+**Rétention retenue : 30 jours** sur la data source Loki. Ce choix couvre le besoin
+d'exploitation (post-mortem d'incident, calcul mensuel du SLO 99,9 %) sans conserver
+d'historique au-delà de son utilité.
+
+À appliquer dans la console Scaleway : **Cockpit → Data sources → la source Loki du projet
+→ période de rétention**. Si la valeur exacte n'est pas proposée, retenir l'option
+immédiatement inférieure plutôt que supérieure : la minimisation prime.
+
+---
+
+## Accès aux endpoints de métriques
+
+`/metrics` et `/api/metrics` sont **fermés au public**. Le garde
+(`src/lib/server/metrics-auth.ts`) fonctionne en _fail closed_ :
+
+| Contexte             | `METRICS_TOKEN` | Comportement                                                                                        |
+| -------------------- | --------------- | --------------------------------------------------------------------------------------------------- |
+| Production           | défini          | `Authorization: Bearer <token>` exigé, sinon **401**                                                |
+| Production           | absent          | Endpoints **désactivés** (404), et la anomalie de configuration est journalisée une fois en `ERROR` |
+| Développement / test | indifférent     | Endpoints ouverts                                                                                   |
+
+Autrement dit, oublier la variable en production **ferme** l'accès au lieu de le rouvrir.
+
+Générer un jeton et le poser sur le conteneur (Scaleway → Containers → Variables
+d'environnement, en variable **secrète**) :
+
+```bash
+openssl rand -hex 32
+```

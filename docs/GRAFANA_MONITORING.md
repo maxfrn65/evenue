@@ -300,10 +300,10 @@ Le label de route est l'identifiant de route SvelteKit (`/listings/[id]`), jamai
 brut : un label par URL laisserait n'importe quel visiteur créer des séries à volonté.
 
 **Collecte.** Cockpit ne _scrape_ pas les applications ; il ingère les métriques en push.
-Cet endpoint est donc prêt à être collecté, mais rien ne le collecte par défaut. Les trois
-options et l'option recommandée sont détaillées dans
-[`observability/README.md`](observability/README.md) — en l'état, les mêmes KRI sont
-couverts par les règles Loki, qui fonctionnent sans infrastructure supplémentaire.
+**Décision actée : aucun collecteur n'est déployé.** L'endpoint est exposé et exploité à la
+demande pour le diagnostic ; la supervision continue repose sur les métriques natives
+d'infrastructure et sur les requêtes LogQL du § 2. Les options écartées et leur motif sont
+consignés dans [`observability/README.md`](observability/README.md).
 
 **Portée.** Le conteneur scale à zéro : les compteurs sont par instance et repartent de
 zéro à chaque démarrage à froid. Les règles s'expriment donc en `rate()` sur fenêtre,
@@ -326,12 +326,14 @@ vérification post-déploiement. Comme les valeurs sont propres à l'instance qu
 ne remplace pas la supervision : pour l'état du Circuit Breaker, se fier aux **logs de
 transition** (§ 2.3) ou à la gauge Prometheus.
 
-**Protection.** Si la variable d'environnement `METRICS_TOKEN` est définie sur le
-conteneur, `/metrics` et `/api/metrics` exigent `Authorization: Bearer <token>` et
-répondent 401 sinon. Non définie, ils restent ouverts (développement local et démonstration
-inchangés). Les comptages en base de `/api/metrics` sont mis en cache 15 s, pour qu'un
-appel répété ne déclenche pas deux `COUNT` à chaque fois ni ne maintienne une instance
-éveillée.
+**Protection.** Les deux endpoints sont **fermés au public**. En production, ils exigent
+`Authorization: Bearer <METRICS_TOKEN>` ; si la variable n'est pas définie, ils sont
+**désactivés** (404) plutôt que laissés ouverts — un oubli de configuration ferme l'accès au
+lieu de le rouvrir. Hors production, ils restent ouverts pour le développement local. Voir
+[`observability/README.md`](observability/README.md).
+
+Les comptages en base de `/api/metrics` sont mis en cache 15 s, pour qu'un appel répété ne
+déclenche pas deux `COUNT` à chaque fois ni ne maintienne une instance éveillée.
 
 ---
 
@@ -349,13 +351,14 @@ appel répété ne déclenche pas deux `COUNT` à chaque fois ni ne maintienne u
 | 5   | Dashboards et règles d'alerte non versionnés                                                                                                  | Dashboard et règles Loki/Prometheus versionnés dans [`observability/`](observability/), importables sans édition préalable                         |
 | —   | Aucune métrique applicative exposée                                                                                                           | Endpoint `/metrics` au format Prometheus : compteurs, histogramme de latence, gauges du Circuit Breaker, échecs d'authentification (§ 4)           |
 | —   | Aucune sonde de disponibilité                                                                                                                 | Sonde externe toutes les 15 min (`.github/workflows/uptime-probe.yml`), qui ouvre une fiche d'anomalie en cas d'échec                              |
+| 4   | Rétention des logs contenant `userId` et IP                                                                                                   | Rétention de 30 jours actée sur la data source Loki (RGPD) — à appliquer dans la console                                                           |
+| 7   | Collecte des métriques applicatives                                                                                                           | Décision actée : aucun collecteur. Métriques natives + métriques dérivées des logs                                                                 |
+| —   | Endpoints de métriques ouverts                                                                                                                | Fermés au public : jeton exigé en production, endpoints désactivés si le jeton manque                                                              |
 | —   | Aucune trace des échecs d'authentification                                                                                                    | Lignes `AUTH_FAILURE` avec l'IP source, alimentant le KRI « > 50 tentatives/min sur une même IP »                                                  |
 
 ### Reste à faire
 
-| #   | Sujet                                      | Action                                                                                                                                                                                            |
-| --- | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 4   | `userId` journalisé sur 100 % des requêtes | Donnée personnelle (pseudonyme) dans les logs : fixer et documenter la rétention de la data source Loki dans Cockpit (RGPD)                                                                       |
-| 7   | Collecte des métriques applicatives        | Décision à acter : rester sur « métriques infra natives + métriques dérivées des logs » (recommandé), ou déployer un collecteur Alloy — voir [`observability/README.md`](observability/README.md) |
-| 8   | Health check du conteneur                  | Le `HEALTHCHECK` du `Dockerfile` n'est lu que par Docker en local ; déclarer `/api/health` comme _health check_ dans la configuration du conteneur Scaleway                                       |
-| 9   | Aucun contact point d'alerte               | Créer les contact points SEV1 / SEV2 (`Alerting → Contact points`), sans lesquels les règles se déclenchent sans notifier personne                                                                |
+| #   | Sujet                        | Action                                                                                                                                                      |
+| --- | ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 8   | Health check du conteneur    | Le `HEALTHCHECK` du `Dockerfile` n'est lu que par Docker en local ; déclarer `/api/health` comme _health check_ dans la configuration du conteneur Scaleway |
+| 9   | Aucun contact point d'alerte | Créer les contact points SEV1 / SEV2 (`Alerting → Contact points`), sans lesquels les règles se déclenchent sans notifier personne                          |

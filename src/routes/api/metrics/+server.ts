@@ -2,7 +2,7 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { wakamCircuitBreaker } from '$lib/server/circuit-breaker';
 import { prisma } from '$lib/server/db';
-import { env } from '$env/dynamic/private';
+import { denyMetricsAccess } from '$lib/server/metrics-auth';
 
 /**
  * Health/metrics probe.
@@ -52,12 +52,8 @@ async function readDatabaseSnapshot(now: number): Promise<DatabaseSnapshot> {
 }
 
 export const GET: RequestHandler = async ({ request }) => {
-	// Optional bearer protection (OWASP A01). When METRICS_TOKEN is unset the endpoint
-	// stays open, so local development and the existing demo keep working unchanged.
-	const expectedToken = env.METRICS_TOKEN;
-	if (expectedToken && request.headers.get('authorization') !== `Bearer ${expectedToken}`) {
-		return json({ error: 'Unauthorized' }, { status: 401 });
-	}
+	const denied = denyMetricsAccess(request);
+	if (denied) return denied;
 
 	const database = await readDatabaseSnapshot(Date.now());
 

@@ -32,7 +32,8 @@ la version déployée.
   indisponibilité ouvre automatiquement une fiche d'anomalie.
 - Règles d'alerte et dashboard Grafana versionnés dans `docs/observability/`.
 - Modèle de fiche de consignation d'anomalie (`.github/ISSUE_TEMPLATE/anomalie.yml`).
-- Protection facultative par jeton (`METRICS_TOKEN`) sur les endpoints de métriques.
+- Fermeture au public des endpoints de métriques : jeton `METRICS_TOKEN` exigé en
+  production, endpoints désactivés si le jeton n'est pas configuré (_fail closed_).
 
 ### Corrigé
 

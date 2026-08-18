@@ -1,6 +1,6 @@
 import type { RequestHandler } from './$types';
-import { env } from '$env/dynamic/private';
 import { wakamCircuitBreaker } from '$lib/server/circuit-breaker';
+import { denyMetricsAccess } from '$lib/server/metrics-auth';
 import { METRICS_CONTENT_TYPE, renderMetrics, setCircuitBreakerState } from '$lib/server/metrics';
 
 /**
@@ -11,12 +11,8 @@ import { METRICS_CONTENT_TYPE, renderMetrics, setCircuitBreakerState } from '$li
  * `/api/metrics` keeps returning the human-readable JSON health snapshot.
  */
 export const GET: RequestHandler = async ({ request }) => {
-	// Same optional protection as /api/metrics: set METRICS_TOKEN on the container and the
-	// scraper must send `Authorization: Bearer <token>`. Unset, the endpoint stays open.
-	const expectedToken = env.METRICS_TOKEN;
-	if (expectedToken && request.headers.get('authorization') !== `Bearer ${expectedToken}`) {
-		return new Response('Unauthorized\n', { status: 401 });
-	}
+	const denied = denyMetricsAccess(request);
+	if (denied) return denied;
 
 	// getState() also performs the OPEN → HALF_OPEN transition once the reset timeout has
 	// elapsed, so reading it here keeps the gauge truthful at scrape time.
