@@ -1,0 +1,294 @@
+/* Les marges sont pilotées par Puppeteer (voir build.mjs) pour laisser la place au
+   pied de page ; ne définir ici que le format. */
+@page {
+	size: A4;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+html {
+	-webkit-print-color-adjust: exact;
+	print-color-adjust: exact;
+}
+
+body {
+	margin: 0;
+	font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+	font-size: 9.2pt;
+	line-height: 1.5;
+	color: #1f2933;
+}
+
+p {
+	margin: 0 0 8pt;
+	text-align: justify;
+}
+
+/* ---------- Page de garde ---------- */
+
+.cover {
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	text-align: center;
+	padding-top: 120pt;
+}
+
+.cover .kicker {
+	color: #3b6fd4;
+	font-size: 10pt;
+	font-weight: 600;
+	letter-spacing: 2.6pt;
+	margin-bottom: 22pt;
+}
+
+.cover h1 {
+	color: #12305e;
+	font-size: 34pt;
+	font-weight: 700;
+	margin: 0 0 14pt;
+	letter-spacing: -0.5pt;
+}
+
+.cover .subtitle {
+	color: #2c4f86;
+	font-size: 13pt;
+	margin: 0 0 8pt;
+}
+
+.cover .subsubtitle {
+	color: #7b8794;
+	font-size: 10pt;
+	margin: 0 0 90pt;
+}
+
+.cover .meta {
+	color: #52606d;
+	font-size: 8.6pt;
+	line-height: 1.6;
+}
+
+/* ---------- Titres ---------- */
+
+h2 {
+	color: #12305e;
+	font-size: 13pt;
+	font-weight: 700;
+	margin: 20pt 0 10pt;
+	padding-bottom: 5pt;
+	border-bottom: 2.2pt solid #2c5aa0;
+	page-break-after: avoid;
+}
+
+h2:first-of-type {
+	margin-top: 4pt;
+}
+
+h3 {
+	color: #2c5aa0;
+	font-size: 10pt;
+	font-weight: 700;
+	margin: 14pt 0 6pt;
+	page-break-after: avoid;
+}
+
+/* ---------- Badges ---------- */
+
+.badge-elim {
+	display: inline-block;
+	background: #a02222;
+	color: #fff;
+	font-size: 6.6pt;
+	font-weight: 700;
+	letter-spacing: 0.5pt;
+	padding: 1.5pt 5pt;
+	border-radius: 2pt;
+	vertical-align: middle;
+	margin-left: 4pt;
+}
+
+.badge-comp {
+	display: inline-block;
+	background: #e4e9f0;
+	color: #3d4b5c;
+	font-size: 6.8pt;
+	font-weight: 600;
+	letter-spacing: 0.4pt;
+	padding: 1.5pt 5pt;
+	border-radius: 2pt;
+	vertical-align: middle;
+	margin-left: 4pt;
+}
+
+/* ---------- Sommaire ---------- */
+
+.toc {
+	margin: 0 0 18pt;
+	padding: 0;
+	list-style: none;
+}
+
+.toc li {
+	font-size: 9pt;
+	padding: 3.5pt 0;
+	border-bottom: 0.5pt dotted #c7ced8;
+}
+
+/* ---------- Tableaux ---------- */
+
+table {
+	width: 100%;
+	border-collapse: collapse;
+	margin: 8pt 0 12pt;
+	font-size: 8.2pt;
+	page-break-inside: auto;
+}
+
+thead th {
+	background: #1f3864;
+	color: #fff;
+	font-weight: 700;
+	text-align: left;
+	padding: 5pt 6pt;
+	border: 0.5pt solid #1f3864;
+}
+
+tbody td {
+	padding: 5pt 6pt;
+	border: 0.5pt solid #d5dbe4;
+	vertical-align: top;
+}
+
+tbody tr:nth-child(even) td {
+	background: #f2f6fc;
+}
+
+tr {
+	page-break-inside: avoid;
+}
+
+/* Tableau « fiche » à deux colonnes (label / valeur) */
+table.fiche td:first-child {
+	background: #1f3864;
+	color: #fff;
+	font-weight: 600;
+	width: 24%;
+}
+
+table.fiche tr:nth-child(even) td:first-child {
+	background: #1f3864;
+}
+
+/* ---------- Encadrés ---------- */
+
+.callout {
+	margin: 10pt 0 12pt;
+	padding: 7pt 10pt;
+	font-size: 8.2pt;
+	line-height: 1.45;
+	page-break-inside: avoid;
+}
+
+.callout p {
+	margin: 0;
+	text-align: left;
+}
+
+.callout-note {
+	background: #fdf7e7;
+	border-left: 3pt solid #d9a441;
+}
+
+.callout-proof {
+	background: #eef3fb;
+	border-left: 3pt solid #3b6fd4;
+}
+
+.callout-annex {
+	background: #eef3fb;
+	border-left: 3pt solid #3b6fd4;
+}
+
+.callout-fiction {
+	background: #fdf0f2;
+	border: 1pt dashed #c0566b;
+}
+
+.capture {
+	margin: 12pt 0;
+	padding: 14pt 10pt;
+	border: 1pt dashed #9aa5b1;
+	text-align: center;
+	font-size: 8pt;
+	color: #616e7c;
+	page-break-inside: avoid;
+}
+
+/* Encadrés « périmètre » du §3.1 */
+.scope {
+	margin: 6pt 0;
+	padding: 6pt 10pt;
+	background: #f5f8fd;
+	border-left: 3pt solid #2c5aa0;
+	font-size: 8.4pt;
+	page-break-inside: avoid;
+}
+
+.scope p {
+	margin: 0;
+	text-align: left;
+}
+
+/* ---------- Listes ---------- */
+
+ul,
+ol {
+	margin: 6pt 0 10pt;
+	padding-left: 16pt;
+}
+
+li {
+	margin-bottom: 4pt;
+}
+
+/* ---------- Divers ---------- */
+
+code {
+	font-family: 'SF Mono', Menlo, Consolas, monospace;
+	font-size: 7.8pt;
+	background: #eef1f5;
+	padding: 0.5pt 3pt;
+	border-radius: 2pt;
+	color: #23303f;
+}
+
+strong {
+	color: #12305e;
+}
+
+.sev1 {
+	color: #a02222;
+	font-weight: 700;
+}
+
+.sev2 {
+	color: #b5730f;
+	font-weight: 700;
+}
+
+.sev3 {
+	color: #b5730f;
+	font-weight: 700;
+}
+
+.ok {
+	color: #1a7f4b;
+	font-weight: 700;
+}
+
+.blank-page {
+	page-break-after: always;
+}

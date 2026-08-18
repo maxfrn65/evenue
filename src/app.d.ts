@@ -4,6 +4,8 @@ declare global {
 	namespace App {
 		// interface Error {}
 		interface Locals {
+			/** Correlation id for the current request, echoed in the x-request-id header. */
+			requestId?: string;
 			user?: {
 				id: string;
 				email: string;

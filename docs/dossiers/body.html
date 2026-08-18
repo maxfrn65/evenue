@@ -1,0 +1,913 @@
+<!doctype html>
+<html lang="fr">
+	<head>
+		<meta charset="utf-8" />
+		<title>Evenue — Bloc 4 · Maintien en condition opérationnelle</title>
+		<link rel="stylesheet" href="styles.css" />
+	</head>
+	<body>
+		<!-- Page blanche technique : elle décale la numérotation pour que la première page
+		     de contenu porte « 2 / 10 ». Elle est retirée à l'assemblage final. -->
+		<div class="blank-page"></div>
+
+		<h2>Sommaire</h2>
+		<ul class="toc">
+			<li>1. Introduction et périmètre du maintien en condition opérationnelle</li>
+			<li>2. Processus de mise à jour des dépendances</li>
+			<li>3. Système de supervision et d'alerte <span class="badge-elim">ÉLIMINATOIRE</span></li>
+			<li>
+				4. Processus de collecte et de consignation des anomalies
+				<span class="badge-elim">ÉLIMINATOIRE</span>
+			</li>
+			<li>5. Fiche de consignation d'une anomalie rencontrée (ANO-013)</li>
+			<li>6. Traitement d'une anomalie détectée</li>
+			<li>7. Journal des versions déployées <span class="badge-elim">ÉLIMINATOIRE</span></li>
+			<li>8. Problème résolu en collaboration avec le support client</li>
+			<li>9. Recommandations argumentées d'amélioration</li>
+			<li>10. Conclusion</li>
+		</ul>
+
+		<h3>Correspondance livrables ↔ compétences du Bloc 4</h3>
+		<table>
+			<thead>
+				<tr>
+					<th>Attendu du règlement</th>
+					<th>Compétence</th>
+					<th>Éliminatoire</th>
+					<th>Section</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td>Processus de mise à jour des dépendances</td>
+					<td>C4.1.1</td>
+					<td>Non</td>
+					<td>§2</td>
+				</tr>
+				<tr>
+					<td>Description du système de supervision</td>
+					<td>C4.1.2</td>
+					<td class="sev1">Oui</td>
+					<td>§3</td>
+				</tr>
+				<tr>
+					<td>Processus de collecte et de consignation des anomalies</td>
+					<td>C4.2.1</td>
+					<td class="sev1">Oui</td>
+					<td>§4</td>
+				</tr>
+				<tr>
+					<td>Fiche de consignation d'une anomalie rencontrée</td>
+					<td>C4.2.1</td>
+					<td class="sev1">Oui</td>
+					<td>§5</td>
+				</tr>
+				<tr>
+					<td>Traitement d'une anomalie détectée</td>
+					<td>C4.2.2</td>
+					<td>Non</td>
+					<td>§6</td>
+				</tr>
+				<tr>
+					<td>Journal des versions déployées</td>
+					<td>C4.3.2</td>
+					<td class="sev1">Oui</td>
+					<td>§7</td>
+				</tr>
+				<tr>
+					<td>Problème résolu avec le support client</td>
+					<td>C4.3.1</td>
+					<td>Non</td>
+					<td>§8</td>
+				</tr>
+				<tr>
+					<td>Recommandations argumentées d'amélioration</td>
+					<td>C4.4</td>
+					<td>Non</td>
+					<td>§9</td>
+				</tr>
+			</tbody>
+		</table>
+
+		<h2>1. Introduction et périmètre du maintien en condition opérationnelle</h2>
+		<p>
+			Ce dossier présente la phase d'exploitation d'Evenue, plateforme développée au cours de la
+			formation. L'application est déployée en production : interface et logique métier en
+			<strong>SvelteKit</strong> (routes serveur), persistance <strong>PostgreSQL</strong> managée sur
+			<strong>Neon</strong> et accédée via l'ORM <strong>Prisma v7</strong>, exécution en conteneur
+			sur <strong>Scaleway Serverless Containers</strong>, avec une chaîne
+			<strong>CI/CD GitHub Actions</strong>. Les briques critiques sont
+			<strong>Stripe Connect</strong> (paiement sous séquestre et KYC) et l'<strong>API Wakam</strong>
+			(assurance à la demande, protégée par un Circuit Breaker).
+		</p>
+		<p>
+			Le maintien en condition opérationnelle (MCO) couvre quatre responsabilités : garder les
+			dépendances à jour et sûres (§2), superviser la disponibilité et détecter les incidents (§3),
+			collecter, consigner puis corriger les anomalies (§4 à §6), et tracer les évolutions déployées
+			(§7). Le support client (§8) et les axes d'amélioration (§9) complètent le dispositif.
+		</p>
+
+		<div class="callout callout-note">
+			<p>
+				<strong>Note d'architecture.</strong> Le socle applicatif est déployé sur Scaleway ; la base
+				PostgreSQL est en réalité hébergée sur <strong>Neon</strong> (Postgres cloud) et référencée
+				par variable d'environnement <code>DATABASE_URL</code> lue via
+				<code>$env/dynamic/private</code>. Ce dossier décrit l'infrastructure réellement en
+				production.
+			</p>
+		</div>
+
+		<h2>2. Processus de mise à jour des dépendances <span class="badge-comp">C4.1.1</span></h2>
+		<p>
+			Evenue repose sur un écosystème JavaScript/TypeScript dont la sécurité et la stabilité dépendent
+			directement de la tenue à jour des dépendances.
+		</p>
+
+		<h3>2.1 — Inventaire des dépendances critiques</h3>
+		<table>
+			<thead>
+				<tr>
+					<th style="width: 24%">Dépendance</th>
+					<th style="width: 26%">Rôle</th>
+					<th>Enjeu de mise à jour</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td>SvelteKit / Vite</td>
+					<td>Framework applicatif et build</td>
+					<td>Correctifs SSR et sécurité ; compatibilité runtime.</td>
+				</tr>
+				<tr>
+					<td>Prisma</td>
+					<td>ORM d'accès à PostgreSQL (Neon)</td>
+					<td>Migrations de version majeures (ex. v7) impactant le build et le runtime.</td>
+				</tr>
+				<tr>
+					<td>@stripe/stripe-js / SDK Stripe</td>
+					<td>Paiement, séquestre, KYC</td>
+					<td>Conformité API, correctifs de sécurité des flux financiers.</td>
+				</tr>
+				<tr>
+					<td>Client API Wakam</td>
+					<td>Assurance à la demande</td>
+					<td>Évolutions du contrat d'interface, sécurité des échanges.</td>
+				</tr>
+				<tr>
+					<td>shadcn-svelte, @lucide/svelte, Leaflet</td>
+					<td>UI et cartographie</td>
+					<td>Correctifs d'accessibilité et compatibilité de composants.</td>
+				</tr>
+				<tr>
+					<td>Node.js (runtime)</td>
+					<td>Exécution serveur et build CI/Docker</td>
+					<td>Support LTS, compatibilité des moteurs (ex. Prisma).</td>
+				</tr>
+			</tbody>
+		</table>
+
+		<h3>2.2 — Veille et détection des vulnérabilités</h3>
+		<p>
+			La veille combine trois sources : la documentation officielle et les notes de version
+			(SvelteKit, Prisma, Stripe), le suivi des dépôts via <code>GitHub Watch &amp; Stars</code> pour
+			être notifié des <em>releases</em> critiques, et surtout un
+			<strong>contrôle automatisé en intégration continue</strong>. Un job CI d'<strong
+				>audit de dépendances</strong
+			>
+			(<code>npm audit</code>) a été ajouté à la pipeline : il est
+			<strong>bloquant en cas de vulnérabilité critique</strong> (mesure OWASP A06 —
+			<em>Vulnerable and Outdated Components</em>), ce qui empêche tout déploiement introduisant une
+			faille connue.
+		</p>
+
+		<h3>2.3 — Procédure de mise à jour</h3>
+		<ol>
+			<li>
+				<strong>Isolation :</strong> chaque montée de version est réalisée sur une branche dédiée et
+				une Pull Request (convention <code>fix(deps)</code> / <code>chore(deps)</code>).
+			</li>
+			<li>
+				<strong>Validation automatique :</strong> la CI exécute la suite de tests (104 tests Vitest,
+				seuils de couverture bloquants) et l'audit de sécurité avant tout merge — garantie de
+				<strong>non-régression</strong>.
+			</li>
+			<li>
+				<strong>Gestion des ruptures (SemVer) :</strong> les versions majeures sont traitées comme
+				des changements à risque. La migration <strong>Prisma v7</strong> en est l'exemple : elle a
+				nécessité de configurer le <em>seed</em> dans <code>prisma.config.ts</code>, d'adapter le
+				chemin de génération du client, et de <strong>passer Node de 20 à 22</strong> pour la
+				compatibilité du moteur « stream adapter ». Chaque ajustement est tracé par un commit
+				<code>fix(...)</code> distinct.
+			</li>
+			<li>
+				<strong>Déploiement :</strong> après merge, la CI/CD reconstruit l'image (Dockerfile
+				multi-stage) et déploie sur Scaleway.
+			</li>
+		</ol>
+
+		<div class="callout callout-proof">
+			<p>
+				<strong>Preuve projet.</strong> Migration Prisma v7 (<code>#CU-018</code> et correctifs
+				associés), passage Node 20→22, remplacement
+				<code>lucide-svelte</code> → <code>@lucide/svelte</code>, et job CI d'audit bloquant
+				(<code>#CU-020</code>). Tous visibles dans l'historique Git.
+			</p>
+		</div>
+
+		<h2>
+			3. Système de supervision et d'alerte
+			<span class="badge-elim">ÉLIMINATOIRE · C4.1.2</span>
+		</h2>
+		<p>
+			Le système de supervision est structuré selon les quatre exigences de la compétence :
+			<strong>définir le périmètre</strong>, <strong>identifier les indicateurs pertinents</strong>,
+			<strong>mettre en place des sondes</strong>, et <strong>configurer les signalements</strong> —
+			afin de garantir une disponibilité permanente du logiciel.
+		</p>
+
+		<h3>3.1 — Périmètre de supervision</h3>
+		<p>Quatre couches sont surveillées, de l'infrastructure jusqu'aux dépendances externes :</p>
+		<div class="scope">
+			<p>
+				<strong>Infrastructure (Scaleway Serverless) :</strong> disponibilité du conteneur, CPU,
+				mémoire, redémarrages.
+			</p>
+		</div>
+		<div class="scope">
+			<p>
+				<strong>Base de données (PostgreSQL / Neon) :</strong> latence des requêtes, saturation du
+				pool de connexions, disponibilité.
+			</p>
+		</div>
+		<div class="scope">
+			<p>
+				<strong>Application (SvelteKit) :</strong> codes de réponse HTTP, durée des requêtes, taux
+				d'erreur 500, débit.
+			</p>
+		</div>
+		<div class="scope">
+			<p>
+				<strong>Services tiers critiques :</strong> Stripe (paiement/séquestre) et surtout l'<strong
+					>API Wakam</strong
+				>, dont l'état du <strong>Circuit Breaker</strong> (fermé / ouvert / semi-ouvert) est un
+				signal métier de premier plan.
+			</p>
+		</div>
+
+		<h3>3.2 — Indicateurs de suivi pertinents</h3>
+		<p>
+			Les seuils reprennent le référentiel d'indicateurs de risque (KRI) défini au cadrage, complétés
+			d'un objectif de disponibilité (SLO) de 99,9 %.
+		</p>
+		<table>
+			<thead>
+				<tr>
+					<th style="width: 15%">Domaine</th>
+					<th style="width: 30%">Indicateur</th>
+					<th style="width: 22%">Seuil d'alerte</th>
+					<th>Risque couvert</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td>Application</td>
+					<td>Taux d'erreur HTTP 500</td>
+					<td>&gt; 1 % des requêtes sur 5 min</td>
+					<td>Bug critique en production</td>
+				</tr>
+				<tr>
+					<td>Métier</td>
+					<td>Échecs consécutifs API Wakam / Circuit Breaker ouvert</td>
+					<td>&gt; 3 échecs consécutifs</td>
+					<td>Impossibilité de vendre (SPOF assurance)</td>
+				</tr>
+				<tr>
+					<td>Performance</td>
+					<td>Temps de réponse moyen</td>
+					<td>&gt; 2 s</td>
+					<td>Perte d'utilisateurs / SEO</td>
+				</tr>
+				<tr>
+					<td>Sécurité</td>
+					<td>Tentatives de connexion échouées</td>
+					<td>&gt; 50/min sur une même IP</td>
+					<td>Attaque par force brute</td>
+				</tr>
+				<tr>
+					<td>Infrastructure</td>
+					<td>CPU / disque</td>
+					<td>&gt; 85 % d'utilisation</td>
+					<td>Crash serveur imminent</td>
+				</tr>
+				<tr>
+					<td>Disponibilité</td>
+					<td>Uptime (SLO)</td>
+					<td>&lt; 99,9 % (≈ 43 min/mois)</td>
+					<td>Indisponibilité du service</td>
+				</tr>
+			</tbody>
+		</table>
+
+		<h3>3.3 — Sondes mises en place</h3>
+		<p>
+			La collecte s'appuie sur une instrumentation réelle du code, agrégée dans la stack
+			<strong>Grafana + Loki + Mimir</strong> hébergée sur Scaleway (Cockpit) :
+		</p>
+		<ul>
+			<li>
+				<strong>Logger JSON structuré :</strong> chaque événement applicatif est journalisé au format
+				JSON, ce qui permet une agrégation et une recherche fines dans <strong>Loki</strong>. Chaque
+				ligne porte un identifiant de corrélation, également renvoyé au client dans l'en-tête
+				<code>x-request-id</code>.
+			</li>
+			<li>
+				<strong>Middleware de durée des requêtes :</strong> mesure la latence de chaque requête HTTP
+				et alimente les métriques de performance.
+			</li>
+			<li>
+				<strong>Endpoint <code>/metrics</code> au format Prometheus :</strong> expose les compteurs
+				et histogrammes (débit, latence, codes HTTP, état du Circuit Breaker) —
+				<strong
+					>endpoint exposé, exploité à la demande ; supervision continue assurée par les métriques
+					natives et les requêtes LogQL</strong
+				>.
+			</li>
+			<li>
+				<strong>Sonde de disponibilité :</strong> vérification périodique des points d'entrée
+				critiques (page publique, endpoint de réservation) pour mesurer l'uptime.
+			</li>
+		</ul>
+
+		<div class="callout callout-proof">
+			<p>
+				<strong>Preuve projet.</strong> PR <code>#17</code> / <code>CU-019</code> : «
+				<em
+					>structured JSON logger, request duration middleware, Prometheus metrics endpoint and
+					Grafana Loki alert docs</em
+				>
+				» + alertes sur le Circuit Breaker. Complétée par le durcissement SSR (commit
+				<code>29a0bf0</code> : encapsulation <code>try/catch</code> des fonctions
+				<code>load</code> serveur pour prévenir les erreurs 500).
+			</p>
+		</div>
+
+		<div class="capture">
+			[ CAPTURE À INSÉRER — Dashboard Grafana : vue d'ensemble (taux HTTP 500, latence p95,
+			CPU/mémoire, état Circuit Breaker Wakam). Voir Annexe A. ]
+		</div>
+
+		<h3>3.4 — Modalité des signalements (alerting)</h3>
+		<p>
+			Les alertes sont pilotées par <strong>Grafana Alerting</strong> : des règles évaluent en continu
+			les métriques natives d'infrastructure et les logs Loki. Lorsqu'un seuil est franchi, une
+			notification est émise selon la sévérité :
+		</p>
+		<table>
+			<thead>
+				<tr>
+					<th style="width: 16%">Sévérité</th>
+					<th style="width: 34%">Déclencheur type</th>
+					<th style="width: 28%">Canal de signalement</th>
+					<th>Délai de réaction visé</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td class="sev1">SEV1 — Critique</td>
+					<td>Service indisponible, Circuit Breaker Wakam ouvert, taux 500 &gt; 1 %</td>
+					<td>Slack <code>#urgence</code> + SMS/email aux fondateurs</td>
+					<td>Immédiat</td>
+				</tr>
+				<tr>
+					<td class="sev2">SEV2 — Majeur</td>
+					<td>Latence &gt; 2 s, CPU/disque &gt; 85 %</td>
+					<td>Slack <code>#alertes</code></td>
+					<td>&lt; 1 h</td>
+				</tr>
+				<tr>
+					<td class="sev3">SEV3 — Mineur</td>
+					<td>Anomalie non bloquante, tendance à surveiller</td>
+					<td>Ticket GitHub Issues</td>
+					<td>Prochain sprint</td>
+				</tr>
+			</tbody>
+		</table>
+		<p>
+			Ce dispositif ferme la boucle « détection → signalement → intervention » et alimente directement
+			le processus de consignation des anomalies décrit au §4.
+		</p>
+
+		<h2>
+			4. Processus de collecte et de consignation des anomalies
+			<span class="badge-elim">ÉLIMINATOIRE · C4.2.1</span>
+		</h2>
+		<p>
+			La compétence exige un <strong>processus de collecte et de consignation</strong>, l'usage d'un
+			<strong>outil</strong> et l'intégration de <strong>toutes les informations pertinentes</strong>
+			pour déterminer le correctif.
+		</p>
+
+		<h3>4.1 — Canaux de collecte</h3>
+		<ul>
+			<li><strong>Automatique :</strong> alertes Grafana (métriques et logs) — cf. §3.</li>
+			<li>
+				<strong>Interne :</strong> détection en revue de code, en tests, ou lors des campagnes de
+				recette (68 scénarios exécutés au Bloc 2).
+			</li>
+			<li><strong>Externe :</strong> remontée par un utilisateur via le support (cf. §8).</li>
+		</ul>
+
+		<h3>4.2 — Outil de consignation</h3>
+		<p>
+			Les anomalies sont consignées dans <strong>GitHub Issues</strong>, adossé au dépôt et donc au
+			code et aux Pull Requests. Chaque anomalie reçoit un identifiant <code>ANO-xxx</code>, des
+			<strong>labels</strong> (<code>bug</code>, sévérité <code>SEV1/2/3</code>, domaine) et est
+			reliée au ticket ClickUp (<code>CU-xxx</code>) et au commit correctif. Cet adossement garantit
+			la traçabilité de bout en bout : anomalie → correctif → version déployée.
+		</p>
+
+		<h3>4.3 — Informations consignées (modèle de fiche)</h3>
+		<p>Chaque fiche intègre les informations nécessaires à la qualification et à la résolution :</p>
+		<table>
+			<thead>
+				<tr>
+					<th style="width: 34%">Champ</th>
+					<th>Rôle</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td>Identifiant / titre</td>
+					<td>Référence unique et intitulé synthétique.</td>
+				</tr>
+				<tr>
+					<td>Date et source de détection</td>
+					<td>Quand et par quel canal (alerte, recette, support).</td>
+				</tr>
+				<tr>
+					<td>Sévérité et criticité</td>
+					<td>SEV1–3 selon la grille gravité × probabilité.</td>
+				</tr>
+				<tr>
+					<td>Environnement</td>
+					<td>Production, préproduction, version concernée.</td>
+				</tr>
+				<tr>
+					<td>Étapes de reproduction</td>
+					<td>Séquence permettant de reproduire le défaut.</td>
+				</tr>
+				<tr>
+					<td>Logs / preuves</td>
+					<td>Extraits Loki, trace, capture.</td>
+				</tr>
+				<tr>
+					<td>Impact</td>
+					<td>Conséquence métier, financière, RGPD.</td>
+				</tr>
+				<tr>
+					<td>Correctif envisagé / réalisé</td>
+					<td>Cause racine et action, reliée au commit.</td>
+				</tr>
+				<tr>
+					<td>Statut</td>
+					<td>Ouverte / en cours / corrigée / fermée.</td>
+				</tr>
+			</tbody>
+		</table>
+
+		<h3>4.4 — Workflow de traitement</h3>
+		<p>
+			<strong>Détection → Qualification &amp; triage (sévérité) → Consignation (fiche ANO) →
+				Assignation → Correction → Test de non-régression → Déploiement → Vérification → Clôture /
+				Post-mortem.</strong
+			>
+			Les anomalies bloquantes (SEV1) suivent la procédure d'escalade du §3.4.
+		</p>
+
+		<h2>5. Fiche de consignation d'une anomalie rencontrée</h2>
+		<p>
+			Anomalie réellement rencontrée et corrigée au cours du projet, consignée selon le modèle du
+			§4.3.
+		</p>
+		<table class="fiche">
+			<tbody>
+				<tr>
+					<td>Identifiant</td>
+					<td><strong>ANO-013</strong></td>
+				</tr>
+				<tr>
+					<td>Titre</td>
+					<td>
+						Réservation attribuée à un tiers en l'absence de session (repli « démo » de
+						<code>POST /api/bookings</code>)
+					</td>
+				</tr>
+				<tr>
+					<td>Date / source</td>
+					<td>
+						Juillet 2026 — détectée lors de la campagne de sécurisation OWASP (revue de code +
+						recette), catégorie <strong>A01 Broken Access Control</strong>.
+					</td>
+				</tr>
+				<tr>
+					<td>Sévérité</td>
+					<td><span class="sev1">SEV1 — Critique (4/4)</span></td>
+				</tr>
+				<tr>
+					<td>Environnement</td>
+					<td>
+						Comportement du endpoint de réservation <code>POST /api/bookings</code> (couche métier
+						SvelteKit).
+					</td>
+				</tr>
+				<tr>
+					<td>Reproduction</td>
+					<td>
+						Appeler <code>POST /api/bookings</code> <strong>sans session authentifiée</strong> : au
+						lieu d'être rejetée, la requête était rattachée au <strong>premier compte GUEST</strong>
+						présent en base (repli « démo »).
+					</td>
+				</tr>
+				<tr>
+					<td>Impact</td>
+					<td>
+						Un appel <strong>anonyme</strong> créait une <strong>réservation de 840 €</strong> au nom
+						d'un tiers. Atteinte à l'intégrité des données, exposition financière et responsabilité
+						de la plateforme (contrôle d'accès rompu).
+					</td>
+				</tr>
+				<tr>
+					<td>Cause racine</td>
+					<td>
+						Un repli de développement (« démo ») laissé actif : en l'absence de session, le service
+						sélectionnait par défaut un utilisateur existant au lieu de refuser la requête.
+					</td>
+				</tr>
+				<tr>
+					<td>Correctif</td>
+					<td>
+						Suppression du repli ; <strong>authentification obligatoire</strong> (réponse 401 sans
+						session valide). Livré dans la PR <code>#8</code> / <code>#CU-020</code> (commit
+						<code>8142fb3</code>).
+					</td>
+				</tr>
+				<tr>
+					<td>Non-régression</td>
+					<td>
+						Ajout d'un test dédié sur l'endpoint <code>bookings</code> vérifiant le rejet sans
+						session ; suite portée de <strong>63 à 89 tests</strong> à la livraison du correctif
+						(<strong>104 tests</strong> aujourd'hui), seuils de couverture bloquants en CI.
+					</td>
+				</tr>
+				<tr>
+					<td>Statut</td>
+					<td><span class="ok">Corrigée / Fermée</span></td>
+				</tr>
+			</tbody>
+		</table>
+
+		<h2>6. Traitement d'une anomalie détectée <span class="badge-comp">C4.2.2</span></h2>
+		<p>Cycle complet de résolution de l'anomalie <strong>ANO-013</strong>, de la détection à la clôture.</p>
+
+		<h3>6.1 — Détection et qualification</h3>
+		<p>
+			L'anomalie a été identifiée durant la campagne de sécurisation en analysant le chemin
+			d'exécution de <code>POST /api/bookings</code>. Qualifiée <strong>SEV1</strong> car elle combine
+			une faille de contrôle d'accès (OWASP A01), un impact financier direct (réservation de 840 €
+			frauduleuse) et un risque sur l'intégrité des données.
+		</p>
+
+		<h3>6.2 — Diagnostic</h3>
+		<p>
+			La revue a mis en évidence un repli conditionnel : en l'absence de <code>session</code>, le
+			service de réservation retombait sur le premier utilisateur <code>GUEST</code> de la base. Ce
+			comportement, utile en phase de démonstration locale, n'aurait jamais dû subsister en
+			production. Le logger structuré (§3) permet a posteriori de confirmer qu'aucune réservation
+			légitime ne dépendait de ce chemin.
+		</p>
+
+		<h3>6.3 — Correction</h3>
+		<p>
+			Le repli a été supprimé et remplacé par une <strong>garde d'authentification</strong> : toute
+			requête sans session valide reçoit désormais un <code>401 Unauthorized</code>. La correction est
+			isolée dans une branche dédiée et une Pull Request, selon la convention de commits du projet.
+		</p>
+
+		<h3>6.4 — Tests de non-régression</h3>
+		<p>
+			Un test automatisé vérifie explicitement que l'endpoint refuse une requête anonyme. Il rejoint
+			la suite Vitest (<strong>104 tests</strong>), dont les
+			<strong>seuils de couverture sont bloquants</strong> dans <code>vite.config.ts</code> (80,0 %
+			d'instructions, 83,1 % de lignes sur la couche métier) : aucune régression ne peut passer la CI.
+		</p>
+
+		<h3>6.5 — Déploiement et vérification</h3>
+		<p>
+			Après merge, la pipeline GitHub Actions reconstruit l'image Docker et déploie sur Scaleway. La
+			vérification post-déploiement s'appuie sur la supervision : absence de nouvelles créations
+			anonymes dans les logs Loki, stabilité du taux d'erreur.
+		</p>
+
+		<h3>6.6 — Post-mortem</h3>
+		<p>
+			<strong>Leçons :</strong> (1) proscrire tout repli « démo » dans les chemins de production ; (2)
+			systématiser une garde d'authentification au niveau des endpoints sensibles ; (3) couvrir chaque
+			correctif de sécurité par un test de non-régression. Ces enseignements alimentent les
+			recommandations du §9.
+		</p>
+
+		<h2>
+			7. Journal des versions déployées <span class="badge-elim">ÉLIMINATOIRE · C4.3.2</span>
+		</h2>
+		<p>
+			La compétence exige un <strong>journal des versions déployées intégrant la documentation des
+				correctifs</strong
+			>, pour suivre les évolutions du logiciel.
+		</p>
+
+		<h3>7.1 — Politique de versionnement</h3>
+		<p>
+			Le projet applique les <strong>Conventional Commits</strong> (<code>feat</code>,
+			<code>fix</code>, <code>ci</code>, <code>docs</code>, <code>test</code>) et le
+			<strong>versionnement sémantique</strong> (SemVer : majeur.mineur.correctif). Chaque évolution
+			passe par une <strong>Pull Request numérotée</strong> reliée à un ticket ClickUp
+			(<code>#CU-xxx</code>), ce qui rend chaque version traçable jusqu'à sa spécification et son
+			correctif.
+		</p>
+
+		<h3>7.2 — Extrait du journal des versions</h3>
+		<table>
+			<thead>
+				<tr>
+					<th style="width: 12%">Version</th>
+					<th style="width: 15%">Réf. (PR / ticket)</th>
+					<th style="width: 11%">Type</th>
+					<th>Contenu déployé / correctifs documentés</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td>v0.6.0</td>
+					<td>#5 / CU-007</td>
+					<td>feat</td>
+					<td>Réservation, séquestre Stripe Connect et Circuit Breaker assurance Wakam.</td>
+				</tr>
+				<tr>
+					<td>v0.9.0</td>
+					<td>#9 / CU-011</td>
+					<td>feat</td>
+					<td>Synchronisation iCal bidirectionnelle et prévention du double-booking.</td>
+				</tr>
+				<tr>
+					<td>v0.12.0</td>
+					<td>#15 / CU-017</td>
+					<td>test</td>
+					<td>Suite de tests automatisés et rapport de couverture (&gt; 85 % de fonctions).</td>
+				</tr>
+				<tr>
+					<td>v0.13.0</td>
+					<td>#16 / CU-018</td>
+					<td>ci</td>
+					<td>Pipeline CI/CD GitHub Actions, Dockerfile multi-stage, déploiement Scaleway.</td>
+				</tr>
+				<tr>
+					<td>v0.13.1</td>
+					<td>CU-018</td>
+					<td>fix</td>
+					<td>Passage Node 20 → 22 (compatibilité moteur Prisma v7).</td>
+				</tr>
+				<tr>
+					<td>v0.13.2</td>
+					<td>CU-018</td>
+					<td>fix</td>
+					<td>
+						Correction du tag de l'action Scaleway (v2 → v0) ; correctifs Dockerfile (copie du client
+						Prisma, <code>apk add</code>).
+					</td>
+				</tr>
+				<tr>
+					<td>v0.14.0</td>
+					<td>#17 / CU-019</td>
+					<td>feat</td>
+					<td>
+						Supervision : logger JSON, middleware de durée, endpoint <code>/metrics</code>, alertes
+						Grafana/Loki et Circuit Breaker.
+					</td>
+				</tr>
+				<tr>
+					<td>v0.14.1</td>
+					<td>29a0bf0</td>
+					<td>fix</td>
+					<td>
+						Encapsulation <code>try/catch</code> des <code>load</code> SSR + fallbacks pour prévenir
+						les HTTP 500.
+					</td>
+				</tr>
+				<tr>
+					<td><strong>v1.0.0</strong></td>
+					<td>#8 / CU-020</td>
+					<td>feat / security</td>
+					<td>
+						Durcissement OWASP (dont correctif <strong>ANO-013</strong>), accessibilité RGAA, recette
+						exécutée (68 scénarios). Suite portée à 89 tests.
+					</td>
+				</tr>
+			</tbody>
+		</table>
+		<p style="font-size: 8pt; color: #616e7c">
+			Journal complet disponible en Annexe B (généré depuis l'historique Git et les Pull Requests).
+		</p>
+
+		<div class="callout callout-note">
+			<p>
+				<strong>Amélioration identifiée.</strong> Le journal est actuellement dérivé des merge commits
+				et des PR. La pose de <strong>tags Git annotés</strong> par version et une génération
+				automatique du <em>changelog</em> (ex. <code>semantic-release</code>) fiabiliseraient encore
+				la traçabilité (cf. §9).
+			</p>
+		</div>
+
+		<h2>
+			8. Problème résolu en collaboration avec le support client
+			<span class="badge-comp">C4.3.1</span>
+		</h2>
+
+		<div class="callout callout-fiction">
+			<p>
+				<strong>Exemple réaliste — à remplacer par ton véritable échange support avant dépôt.</strong>
+				Le cas ci-dessous est cohérent avec le projet (déclaration de sinistre Wakam, fenêtre de 7
+				jours post-événement du ticket CU-014) mais reste fictif.
+			</p>
+		</div>
+
+		<h3>8.1 — Contexte</h3>
+		<p>
+			Un hôte contacte le support : après son événement, il tente de <strong>déclarer un sinistre</strong>
+			(dégradations) via son espace, mais le formulaire refuse sa déclaration avec un message
+			générique. Il estime être dans les délais.
+		</p>
+
+		<h3>8.2 — Échange et diagnostic</h3>
+		<table>
+			<thead>
+				<tr>
+					<th style="width: 20%">Étape</th>
+					<th>Action</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td>J0 — Réception</td>
+					<td>
+						Ticket support ouvert (canal e-mail), rattaché à une fiche <code>ANO</code>. Demande des
+						informations : identifiant de réservation, date de l'événement, capture du message.
+					</td>
+				</tr>
+				<tr>
+					<td>J0 — Reproduction</td>
+					<td>
+						Le support reproduit le cas avec le compte hôte. Consultation des logs Loki : la requête
+						est rejetée par la règle de <strong>fenêtre de 7 jours post-événement</strong> (RBAC
+						déclaration, CU-014).
+					</td>
+				</tr>
+				<tr>
+					<td>J0 — Cause</td>
+					<td>
+						La fenêtre était calculée à partir de la <strong>date de réservation</strong> et non de la
+						<strong>date de fin d'événement</strong> : l'hôte, pourtant dans les délais réels, était
+						bloqué à tort.
+					</td>
+				</tr>
+				<tr>
+					<td>J1 — Correctif</td>
+					<td>
+						Correctif <code>fix(claims)</code> : calcul de la fenêtre basé sur la date de fin
+						d'événement ; test de non-régression ajouté ; déploiement via CI/CD.
+					</td>
+				</tr>
+				<tr>
+					<td>J1 — Réponse client</td>
+					<td>
+						Information de l'hôte que le correctif est en ligne, invitation à renouveler sa
+						déclaration, confirmation de la bonne prise en compte.
+					</td>
+				</tr>
+				<tr>
+					<td>J1 — Clôture</td>
+					<td>
+						Ticket clos, anomalie consignée et reliée à la version déployée. Post-mortem : ajouter un
+						test couvrant explicitement les bornes de la fenêtre.
+					</td>
+				</tr>
+			</tbody>
+		</table>
+		<p>
+			Ce cas illustre l'articulation entre le <strong>support client</strong> (écoute, reproduction,
+			communication) et la <strong>chaîne technique</strong> (logs, correctif, non-régression,
+			déploiement, traçabilité).
+		</p>
+
+		<h2>9. Recommandations argumentées d'amélioration <span class="badge-comp">C4.4</span></h2>
+		<p>
+			Axes priorisés selon le rapport bénéfice / effort, issus de l'exploitation réelle et des
+			post-mortems.
+		</p>
+		<table>
+			<thead>
+				<tr>
+					<th style="width: 22%">Recommandation</th>
+					<th>Argument (bénéfice)</th>
+					<th style="width: 11%">Priorité</th>
+					<th style="width: 9%">Effort</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td>Finaliser l'entité <code>Payout</code> du séquestre (ANO-014)</td>
+					<td>
+						Anomalie ouverte et tracée : l'entité de répartition des fonds n'est jamais alimentée.
+						Sans elle, la ventilation hôte / plateforme / assureur après événement — cœur du modèle —
+						n'est pas garantie. Correction prioritaire.
+					</td>
+					<td class="sev1">Haute</td>
+					<td>Moyen</td>
+				</tr>
+				<tr>
+					<td>Tags Git annotés + <code>semantic-release</code></td>
+					<td>
+						Fiabilise le journal des versions (C4.3.2) et automatise le changelog à partir des
+						Conventional Commits déjà en place.
+					</td>
+					<td class="sev1">Haute</td>
+					<td>Faible</td>
+				</tr>
+				<tr>
+					<td>Gestionnaire de secrets (Scaleway Secret Manager)</td>
+					<td>
+						Suite à l'incident A02 (chaîne de connexion Neon codée en dur, secret révoqué),
+						centraliser et faire tourner les secrets réduit le risque de fuite.
+					</td>
+					<td class="sev1">Haute</td>
+					<td>Moyen</td>
+				</tr>
+				<tr>
+					<td>Traçage distribué (OpenTelemetry)</td>
+					<td>
+						Corréler une requête utilisateur avec ses appels Stripe et Wakam accélère le diagnostic
+						des incidents métier (au-delà des logs et métriques actuels).
+					</td>
+					<td class="sev2">Moyenne</td>
+					<td>Moyen</td>
+				</tr>
+				<tr>
+					<td>Tests de résilience du Circuit Breaker Wakam</td>
+					<td>
+						Vérifier en conditions dégradées (API assureur HS) que la mise en file d'attente et le
+						mode dégradé fonctionnent réellement : valide le principal SPOF du projet.
+					</td>
+					<td class="sev2">Moyenne</td>
+					<td>Moyen</td>
+				</tr>
+				<tr>
+					<td>Automatisation de la veille dépendances (Renovate)</td>
+					<td>
+						Complète l'audit CI bloquant par des PR de mise à jour proactives, réduisant la dette et
+						la fenêtre d'exposition aux vulnérabilités.
+					</td>
+					<td class="sev2">Moyenne</td>
+					<td>Faible</td>
+				</tr>
+				<tr>
+					<td>Budget d'erreur (SLO) adossé à la sonde synthétique</td>
+					<td>
+						La sonde d'uptime externe est en place ; y adosser un suivi d'<em>error budget</em>
+						objectiverait le respect du SLO 99,9 % indépendamment de l'infrastructure supervisée.
+					</td>
+					<td class="sev2">Moyenne</td>
+					<td>Faible</td>
+				</tr>
+			</tbody>
+		</table>
+
+		<h2>10. Conclusion</h2>
+		<p>
+			Evenue dispose d'un dispositif de maintien en condition opérationnelle complet et outillé : des
+			dépendances tenues à jour et auditées automatiquement, une supervision réelle (logs structurés,
+			métriques d'infrastructure et endpoint Prometheus applicatif, alertes Grafana/Loki, surveillance
+			du Circuit Breaker), un processus de consignation adossé à GitHub Issues, et un journal de
+			versions traçable jusqu'au correctif. L'anomalie critique <strong>ANO-013</strong> illustre la
+			chaîne complète, de la détection au déploiement vérifié, avec test de non-régression. Les axes
+			d'amélioration — au premier rang desquels la finalisation de l'entité
+			<code>Payout</code> (ANO-014) — dessinent la trajectoire de fiabilisation de la plateforme.
+		</p>
+
+		<div class="callout callout-annex">
+			<p>
+				<strong>Annexes (hors 20 pages) :</strong> A — captures des dashboards et règles d'alerte
+				Grafana ; B — journal des versions complet (export Git / PR) ; C — fiche ANO-013 détaillée et
+				extrait de logs Loki ; D — extrait du cahier de recettes (68 scénarios).
+			</p>
+		</div>
+	</body>
+</html>

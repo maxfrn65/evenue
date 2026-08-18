@@ -1,6 +1,7 @@
 import type { Handle, HandleServerError } from '@sveltejs/kit';
 import { prisma } from '$lib/server/db';
 import { logger } from '$lib/server/logger';
+import { recordHttpRequest } from '$lib/server/metrics';
 
 /**
  * Content-Security-Policy for the app (OWASP A05 / A03 defense-in-depth against XSS).
@@ -45,6 +46,12 @@ function applySecurityHeaders(headers: Headers, isHttps: boolean): void {
  */
 export const handle: Handle = async ({ event, resolve }) => {
 	const start = performance.now();
+
+	// Correlation id: every line logged while serving this request carries it, and it is
+	// echoed back so a user-reported error can be traced to its logs in one LogQL query.
+	const requestId = event.request?.headers?.get('x-request-id') || crypto.randomUUID();
+	event.locals.requestId = requestId;
+
 	const userId = event.cookies.get('evenue_session');
 
 	if (!userId) {
@@ -70,6 +77,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 	const durationMs = Math.round(performance.now() - start);
 
 	response.headers.set('x-response-time', `${durationMs}ms`);
+	response.headers.set('x-request-id', requestId);
 
 	// Security headers (OWASP A05: Security Misconfiguration).
 	applySecurityHeaders(response.headers, event.url?.protocol === 'https:');
@@ -77,23 +85,36 @@ export const handle: Handle = async ({ event, resolve }) => {
 	const method = event.request?.method || 'GET';
 	const pathname = event.url?.pathname || '/';
 
-	// Log HTTP request metadata in JSON format for Grafana Loki
-	if (response.status >= 400) {
-		logger.warn(`HTTP ${method} ${pathname} ${response.status}`, {
-			context: 'HTTP_REQUEST',
-			path: pathname,
-			statusCode: response.status,
-			durationMs,
-			userId: event.locals.user?.id
-		});
+	// Prometheus counters and latency histogram feeding the KRI thresholds (§3.2).
+	// Labelled by route id, never by raw pathname: an unbounded label would let any
+	// visitor create arbitrary time series just by requesting random URLs.
+	recordHttpRequest(method, event.route?.id ?? 'unmatched', response.status, durationMs);
+
+	// A scrape every 15 s would add ~5 800 log lines a day for no diagnostic value.
+	// Failures still get logged.
+	if (pathname === '/metrics' && response.status < 400) {
+		return response;
+	}
+
+	// Log HTTP request metadata in JSON format for Grafana Loki.
+	// The level maps to the status class so an ERROR line always means "the server failed":
+	// logging 5xx as WARN made server faults indistinguishable from client mistakes.
+	const payload = {
+		context: 'HTTP_REQUEST',
+		requestId,
+		path: pathname,
+		statusCode: response.status,
+		durationMs,
+		userId: event.locals.user?.id
+	};
+	const line = `HTTP ${method} ${pathname} ${response.status}`;
+
+	if (response.status >= 500) {
+		logger.error(line, payload);
+	} else if (response.status >= 400) {
+		logger.warn(line, payload);
 	} else {
-		logger.info(`HTTP ${method} ${pathname} ${response.status}`, {
-			context: 'HTTP_REQUEST',
-			path: pathname,
-			statusCode: response.status,
-			durationMs,
-			userId: event.locals.user?.id
-		});
+		logger.info(line, payload);
 	}
 
 	return response;
@@ -101,16 +122,38 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 /**
  * Global Error Handler for uncaught server exceptions.
+ *
+ * SvelteKit routes 404s through this hook too. Reporting them as SERVER_EXCEPTION (with a
+ * stack trace) drowned the ERROR level in scanner noise — bots probe /metrics, /.env,
+ * /actuator/health continuously on any public IP — and inflated log volume for nothing.
+ * Anything below 500 is a client-side outcome and is logged as such, without a stack.
  */
-export const handleError: HandleServerError = ({ error, event }) => {
-	const err = error as Error;
+export const handleError: HandleServerError = ({ error, event, status }) => {
 	const pathname = event.url?.pathname || '/';
+	const requestId = event.locals?.requestId;
+	const httpStatus = status ?? 500;
+
+	if (httpStatus < 500) {
+		// Not logged here on purpose: `handle` already emits one HTTP_REQUEST line at WARN
+		// for this very response. Logging again would double every scanner 404.
+		return {
+			message:
+				httpStatus === 404
+					? 'La page demandée est introuvable.'
+					: 'La requête ne peut pas être traitée.',
+			code: httpStatus === 404 ? 'NOT_FOUND' : 'BAD_REQUEST'
+		};
+	}
+
+	const err = error as Error;
 	logger.error(`Uncaught Server Exception: ${err?.message || 'Unknown error'}`, {
 		context: 'SERVER_EXCEPTION',
+		requestId,
 		path: pathname,
+		statusCode: httpStatus,
 		error: err?.message,
 		stack: err?.stack,
-		userId: event.locals.user?.id
+		userId: event.locals?.user?.id
 	});
 
 	return {

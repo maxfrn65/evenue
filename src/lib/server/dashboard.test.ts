@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 // Mock Prisma
 vi.mock('./db', () => ({
@@ -20,6 +20,15 @@ import { getDashboardData, cancelBooking } from './dashboard';
 describe('Dashboard Service', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
+		// The fixtures below use fixed August 2026 dates to represent *upcoming* bookings.
+		// Without a frozen clock the suite silently rots: once that date passes, those
+		// bookings become past ones and `upcomingBookings` drops to 0.
+		vi.useFakeTimers();
+		vi.setSystemTime(new Date('2026-07-25T12:00:00Z'));
+	});
+
+	afterEach(() => {
+		vi.useRealTimers();
 	});
 
 	describe('getDashboardData', () => {

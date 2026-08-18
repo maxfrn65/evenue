@@ -1,0 +1,141 @@
+name: Anomalie (ANO)
+description: Consigner une anomalie détectée en production, en recette ou via le support
+title: '[ANO-XXX] '
+labels: ['bug']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Modèle de fiche de consignation d'anomalie (dossier Bloc 4 §4.3).
+        Chaque champ sert la qualification puis la résolution : une fiche incomplète
+        rallonge le diagnostic. Rattacher la fiche au ticket ClickUp (`CU-xxx`) et au
+        commit correctif pour garantir la traçabilité `anomalie → correctif → version`.
+
+  - type: input
+    id: identifiant
+    attributes:
+      label: Identifiant
+      description: Référence unique, incrémentale.
+      placeholder: ANO-014
+    validations:
+      required: true
+
+  - type: dropdown
+    id: source
+    attributes:
+      label: Source de détection
+      options:
+        - Alerte Grafana (métriques ou logs)
+        - Sonde de disponibilité automatique
+        - Revue de code
+        - Campagne de recette
+        - Support client
+        - Test automatisé / CI
+    validations:
+      required: true
+
+  - type: input
+    id: date
+    attributes:
+      label: Date de détection
+      placeholder: 2026-08-15
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severite
+    attributes:
+      label: Sévérité
+      description: Grille gravité × probabilité du §3.4.
+      options:
+        - SEV1 — Critique (service indisponible, faille, perte financière)
+        - SEV2 — Majeur (dégradation notable, latence, saturation)
+        - SEV3 — Mineur (non bloquant, tendance à surveiller)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: environnement
+    attributes:
+      label: Environnement
+      options:
+        - Production
+        - Préproduction
+        - Local / développement
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version concernée
+      placeholder: v1.0.0
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Étapes de reproduction
+      description: Séquence permettant de reproduire le défaut de façon fiable.
+      placeholder: |
+        1. Appeler POST /api/bookings sans cookie de session
+        2. Observer la réponse
+        3. Résultat attendu : 401 — résultat obtenu : 201
+    validations:
+      required: true
+
+  - type: textarea
+    id: preuves
+    attributes:
+      label: Logs et preuves
+      description: |
+        Extrait de logs Loki, `requestId` (en-tête `x-request-id` renvoyé par l'application),
+        capture d'écran, requête LogQL utilisée. Voir docs/GRAFANA_MONITORING.md.
+      render: text
+    validations:
+      required: true
+
+  - type: textarea
+    id: impact
+    attributes:
+      label: Impact
+      description: Conséquence métier, financière, RGPD ou sécurité.
+    validations:
+      required: true
+
+  - type: textarea
+    id: cause
+    attributes:
+      label: Cause racine
+      description: À compléter après diagnostic.
+    validations:
+      required: false
+
+  - type: textarea
+    id: correctif
+    attributes:
+      label: Correctif envisagé / réalisé
+      description: Action, branche, Pull Request et commit associés.
+    validations:
+      required: false
+
+  - type: input
+    id: ticket
+    attributes:
+      label: Ticket ClickUp associé
+      placeholder: CU-020
+    validations:
+      required: false
+
+  - type: dropdown
+    id: statut
+    attributes:
+      label: Statut
+      options:
+        - Ouverte
+        - En cours
+        - Corrigée (en attente de déploiement)
+        - Fermée
+    validations:
+      required: true
