@@ -2,20 +2,36 @@ import Stripe from 'stripe';
 import { prisma } from './db';
 import { env } from '$env/dynamic/private';
 
-const stripeSecretKey = env.STRIPE_SECRET_KEY || process.env.STRIPE_SECRET_KEY;
+/**
+ * Stripe client, created on first use rather than on import — same reason as the Prisma
+ * client in ./db.ts: SvelteKit's build-time analysis imports every server module, so
+ * requiring a secret at import time makes the production build impossible without
+ * production credentials.
+ */
+let client: Stripe | undefined;
 
-if (!stripeSecretKey && process.env.NODE_ENV === 'production') {
-	// No secret key must ever fall back to a hardcoded value in production
-	// (OWASP A02: Cryptographic Failures).
-	throw new Error('STRIPE_SECRET_KEY is not set in production.');
+function createStripe(): Stripe {
+	const stripeSecretKey = env.STRIPE_SECRET_KEY || process.env.STRIPE_SECRET_KEY;
+
+	if (!stripeSecretKey && process.env.NODE_ENV === 'production') {
+		// No secret key must ever fall back to a hardcoded value in production
+		// (OWASP A02: Cryptographic Failures).
+		throw new Error('STRIPE_SECRET_KEY is not set in production.');
+	}
+
+	// Outside production, allow an obviously-fake placeholder so the app boots
+	// without live Stripe credentials (test keys are non-sensitive by design).
+	return new Stripe(stripeSecretKey || 'sk_test_placeholder_dev_only', {
+		apiVersion: '2025-02-24.acacia' as Stripe.LatestApiVersion
+	});
 }
 
-// Outside production, allow an obviously-fake placeholder so the app boots
-// without live Stripe credentials (test keys are non-sensitive by design).
-const resolvedStripeKey = stripeSecretKey || 'sk_test_placeholder_dev_only';
-
-export const stripe = new Stripe(resolvedStripeKey, {
-	apiVersion: '2025-02-24.acacia' as Stripe.LatestApiVersion
+export const stripe = new Proxy({} as Stripe, {
+	get(_target, property) {
+		client ??= createStripe();
+		const value = Reflect.get(client, property, client);
+		return typeof value === 'function' ? value.bind(client) : value;
+	}
 });
 
 /**
