@@ -8,12 +8,14 @@
  */
 
 import { logger } from './logger';
+import { recordCircuitBreakerOpened, setCircuitBreakerState } from './metrics';
 
 export type CircuitState = 'CLOSED' | 'OPEN' | 'HALF_OPEN';
 
 export interface CircuitBreakerOptions<T> {
+	partner?: string; // Metric label identifying the protected external service
 	failureThreshold?: number; // Number of failures before tripping (Default: 3 per KRI rules)
-	resetTimeoutMs?: number;   // Delay before trying HALF_OPEN (Default: 5000ms)
+	resetTimeoutMs?: number; // Delay before trying HALF_OPEN (Default: 5000ms)
 	fallback?: () => T | Promise<T>; // Degradation fallback response
 	onStateChange?: (fromState: CircuitState, toState: CircuitState) => void;
 }
@@ -30,12 +32,14 @@ export class CircuitBreaker<T = unknown> {
 	private failureCount: number = 0;
 	private lastStateChangeTime: number = Date.now();
 
+	private readonly partner: string;
 	private readonly failureThreshold: number;
 	private readonly resetTimeoutMs: number;
 	private readonly fallback?: () => T | Promise<T>;
 	private readonly onStateChange?: (fromState: CircuitState, toState: CircuitState) => void;
 
 	constructor(options: CircuitBreakerOptions<T> = {}) {
+		this.partner = options.partner ?? 'unknown';
 		this.failureThreshold = options.failureThreshold ?? 3;
 		this.resetTimeoutMs = options.resetTimeoutMs ?? 5000;
 		this.fallback = options.fallback;
@@ -99,6 +103,13 @@ export class CircuitBreaker<T = unknown> {
 			this.state = newState;
 			this.lastStateChangeTime = Date.now();
 
+			// Mirror the transition into Prometheus so the breaker is observable both as a
+			// current state (gauge) and as a history of outages (counter).
+			setCircuitBreakerState(this.partner, newState, this.failureCount);
+			if (newState === 'OPEN') {
+				recordCircuitBreakerOpened(this.partner);
+			}
+
 			if (newState === 'OPEN') {
 				logger.alert(`Circuit Breaker tripped to OPEN. Partner service is unreachable.`, {
 					context: 'CIRCUIT_BREAKER',
@@ -128,4 +139,4 @@ export class CircuitBreaker<T = unknown> {
 	}
 }
 
-export const wakamCircuitBreaker = new CircuitBreaker();
+export const wakamCircuitBreaker = new CircuitBreaker({ partner: 'wakam' });

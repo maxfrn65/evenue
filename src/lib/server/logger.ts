@@ -3,13 +3,17 @@ export type LogLevel = 'INFO' | 'WARN' | 'ERROR' | 'ALERT';
 export interface LogPayload {
 	message: string;
 	context?: string;
+	/** Correlation id shared by every line emitted while serving one HTTP request. */
+	requestId?: string;
 	path?: string;
 	statusCode?: number;
 	durationMs?: number;
 	userId?: string;
 	error?: string;
 	stack?: string;
-	metadata?: Record<string, any>;
+	/** Set on ALERT lines only, so they can be filtered without relying on the level. */
+	alertMarker?: 'CRITICAL_ALERT';
+	metadata?: Record<string, unknown>;
 }
 
 class Logger {
@@ -41,9 +45,20 @@ class Logger {
 		return formatted;
 	}
 
+	/**
+	 * Critical alert: the line MUST stay parsable as JSON.
+	 *
+	 * Prefixing the output (e.g. `🚨 [CRITICAL_ALERT] {…}`) breaks Loki's `| json`
+	 * stage, which silently disables every alert rule filtering on `level="ALERT"`.
+	 * The marker therefore lives inside the payload, not in front of it.
+	 */
 	alert(message: string, payload: Omit<LogPayload, 'message'> = {}) {
-		const formatted = this.format('ALERT', { message, ...payload });
-		console.error(`🚨 [CRITICAL_ALERT] ${formatted}`);
+		const formatted = this.format('ALERT', {
+			message,
+			alertMarker: 'CRITICAL_ALERT',
+			...payload
+		});
+		console.error(formatted);
 		return formatted;
 	}
 }

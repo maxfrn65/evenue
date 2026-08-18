@@ -1,0 +1,257 @@
+{
+	"title": "Evenue — Maintien en condition opérationnelle",
+	"description": "Vue d'ensemble MCO : taux d'erreur 5xx, latence p95, état du Circuit Breaker Wakam, sécurité authentification. Construit sur les logs JSON structurés ingérés par Scaleway Cockpit (Loki) — aucune métrique poussée n'est requise.",
+	"tags": ["evenue", "mco", "bloc4"],
+	"timezone": "browser",
+	"schemaVersion": 39,
+	"version": 1,
+	"refresh": "1m",
+	"time": { "from": "now-6h", "to": "now" },
+	"templating": {
+		"list": [
+			{
+				"name": "datasource",
+				"label": "Source Loki",
+				"type": "datasource",
+				"query": "loki",
+				"current": {},
+				"hide": 0
+			},
+			{
+				"name": "container",
+				"label": "Conteneur",
+				"type": "textbox",
+				"query": "evenue4616ab80-evenue",
+				"current": { "text": "evenue4616ab80-evenue", "value": "evenue4616ab80-evenue" },
+				"hide": 0
+			}
+		]
+	},
+	"panels": [
+		{
+			"id": 1,
+			"type": "stat",
+			"title": "Taux d'erreur 5xx (5 min) — seuil KRI 1 %",
+			"datasource": { "type": "loki", "uid": "${datasource}" },
+			"gridPos": { "h": 5, "w": 6, "x": 0, "y": 0 },
+			"fieldConfig": {
+				"defaults": {
+					"unit": "percentunit",
+					"decimals": 2,
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{ "color": "green", "value": null },
+							{ "color": "red", "value": 0.01 }
+						]
+					}
+				},
+				"overrides": []
+			},
+			"options": {
+				"reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+				"colorMode": "background",
+				"graphMode": "area"
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"queryType": "range",
+					"expr": "sum(rate({resource_type=\"serverless_container\", resource_name=\"$container\"} |= `\"context\":\"HTTP_REQUEST\"` | json | __error__=\"\" | statusCode >= 500 [5m])) / sum(rate({resource_type=\"serverless_container\", resource_name=\"$container\"} |= `\"context\":\"HTTP_REQUEST\"` | json | __error__=\"\" [5m]))"
+				}
+			]
+		},
+		{
+			"id": 2,
+			"type": "stat",
+			"title": "Ouvertures du Circuit Breaker Wakam (6 h)",
+			"datasource": { "type": "loki", "uid": "${datasource}" },
+			"gridPos": { "h": 5, "w": 6, "x": 6, "y": 0 },
+			"fieldConfig": {
+				"defaults": {
+					"unit": "short",
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{ "color": "green", "value": null },
+							{ "color": "red", "value": 1 }
+						]
+					}
+				},
+				"overrides": []
+			},
+			"options": {
+				"reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+				"colorMode": "background"
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"queryType": "range",
+					"expr": "sum(count_over_time({resource_type=\"serverless_container\", resource_name=\"$container\"} |= `CRITICAL_ALERT` | json | __error__=\"\" | context=\"CIRCUIT_BREAKER\" [6h]))"
+				}
+			]
+		},
+		{
+			"id": 3,
+			"type": "stat",
+			"title": "Exceptions serveur (1 h)",
+			"datasource": { "type": "loki", "uid": "${datasource}" },
+			"gridPos": { "h": 5, "w": 6, "x": 12, "y": 0 },
+			"fieldConfig": {
+				"defaults": {
+					"unit": "short",
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{ "color": "green", "value": null },
+							{ "color": "orange", "value": 1 }
+						]
+					}
+				},
+				"overrides": []
+			},
+			"options": {
+				"reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+				"colorMode": "background"
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"queryType": "range",
+					"expr": "sum(count_over_time({resource_type=\"serverless_container\", resource_name=\"$container\"} |= `\"context\":\"SERVER_EXCEPTION\"` [1h]))"
+				}
+			]
+		},
+		{
+			"id": 4,
+			"type": "stat",
+			"title": "Démarrages à froid (6 h)",
+			"datasource": { "type": "loki", "uid": "${datasource}" },
+			"gridPos": { "h": 5, "w": 6, "x": 18, "y": 0 },
+			"fieldConfig": {
+				"defaults": { "unit": "short" },
+				"overrides": []
+			},
+			"options": {
+				"reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+				"colorMode": "value"
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"queryType": "range",
+					"expr": "sum(count_over_time({resource_type=\"serverless_container\", resource_name=\"$container\"} |= `Listening on http` [6h]))"
+				}
+			]
+		},
+		{
+			"id": 5,
+			"type": "timeseries",
+			"title": "Latence p95 par route — seuil KRI 2 s",
+			"datasource": { "type": "loki", "uid": "${datasource}" },
+			"gridPos": { "h": 9, "w": 12, "x": 0, "y": 5 },
+			"fieldConfig": {
+				"defaults": {
+					"unit": "ms",
+					"custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 5 },
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{ "color": "green", "value": null },
+							{ "color": "red", "value": 2000 }
+						]
+					}
+				},
+				"overrides": []
+			},
+			"options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["max"] } },
+			"targets": [
+				{
+					"refId": "A",
+					"queryType": "range",
+					"legendFormat": "{{path}}",
+					"expr": "quantile_over_time(0.95, {resource_type=\"serverless_container\", resource_name=\"$container\"} |= `\"context\":\"HTTP_REQUEST\"` | json | __error__=\"\" | unwrap durationMs [5m]) by (path)"
+				}
+			]
+		},
+		{
+			"id": 6,
+			"type": "timeseries",
+			"title": "Requêtes par code de statut",
+			"datasource": { "type": "loki", "uid": "${datasource}" },
+			"gridPos": { "h": 9, "w": 12, "x": 12, "y": 5 },
+			"fieldConfig": {
+				"defaults": {
+					"unit": "short",
+					"custom": {
+						"drawStyle": "bars",
+						"lineWidth": 1,
+						"fillOpacity": 60,
+						"stacking": { "mode": "normal" }
+					}
+				},
+				"overrides": []
+			},
+			"options": { "legend": { "displayMode": "list", "placement": "bottom" } },
+			"targets": [
+				{
+					"refId": "A",
+					"queryType": "range",
+					"legendFormat": "HTTP {{statusCode}}",
+					"expr": "sum by (statusCode) (count_over_time({resource_type=\"serverless_container\", resource_name=\"$container\"} |= `\"context\":\"HTTP_REQUEST\"` | json | __error__=\"\" [5m]))"
+				}
+			]
+		},
+		{
+			"id": 7,
+			"type": "timeseries",
+			"title": "Tentatives de connexion échouées par IP — seuil KRI 50/min",
+			"datasource": { "type": "loki", "uid": "${datasource}" },
+			"gridPos": { "h": 8, "w": 12, "x": 0, "y": 14 },
+			"fieldConfig": {
+				"defaults": {
+					"unit": "short",
+					"custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 10 },
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{ "color": "green", "value": null },
+							{ "color": "red", "value": 50 }
+						]
+					}
+				},
+				"overrides": []
+			},
+			"options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["max"] } },
+			"targets": [
+				{
+					"refId": "A",
+					"queryType": "range",
+					"legendFormat": "{{ip}}",
+					"expr": "sum by (ip) (count_over_time({resource_type=\"serverless_container\", resource_name=\"$container\"} |= `\"context\":\"AUTH_FAILURE\"` | json ip=\"metadata.ip\" | __error__=\"\" [1m]))"
+				}
+			]
+		},
+		{
+			"id": 8,
+			"type": "logs",
+			"title": "Erreurs et alertes récentes",
+			"datasource": { "type": "loki", "uid": "${datasource}" },
+			"gridPos": { "h": 8, "w": 12, "x": 12, "y": 14 },
+			"options": {
+				"showTime": true,
+				"wrapLogMessage": true,
+				"sortOrder": "Descending",
+				"enableLogDetails": true
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"queryType": "range",
+					"expr": "{resource_type=\"serverless_container\", resource_name=\"$container\"} |= `\"service\":\"evenue-app\"` | json | __error__=\"\" | level =~ `ERROR|ALERT`"
+				}
+			]
+		}
+	]
+}

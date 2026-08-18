@@ -147,15 +147,25 @@ jobs:
       - name: Setup Scaleway CLI
         uses: scaleway/action-scw@v0
         with:
+          access-key: ${{ secrets.SCW_ACCESS_KEY }}
           secret-key: ${{ secrets.SCW_SECRET_KEY }}
           default-project-id: ${{ secrets.SCW_DEFAULT_PROJECT_ID }}
           default-organization-id: ${{ secrets.SCW_DEFAULT_PROJECT_ID }}
           default-region: fr-par
 
+      # Deploys the exact image built by the previous job (SHA-tagged, not :latest) so the
+      # running revision is always traceable back to a commit. The script exits non-zero if
+      # the deployment fails or never becomes ready — a green pipeline now means shipped.
       - name: Deploy Serverless Container
         run: |
           chmod +x ./scripts/deploy-scaleway.sh
           ./scripts/deploy-scaleway.sh
         env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+          SCW_CONTAINER_ID: ${{ secrets.SCW_CONTAINER_ID }}
+          IMAGE_URI: ${{ env.SCALEWAY_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+
+      # Fails the pipeline if the live app does not answer after the deployment.
+      - name: Smoke test production health endpoint
+        run: |
+          curl --fail --silent --show-error --retry 5 --retry-delay 10 --retry-all-errors \
+            "${{ vars.PRODUCTION_URL }}/api/health"

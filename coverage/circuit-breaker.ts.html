@@ -23,16 +23,16 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">95.91% </span>
+                <span class="strong">96.22% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>47/49</span>
+                <span class='fraction'>51/53</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">94.44% </span>
+                <span class="strong">95% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>34/36</span>
+                <span class='fraction'>38/40</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">95.91% </span>
+                <span class="strong">96.22% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>47/49</span>
+                <span class='fraction'>51/53</span>
             </div>
         
             
@@ -194,7 +194,20 @@
 <a name='L129'></a><a href='#L129'>129</a>
 <a name='L130'></a><a href='#L130'>130</a>
 <a name='L131'></a><a href='#L131'>131</a>
-<a name='L132'></a><a href='#L132'>132</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L132'></a><a href='#L132'>132</a>
+<a name='L133'></a><a href='#L133'>133</a>
+<a name='L134'></a><a href='#L134'>134</a>
+<a name='L135'></a><a href='#L135'>135</a>
+<a name='L136'></a><a href='#L136'>136</a>
+<a name='L137'></a><a href='#L137'>137</a>
+<a name='L138'></a><a href='#L138'>138</a>
+<a name='L139'></a><a href='#L139'>139</a>
+<a name='L140'></a><a href='#L140'>140</a>
+<a name='L141'></a><a href='#L141'>141</a>
+<a name='L142'></a><a href='#L142'>142</a>
+<a name='L143'></a><a href='#L143'>143</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -232,6 +245,8 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">9x</span>
 <span class="cline-any cline-yes">9x</span>
 <span class="cline-any cline-yes">9x</span>
 <span class="cline-any cline-yes">9x</span>
@@ -295,6 +310,13 @@
 <span class="cline-any cline-yes">8x</span>
 <span class="cline-any cline-yes">8x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">8x</span>
 <span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -335,12 +357,14 @@
  */
 &nbsp;
 import { logger } from './logger';
+import { recordCircuitBreakerOpened, setCircuitBreakerState } from './metrics';
 &nbsp;
 export type CircuitState = 'CLOSED' | 'OPEN' | 'HALF_OPEN';
 &nbsp;
 export interface CircuitBreakerOptions&lt;T&gt; {
+	partner?: string; // Metric label identifying the protected external service
 	failureThreshold?: number; // Number of failures before tripping (Default: 3 per KRI rules)
-	resetTimeoutMs?: number;   // Delay before trying HALF_OPEN (Default: 5000ms)
+	resetTimeoutMs?: number; // Delay before trying HALF_OPEN (Default: 5000ms)
 	fallback?: () =&gt; T | Promise&lt;T&gt;; // Degradation fallback response
 	onStateChange?: (fromState: CircuitState, toState: CircuitState) =&gt; void;
 }
@@ -357,12 +381,14 @@ export class CircuitBreaker&lt;T = unknown&gt; {
 	private failureCount: number = 0;
 	private lastStateChangeTime: number = Date.now();
 &nbsp;
+	private readonly partner: string;
 	private readonly failureThreshold: number;
 	private readonly resetTimeoutMs: number;
 	private readonly fallback?: () =&gt; T | Promise&lt;T&gt;;
 	private readonly onStateChange?: (fromState: CircuitState, toState: CircuitState) =&gt; void;
 &nbsp;
 	constructor(options: CircuitBreakerOptions&lt;T&gt; = {}) {
+		this.partner = options.partner ?? 'unknown';
 		this.failureThreshold = options.failureThreshold ?? 3;
 		this.resetTimeoutMs = options.resetTimeoutMs ?? 5000;
 		this.fallback = options.fallback;
@@ -426,6 +452,13 @@ export class CircuitBreaker&lt;T = unknown&gt; {
 			this.state = newState;
 			this.lastStateChangeTime = Date.now();
 &nbsp;
+			// Mirror the transition into Prometheus so the breaker is observable both as a
+			// current state (gauge) and as a history of outages (counter).
+			setCircuitBreakerState(this.partner, newState, this.failureCount);
+			if (newState === 'OPEN') {
+				recordCircuitBreakerOpened(this.partner);
+			}
+&nbsp;
 			if (newState === 'OPEN') {
 				logger.alert(`Circuit Breaker tripped to OPEN. Partner service is unreachable.`, {
 					context: 'CIRCUIT_BREAKER',
@@ -455,7 +488,7 @@ export class CircuitBreaker&lt;T = unknown&gt; {
 	}
 }
 &nbsp;
-export const wakamCircuitBreaker = new CircuitBreaker();
+export const wakamCircuitBreaker = new CircuitBreaker({ partner: 'wakam' });
 &nbsp;</pre></td></tr></table></pre>
 
                 <div class='push'></div><!-- for sticky footer -->
@@ -463,7 +496,7 @@ export const wakamCircuitBreaker = new CircuitBreaker();
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-07-23T20:45:41.207Z
+                at 2026-08-15T02:11:23.087Z
             </div>
         <script src="prettify.js"></script>
         <script>

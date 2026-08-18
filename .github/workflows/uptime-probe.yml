@@ -1,0 +1,126 @@
+name: Sonde de disponibilité (uptime)
+
+# Vérification périodique des points d'entrée critiques (dossier Bloc 4 §3.3).
+# Complète la supervision Cockpit : cette sonde est externe à l'infrastructure supervisée,
+# elle détecte donc aussi les pannes que la plateforme elle-même ne peut pas signaler.
+on:
+  schedule:
+    # Toutes les 15 minutes (GitHub applique un « best effort » sur les crons).
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+env:
+  # Seuil KRI « temps de réponse > 2 s » (§3.2).
+  MAX_RESPONSE_SECONDS: '2'
+
+jobs:
+  probe:
+    name: Sonder les points d'entrée critiques
+    runs-on: ubuntu-latest
+    steps:
+      - name: Vérifier les points d'entrée
+        id: probe
+        run: |
+          set -uo pipefail
+          BASE="${{ vars.PRODUCTION_URL }}"
+          if [ -z "$BASE" ]; then
+            echo "::error::La variable de dépôt PRODUCTION_URL n'est pas définie."
+            exit 1
+          fi
+
+          failures=0
+
+          # probe <méthode> <chemin> <statut attendu> <libellé>
+          probe() {
+            method="$1"; path="$2"; expected="$3"; label="$4"
+            result=$(curl -s -o /dev/null -X "$method" \
+              -w '%{http_code} %{time_total}' \
+              --max-time 20 "${BASE}${path}" || echo "000 0")
+            status="${result%% *}"
+            elapsed="${result##* }"
+
+            if [ "$status" != "$expected" ]; then
+              echo "::error::$label — attendu HTTP $expected, obtenu $status (${elapsed}s)"
+              echo "| $label | \`$path\` | ❌ $status (attendu $expected) | ${elapsed}s |" >> "$GITHUB_STEP_SUMMARY"
+              failures=$((failures + 1))
+              return
+            fi
+
+            slow=$(awk -v t="$elapsed" -v max="$MAX_RESPONSE_SECONDS" 'BEGIN { print (t > max) ? 1 : 0 }')
+            if [ "$slow" = "1" ]; then
+              echo "::warning::$label — répond en ${elapsed}s, au-delà du seuil KRI de ${MAX_RESPONSE_SECONDS}s"
+              echo "| $label | \`$path\` | ⚠️ $status mais lent | ${elapsed}s |" >> "$GITHUB_STEP_SUMMARY"
+              return
+            fi
+
+            echo "| $label | \`$path\` | ✅ $status | ${elapsed}s |" >> "$GITHUB_STEP_SUMMARY"
+          }
+
+          {
+            echo "### Sonde de disponibilité — $(date -u '+%Y-%m-%d %H:%M UTC')"
+            echo ""
+            echo "| Point d'entrée | Chemin | Statut | Latence |"
+            echo "| --- | --- | --- | --- |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          probe GET  /             200 "Page publique"
+          probe GET  /api/health   200 "Sonde de santé"
+          probe GET  /listings     200 "Recherche d'annonces"
+          # Doit refuser une réservation anonyme : contrôle de non-régression permanent
+          # de l'anomalie ANO-013 (§5), directement en production.
+          probe POST /api/bookings 401 "Réservation sans session (doit être refusée)"
+
+          if [ "$failures" -gt 0 ]; then
+            echo "$failures point(s) d'entrée en échec."
+            exit 1
+          fi
+          echo "Tous les points d'entrée répondent."
+
+      - name: Consigner l'incident dans GitHub Issues
+        # Ferme la boucle « détection → signalement → consignation » du §4 : une indisponibilité
+        # détectée devient une anomalie tracée, sans intervention manuelle.
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = '[ANO] Indisponibilité détectée par la sonde';
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+
+            const { data: open } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'bug,SEV1'
+            });
+            const existing = open.find((issue) => issue.title === title);
+
+            const body = [
+              '**Source de détection :** sonde de disponibilité automatique (§3.3).',
+              `**Date :** ${new Date().toISOString()}`,
+              '**Sévérité :** SEV1 — service potentiellement indisponible.',
+              '',
+              `Détail des points d'entrée en échec : ${runUrl}`,
+              '',
+              'Compléter cette fiche selon le modèle du §4.3 (reproduction, logs Loki, impact, cause racine, correctif).'
+            ].join('\n');
+
+            if (existing) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: existing.number,
+                body
+              });
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                body,
+                labels: ['bug', 'SEV1']
+              });
+            }

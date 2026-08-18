@@ -1,0 +1,116 @@
+# Règles d'alerte Evenue — source de données Loki (Scaleway Cockpit)
+#
+# Ces règles fonctionnent avec l'infrastructure actuelle : les logs du conteneur
+# serverless sont ingérés automatiquement par Cockpit, aucun agent n'est requis.
+#
+# Seuils : référentiel KRI du dossier Bloc 4 §3.2.
+# Sévérités et canaux : §3.4. Les `for:` sont volontairement courts sur SEV1 (réaction
+# immédiate attendue) et plus longs sur SEV2 (éviter les alertes sur un pic isolé).
+#
+# Application : Grafana → Alerting → Alert rules → New alert rule, ou import via l'API
+# ruler. Chaque règle doit être rattachée au contact point de sa sévérité (voir README).
+#
+# ⚠️ Sans trafic, le conteneur passe à zéro instance et n'émet plus aucun log : toute
+# règle exprimée en ratio doit traiter « No data » comme OK, sinon elle sonne chaque nuit.
+
+groups:
+  - name: evenue-disponibilite
+    interval: 1m
+    rules:
+      - alert: EvenueTauxErreur5xxEleve
+        # KRI : taux d'erreur HTTP 500 > 1 % des requêtes sur 5 min.
+        expr: |
+          (
+            sum(rate({resource_type="serverless_container", resource_name="evenue4616ab80-evenue"}
+              |= `"context":"HTTP_REQUEST"` | json | __error__="" | statusCode >= 500 [5m]))
+            /
+            sum(rate({resource_type="serverless_container", resource_name="evenue4616ab80-evenue"}
+              |= `"context":"HTTP_REQUEST"` | json | __error__="" [5m]))
+          ) > 0.01
+        for: 5m
+        labels:
+          severity: SEV1
+          canal: slack-urgence
+        annotations:
+          summary: "Taux d'erreur 5xx supérieur à 1 % sur 5 minutes"
+          description: >-
+            Bug critique probable en production. Identifier les routes fautives avec la
+            requête §2.1 du guide, puis remonter au requestId d'une requête échouée.
+          runbook: docs/GRAFANA_MONITORING.md
+
+      - alert: EvenueExceptionServeur
+        expr: |
+          sum(count_over_time({resource_type="serverless_container", resource_name="evenue4616ab80-evenue"}
+            |= `"context":"SERVER_EXCEPTION"` [10m])) > 0
+        for: 0s
+        labels:
+          severity: SEV2
+          canal: slack-alertes
+        annotations:
+          summary: 'Exception serveur non capturée en production'
+          description: >-
+            Une exception a traversé le hook applicatif. Le champ stack et le requestId
+            de la ligne de log permettent de rejouer le contexte complet.
+
+  - name: evenue-partenaires
+    interval: 1m
+    rules:
+      - alert: EvenueCircuitBreakerWakamOuvert
+        # KRI : > 3 échecs consécutifs de l'API Wakam — le disjoncteur bascule en OPEN.
+        # SPOF métier : sans assurance, aucune réservation ne peut être vendue.
+        expr: |
+          sum(count_over_time({resource_type="serverless_container", resource_name="evenue4616ab80-evenue"}
+            |= `CRITICAL_ALERT` | json | __error__="" | context="CIRCUIT_BREAKER" [5m])) > 0
+        for: 0s
+        labels:
+          severity: SEV1
+          canal: slack-urgence
+        annotations:
+          summary: "Circuit Breaker Wakam ouvert — vente d'assurance interrompue"
+          description: >-
+            L'API assurance est injoignable ou en erreur. Vérifier le statut du partenaire,
+            puis confirmer le retour en CLOSED via les logs de transition.
+
+  - name: evenue-securite
+    interval: 1m
+    rules:
+      - alert: EvenueTentativesConnexionEchouees
+        # KRI sécurité : > 50 tentatives de connexion échouées par minute sur une même IP.
+        # La ligne AUTH_FAILURE porte l'IP dans metadata.ip.
+        expr: |
+          sum by (ip) (count_over_time({resource_type="serverless_container", resource_name="evenue4616ab80-evenue"}
+            |= `"context":"AUTH_FAILURE"` | json ip="metadata.ip" | __error__="" [1m])) > 50
+        for: 0s
+        labels:
+          severity: SEV1
+          canal: slack-urgence
+        annotations:
+          summary: 'Attaque par force brute suspectée depuis {{ $labels.ip }}'
+          description: >-
+            Le limiteur applicatif (10 tentatives / 5 min / IP) bloque déjà les requêtes ;
+            cette alerte signale la tentative d'attaque elle-même. Envisager un blocage en
+            amont si la source persiste.
+
+  - name: evenue-performance
+    interval: 1m
+    rules:
+      - alert: EvenueLatenceElevee
+        # KRI : temps de réponse > 2 s. Mesuré en p95 plutôt qu'en moyenne, une moyenne
+        # masquant les requêtes lentes derrière le volume de requêtes rapides.
+        expr: |
+          max(
+            quantile_over_time(0.95,
+              {resource_type="serverless_container", resource_name="evenue4616ab80-evenue"}
+                |= `"context":"HTTP_REQUEST"` | json | __error__=""
+                | unwrap durationMs [5m]
+            ) by (path)
+          ) > 2000
+        for: 10m
+        labels:
+          severity: SEV2
+          canal: slack-alertes
+        annotations:
+          summary: 'Latence p95 supérieure à 2 s'
+          description: >-
+            Perte d'utilisateurs et impact SEO. Distinguer un démarrage à froid
+            (requête §2.7 du guide) d'une dégradation réelle de la base ou d'un partenaire.

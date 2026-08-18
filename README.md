@@ -9,7 +9,7 @@
 - **Frontend & App Framework** : SvelteKit (Svelte 5 Runes), TypeScript, TailwindCSS v4, Lucide Icons, Shadcn-Svelte.
 - **Backend & ORM** : Node.js 22, Prisma ORM v7 (Driver Adapter `pg`), PostgreSQL (Docker Compose / Neon Cloud).
 - **InsurTech & Fintech** : API Assurance Wakam, Séquestre bancaire Stripe Connect Express, Vérification d'identité KYC.
-- **Résilience & Monitoring** : Pattern Circuit Breaker (3 états), Logging structuré JSON, Métriques Prométhéennes (`/api/metrics`).
+- **Résilience & Observabilité** : Pattern Circuit Breaker (3 états), logging JSON structuré avec identifiant de corrélation, exploité dans Grafana Loki via Scaleway Cockpit (voir [docs/GRAFANA_MONITORING.md](docs/GRAFANA_MONITORING.md)) ; sonde de santé sur `/api/health` et `/api/metrics`.
 - **Tests & Qualité** : Vitest (`@vitest/coverage-v8`), `svelte-check` (Typage 100% strict).
 - **Déploiement Cloud** : Docker Multi-Stage, GitHub Actions CI/CD, Scaleway Serverless Containers (0 €/mois).
 

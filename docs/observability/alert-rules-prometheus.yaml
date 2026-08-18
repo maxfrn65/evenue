@@ -1,0 +1,90 @@
+# Règles d'alerte Evenue — source de données Prometheus / Mimir
+#
+# ⚠️ PRÉREQUIS : ces règles portent sur les métriques `evenue_*` exposées par l'endpoint
+# /metrics de l'application. Scaleway Cockpit ne *scrape* pas les applications — il ingère
+# les métriques en push. Tant qu'aucun collecteur n'est déployé (voir README.md, § « Faire
+# collecter /metrics »), ces règles resteront sans données ; les règles Loki équivalentes
+# (alert-rules-loki.yaml) couvrent les mêmes KRI dès aujourd'hui.
+#
+# Les métriques d'infrastructure du conteneur (CPU, mémoire, requêtes, instances) sont,
+# elles, déjà présentes dans Mimir : Scaleway les y pousse nativement.
+#
+# Rappel de portée : le conteneur scale à zéro et peut tourner en plusieurs instances.
+# Les compteurs sont donc remis à zéro à chaque démarrage à froid — d'où des règles
+# exprimées en `rate()` sur fenêtre, jamais sur des totaux cumulés.
+
+groups:
+  - name: evenue-disponibilite
+    interval: 1m
+    rules:
+      - alert: EvenueTauxErreur5xxEleve
+        # KRI : taux d'erreur HTTP 500 > 1 % sur 5 min.
+        expr: |
+          sum(rate(evenue_http_requests_total{status=~"5.."}[5m]))
+          /
+          sum(rate(evenue_http_requests_total[5m]))
+          > 0.01
+        for: 5m
+        labels:
+          severity: SEV1
+          canal: slack-urgence
+        annotations:
+          summary: "Taux d'erreur 5xx supérieur à 1 % sur 5 minutes"
+          runbook: docs/GRAFANA_MONITORING.md
+
+  - name: evenue-performance
+    interval: 1m
+    rules:
+      - alert: EvenueLatenceElevee
+        # KRI : temps de réponse > 2 s, mesuré en p95 par route.
+        expr: |
+          histogram_quantile(
+            0.95,
+            sum by (le, route) (rate(evenue_http_request_duration_seconds_bucket[5m]))
+          ) > 2
+        for: 10m
+        labels:
+          severity: SEV2
+          canal: slack-alertes
+        annotations:
+          summary: 'Latence p95 supérieure à 2 s sur la route {{ $labels.route }}'
+
+      - alert: EvenueMemoireElevee
+        # KRI : utilisation mémoire > 85 %. MEMORY_LIMIT_BYTES doit correspondre à la
+        # mémoire allouée au conteneur dans la console Scaleway (ici 1 Gio).
+        expr: |
+          evenue_process_resident_memory_bytes / 1073741824 > 0.85
+        for: 10m
+        labels:
+          severity: SEV2
+          canal: slack-alertes
+        annotations:
+          summary: 'Mémoire du conteneur au-delà de 85 % de la limite allouée'
+
+  - name: evenue-partenaires
+    interval: 1m
+    rules:
+      - alert: EvenueCircuitBreakerWakamOuvert
+        # Gauge ordonnée : 0 CLOSED, 1 HALF_OPEN, 2 OPEN.
+        expr: evenue_circuit_breaker_state{partner="wakam"} == 2
+        for: 0s
+        labels:
+          severity: SEV1
+          canal: slack-urgence
+        annotations:
+          summary: "Circuit Breaker Wakam ouvert — vente d'assurance interrompue"
+
+  - name: evenue-securite
+    interval: 1m
+    rules:
+      - alert: EvenueTentativesConnexionEchouees
+        # KRI : > 50 tentatives échouées par minute. La ventilation par IP n'existe qu'en
+        # logs (l'IP serait un label à cardinalité non bornée) : croiser avec la règle
+        # Loki du même nom pour identifier la source.
+        expr: sum(rate(evenue_auth_login_failures_total[1m])) * 60 > 50
+        for: 0s
+        labels:
+          severity: SEV1
+          canal: slack-urgence
+        annotations:
+          summary: 'Plus de 50 tentatives de connexion échouées par minute'
