@@ -52,7 +52,7 @@ echo "🚀 Deploying $IMAGE_URI to serverless container $CONTAINER_ID..."
 
 # Updating the registry image both pins the exact build being shipped (traceable, and
 # rollback is just re-running with the previous tag) and triggers a new deployment.
-scw container container update "$CONTAINER_ID" registry-image="$IMAGE_URI"
+scw container container update "$CONTAINER_ID" image="$IMAGE_URI"
 
 echo "⏳ Waiting for the new deployment to become ready..."
 
