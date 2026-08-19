@@ -109,12 +109,10 @@ jobs:
             ].join('\n');
 
             if (existing) {
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: existing.number,
-                body
-              });
+              // Une fiche est déjà ouverte : ne rien ajouter. La sonde tourne toutes les
+              // 15 min, un commentaire par exécution noierait la fiche sous ~96 messages
+              // par jour sans apporter d'information nouvelle.
+              core.notice(`Fiche déjà ouverte : #${existing.number} — aucun commentaire ajouté.`);
             } else {
               await github.rest.issues.create({
                 owner: context.repo.owner,
