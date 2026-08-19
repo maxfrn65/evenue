@@ -19,7 +19,7 @@ vi.mock('./db', () => ({
 }));
 
 import { prisma } from './db';
-import { sendMessage, getConversations, getConversationMessages, getUnreadCount } from './messages';
+import { sendMessage, getConversations, getUnreadCount } from './messages';
 
 describe('Messaging Service', () => {
 	beforeEach(() => {
@@ -97,7 +97,12 @@ describe('Messaging Service', () => {
 					content: 'Oui tout à fait !',
 					read: false,
 					sender: { id: 'user-host-01', firstName: 'Jean', lastName: 'Dupont', role: 'HOST' },
-					receiver: { id: 'user-guest-01', firstName: 'Alexandre', lastName: 'Martin', role: 'GUEST' }
+					receiver: {
+						id: 'user-guest-01',
+						firstName: 'Alexandre',
+						lastName: 'Martin',
+						role: 'GUEST'
+					}
 				}
 			];
 

@@ -1,9 +1,10 @@
 import { json } from '@sveltejs/kit';
+import { toErrorMessage } from '$lib/utils';
 import type { RequestHandler } from './$types';
 import { disputeClaim } from '$lib/server/claims';
 
-export const POST: RequestHandler = async ({ request, cookies }) => {
-	const userId = cookies.get('evenue_session');
+export const POST: RequestHandler = async ({ request, locals }) => {
+	const userId = locals.user?.id;
 
 	if (!userId) {
 		return json({ success: false, error: 'Non authentifié.' }, { status: 401 });
@@ -14,7 +15,10 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 		const { claimId, disputeReason, disputeEvidenceUrls } = body;
 
 		if (!claimId || !disputeReason) {
-			return json({ success: false, error: 'Identifiant du sinistre et motif de contestation requis.' }, { status: 400 });
+			return json(
+				{ success: false, error: 'Identifiant du sinistre et motif de contestation requis.' },
+				{ status: 400 }
+			);
 		}
 
 		const claim = await disputeClaim({
@@ -25,7 +29,10 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 		});
 
 		return json({ success: true, claim }, { status: 200 });
-	} catch (error: any) {
-		return json({ success: false, error: error.message || 'Erreur lors de la contestation.' }, { status: 400 });
+	} catch (error) {
+		return json(
+			{ success: false, error: toErrorMessage(error, 'Erreur lors de la contestation.') },
+			{ status: 400 }
+		);
 	}
 };

@@ -123,7 +123,7 @@ describe('Bookings Service — Engine & Escrow Initialization', () => {
 				endDate: '2026-08-11',
 				guestCount: 50
 			})
-		).rejects.toThrow("dépasse la capacité maximale du lieu");
+		).rejects.toThrow('dépasse la capacité maximale du lieu');
 	});
 
 	it('should throw error if listing is unavailable on selected dates', async () => {

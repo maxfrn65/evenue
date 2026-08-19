@@ -79,10 +79,7 @@ describe('Dashboard Service', () => {
 					maxCapacity: 30,
 					createdAt: new Date(),
 					_count: { bookings: 2 },
-					bookings: [
-						{ hostEarnings: 450 },
-						{ hostEarnings: 400 }
-					]
+					bookings: [{ hostEarnings: 450 }, { hostEarnings: 400 }]
 				}
 			];
 

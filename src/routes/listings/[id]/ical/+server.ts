@@ -1,4 +1,5 @@
 import type { RequestHandler } from './$types';
+import { toErrorMessage } from '$lib/utils';
 import { generateListingICal } from '$lib/server/ical';
 
 export const GET: RequestHandler = async ({ params }) => {
@@ -11,8 +12,8 @@ export const GET: RequestHandler = async ({ params }) => {
 				'Content-Disposition': `attachment; filename="evenue-${params.id}.ics"`
 			}
 		});
-	} catch (error: any) {
-		return new Response(error.message || 'Erreur lors de la génération du calendrier iCal.', {
+	} catch (error) {
+		return new Response(toErrorMessage(error, 'Erreur lors de la génération du calendrier iCal.'), {
 			status: 404
 		});
 	}

@@ -13,11 +13,7 @@ vi.mock('./db', () => ({
 }));
 
 import { prisma } from './db';
-import {
-	generateListingICal,
-	parseICalEvents,
-	isListingAvailable
-} from './ical';
+import { generateListingICal, parseICalEvents, isListingAvailable } from './ical';
 
 describe('iCal Sync & Double-Booking Prevention Service', () => {
 	beforeEach(() => {

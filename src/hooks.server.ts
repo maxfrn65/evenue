@@ -1,5 +1,5 @@
 import type { Handle, HandleServerError } from '@sveltejs/kit';
-import { prisma } from '$lib/server/db';
+import { SESSION_COOKIE_NAME, resolveSessionUser, sessionClearOptions } from '$lib/server/session';
 import { logger } from '$lib/server/logger';
 import { recordHttpRequest } from '$lib/server/metrics';
 
@@ -52,25 +52,18 @@ export const handle: Handle = async ({ event, resolve }) => {
 	const requestId = event.request?.headers?.get('x-request-id') || crypto.randomUUID();
 	event.locals.requestId = requestId;
 
-	const userId = event.cookies.get('evenue_session');
+	const sessionToken = event.cookies.get(SESSION_COOKIE_NAME);
 
-	if (!userId) {
+	try {
+		event.locals.user = await resolveSessionUser(sessionToken);
+	} catch {
 		event.locals.user = null;
-	} else {
-		try {
-			event.locals.user = await prisma.user.findUnique({
-				where: { id: userId },
-				select: {
-					id: true,
-					email: true,
-					firstName: true,
-					lastName: true,
-					role: true
-				}
-			});
-		} catch {
-			event.locals.user = null;
-		}
+	}
+
+	// A token the store no longer knows is a dead cookie: drop it so the browser stops
+	// sending it and the user is not stuck in a half-logged-in state.
+	if (sessionToken && !event.locals.user) {
+		event.cookies.delete(SESSION_COOKIE_NAME, sessionClearOptions);
 	}
 
 	const response = await resolve(event);

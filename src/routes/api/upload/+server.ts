@@ -1,4 +1,5 @@
 import type { RequestHandler } from './$types';
+import { toErrorMessage } from '$lib/utils';
 import { json } from '@sveltejs/kit';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -6,8 +7,8 @@ import { rateLimit, clientKey } from '$lib/server/rate-limit';
 
 const MAX_FILE_BYTES = 5 * 1024 * 1024; // 5 MB per image
 
-export const POST: RequestHandler = async ({ request, cookies, getClientAddress }) => {
-	const userId = cookies.get('evenue_session');
+export const POST: RequestHandler = async ({ request, getClientAddress, locals }) => {
+	const userId = locals.user?.id;
 
 	if (!userId) {
 		return json({ success: false, error: 'Non authentifié.' }, { status: 401 });
@@ -69,7 +70,10 @@ export const POST: RequestHandler = async ({ request, cookies, getClientAddress 
 		}
 
 		return json({ success: true, urls: uploadedUrls, url: uploadedUrls[0] || '' });
-	} catch (error: any) {
-		return json({ success: false, error: error.message || 'Erreur lors de l\'envoi du fichier.' }, { status: 500 });
+	} catch (error) {
+		return json(
+			{ success: false, error: toErrorMessage(error, "Erreur lors de l'envoi du fichier.") },
+			{ status: 500 }
+		);
 	}
 };

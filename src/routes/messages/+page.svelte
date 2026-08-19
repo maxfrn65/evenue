@@ -1,31 +1,28 @@
 <script lang="ts">
+	import type { PageData } from './$types';
 	import { onDestroy, onMount } from 'svelte';
 	import Badge from '$lib/components/ui/badge/badge.svelte';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import Card from '$lib/components/ui/card/card.svelte';
 	import Textarea from '$lib/components/ui/textarea/textarea.svelte';
-	import {
-		MessageSquare,
-		Send,
-		User,
-		ArrowLeft,
-		CheckCheck,
-		Clock,
-		ShieldCheck
-	} from '@lucide/svelte';
+	import { MessageSquare, Send, CheckCheck, ShieldCheck } from '@lucide/svelte';
 
-	let { data } = $props();
+	let { data }: { data: PageData } = $props();
+
+	type Conversation = PageData['conversations'][number];
+	type Partner = PageData['activePartner'];
+	type ChatMessage = PageData['activeMessages'][number];
 
 	const user = $derived(data.user);
-	let conversations = $state<any[]>([]);
-	let activePartner = $state<any>(null);
-	let messages = $state<any[]>([]);
+	let conversations = $state<Conversation[]>([]);
+	let activePartner = $state<Partner>(null);
+	let messages = $state<ChatMessage[]>([]);
 	let bookingId = $state<string | undefined>(undefined);
 	let newMessage = $state('');
 	let sending = $state(false);
 	let sendError = $state('');
 
-	let pollInterval: any;
+	let pollInterval: ReturnType<typeof setInterval> | undefined;
 
 	$effect(() => {
 		conversations = data.conversations || [];
@@ -36,6 +33,8 @@
 
 	async function loadMessages(partnerId: string) {
 		try {
+			// Local query-string builder, not reactive state.
+			// eslint-disable-next-line svelte/prefer-svelte-reactivity
 			const searchParams = new URLSearchParams({ otherUserId: partnerId });
 			if (bookingId) searchParams.set('bookingId', bookingId);
 			const res = await fetch(`/api/messages?${searchParams}`);
@@ -43,12 +42,10 @@
 			if (res.ok && resData.success) {
 				messages = resData.messages;
 				conversations = conversations.map((conversation) =>
-					conversation.partner.id === partnerId
-						? { ...conversation, unreadCount: 0 }
-						: conversation
+					conversation.partner.id === partnerId ? { ...conversation, unreadCount: 0 } : conversation
 				);
 			}
-		} catch (e) {
+		} catch {
 			// Silent error handling on poll
 		}
 	}
@@ -61,7 +58,7 @@
 		}
 	}
 
-	async function selectPartner(partner: any) {
+	async function selectPartner(partner: NonNullable<Partner>) {
 		activePartner = partner;
 		await loadMessages(partner.id);
 	}
@@ -94,7 +91,7 @@
 				newMessage = contentToSend;
 				sendError = resData.error || "L'envoi du message a échoué.";
 			}
-		} catch (e) {
+		} catch {
 			newMessage = contentToSend;
 			sendError = "L'envoi du message a échoué. Vérifiez votre connexion puis réessayez.";
 		} finally {
@@ -119,9 +116,7 @@
 	<!-- Page Header -->
 	<div class="mb-6 flex items-center justify-between">
 		<div>
-			<h1 class="flex items-center gap-2 text-2xl font-extrabold text-slate-950">
-				Messagerie
-			</h1>
+			<h1 class="flex items-center gap-2 text-2xl font-extrabold text-slate-950">Messagerie</h1>
 			<p class="text-xs text-slate-500">
 				Échangez en direct avec vos hôtes et invités pour l'organisation de vos événements.
 			</p>
@@ -145,17 +140,22 @@
 							onclick={() => selectPartner(c.partner)}
 							class={`w-full rounded-xl p-3 text-left transition-all ${
 								activePartner?.id === c.partner.id
-									? 'bg-slate-50 border border-slate-200'
-									: 'hover:bg-slate-50 border border-transparent'
+									? 'border border-slate-200 bg-slate-50'
+									: 'border border-transparent hover:bg-slate-50'
 							}`}
 						>
 							<div class="flex items-center justify-between">
 								<div class="flex items-center gap-2.5">
-									<div class="flex h-9 w-9 items-center justify-center rounded-full bg-slate-950 font-bold text-white text-xs">
+									<div
+										class="flex h-9 w-9 items-center justify-center rounded-full bg-slate-950 text-xs font-bold text-white"
+									>
 										{c.partner.firstName[0]}
 									</div>
 									<div>
-										<p class="text-xs font-bold text-slate-900">{c.partner.firstName} {c.partner.lastName}</p>
+										<p class="text-xs font-bold text-slate-900">
+											{c.partner.firstName}
+											{c.partner.lastName}
+										</p>
 										<p class="line-clamp-1 text-[11px] text-slate-500">{c.lastMessage.content}</p>
 									</div>
 								</div>
@@ -173,20 +173,26 @@
 		</Card>
 
 		<!-- Right: Active Chat Window -->
-		<Card class="flex h-[600px] flex-col p-0 md:col-span-2 overflow-hidden border-slate-200">
+		<Card class="flex h-[600px] flex-col overflow-hidden border-slate-200 p-0 md:col-span-2">
 			{#if activePartner}
 				<!-- Partner Header -->
 				<div class="flex items-center justify-between border-b border-slate-100 bg-slate-50/50 p-4">
 					<div class="flex items-center gap-3">
-						<div class="flex h-10 w-10 items-center justify-center rounded-full bg-slate-950 font-bold text-white text-sm">
+						<div
+							class="flex h-10 w-10 items-center justify-center rounded-full bg-slate-950 text-sm font-bold text-white"
+						>
 							{activePartner.firstName[0]}
 						</div>
 						<div>
 							<h3 class="text-sm font-bold text-slate-900">
-								{activePartner.firstName} {activePartner.lastName}
+								{activePartner.firstName}
+								{activePartner.lastName}
 							</h3>
 							<div class="flex items-center gap-2">
-								<Badge variant={activePartner.role === 'HOST' ? 'purple' : 'secondary'} class="text-[10px]">
+								<Badge
+									variant={activePartner.role === 'HOST' ? 'purple' : 'secondary'}
+									class="text-[10px]"
+								>
 									{activePartner.role === 'HOST' ? 'Hôte' : 'Invité'}
 								</Badge>
 								<span class="flex items-center gap-1 text-[10px] text-emerald-600">
@@ -198,10 +204,12 @@
 				</div>
 
 				<!-- Messages Scrollable Body -->
-				<div class="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50/20">
+				<div class="flex-1 space-y-3 overflow-y-auto bg-slate-50/20 p-4">
 					{#if messages.length === 0}
-						<div class="flex h-full flex-col items-center justify-center text-center text-xs text-slate-400">
-							<MessageSquare class="h-8 w-8 text-slate-300 mb-2" />
+						<div
+							class="flex h-full flex-col items-center justify-center text-center text-xs text-slate-400"
+						>
+							<MessageSquare class="mb-2 h-8 w-8 text-slate-300" />
 							Démarrez la conversation en envoyant votre premier message !
 						</div>
 					{:else}
@@ -210,13 +218,18 @@
 								<div
 									class={`max-w-[75%] rounded-2xl px-4 py-2.5 text-xs ${
 										msg.senderId === user.id
-											? 'bg-slate-950 text-white rounded-br-none'
-											: 'bg-white text-slate-900 border border-slate-200 shadow-xs rounded-bl-none'
+											? 'rounded-br-none bg-slate-950 text-white'
+											: 'rounded-bl-none border border-slate-200 bg-white text-slate-900 shadow-xs'
 									}`}
 								>
 									<p class="leading-relaxed whitespace-pre-wrap">{msg.content}</p>
 									<div class="mt-1 flex items-center justify-end gap-1 text-[9px] opacity-70">
-										<span>{new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+										<span
+											>{new Date(msg.createdAt).toLocaleTimeString([], {
+												hour: '2-digit',
+												minute: '2-digit'
+											})}</span
+										>
 										{#if msg.senderId === user.id}
 											<CheckCheck class="h-3 w-3" />
 										{/if}
@@ -228,7 +241,10 @@
 				</div>
 
 				<!-- Message Input Footer -->
-				<form onsubmit={handleSendMessage} class="border-t border-slate-100 bg-white p-3 gap-2 flex items-center">
+				<form
+					onsubmit={handleSendMessage}
+					class="flex items-center gap-2 border-t border-slate-100 bg-white p-3"
+				>
 					<Textarea
 						bind:value={newMessage}
 						placeholder="Écrivez votre message..."
@@ -251,13 +267,18 @@
 					</Button>
 				</form>
 				{#if sendError}
-					<p class="border-t border-rose-100 bg-rose-50 px-4 py-2 text-xs text-rose-700" role="alert">
+					<p
+						class="border-t border-rose-100 bg-rose-50 px-4 py-2 text-xs text-rose-700"
+						role="alert"
+					>
 						{sendError}
 					</p>
 				{/if}
 			{:else}
-				<div class="flex h-full flex-col items-center justify-center text-center text-xs text-slate-400">
-					<MessageSquare class="h-10 w-10 text-slate-300 mb-2" />
+				<div
+					class="flex h-full flex-col items-center justify-center text-center text-xs text-slate-400"
+				>
+					<MessageSquare class="mb-2 h-10 w-10 text-slate-300" />
 					Sélectionnez une conversation dans la liste pour afficher les échanges.
 				</div>
 			{/if}

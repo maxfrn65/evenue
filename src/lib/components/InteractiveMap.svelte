@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
+	import type { LatLngTuple, Map as LeafletMap } from 'leaflet';
 	// Self-host Leaflet CSS from the npm package instead of an external CDN
 	// (OWASP A05: removes a third-party origin with no SRI from the page).
 	import 'leaflet/dist/leaflet.css';
@@ -17,7 +18,7 @@
 	let { listings = [] }: { listings?: ListingMarker[] } = $props();
 
 	let mapElement = $state<HTMLDivElement | null>(null);
-	let mapInstance = $state<any>(null);
+	let mapInstance = $state<LeafletMap | null>(null);
 
 	onMount(async () => {
 		if (typeof window === 'undefined' || !mapElement) return;
@@ -28,7 +29,8 @@
 
 		// Clean Voyager light map tiles from CartoDB
 		L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-			attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+			attribution:
+				'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
 			subdomains: 'abcd',
 			maxZoom: 19
 		}).addTo(mapInstance);
@@ -44,16 +46,17 @@
 		}
 	});
 
-	function updateMarkers(L: any) {
-		if (!mapInstance) return;
+	function updateMarkers(L: typeof import('leaflet')) {
+		const map = mapInstance;
+		if (!map) return;
 
-		mapInstance.eachLayer((layer: any) => {
+		map.eachLayer((layer) => {
 			if (layer instanceof L.Marker) {
-				mapInstance.removeLayer(layer);
+				map.removeLayer(layer);
 			}
 		});
 
-		const bounds: any[] = [];
+		const bounds: LatLngTuple[] = [];
 
 		listings.forEach((item) => {
 			if (item.latitude && item.longitude) {
@@ -67,7 +70,7 @@
 					iconAnchor: [25, 12]
 				});
 
-				const marker = L.marker([item.latitude, item.longitude], { icon: customIcon }).addTo(mapInstance);
+				const marker = L.marker([item.latitude, item.longitude], { icon: customIcon }).addTo(map);
 
 				const popupContent = `
 					<div style="font-family:sans-serif;padding:4px;">
@@ -85,7 +88,7 @@
 		});
 
 		if (bounds.length > 0) {
-			mapInstance.fitBounds(bounds, { padding: [40, 40] });
+			map.fitBounds(bounds, { padding: [40, 40] });
 		}
 	}
 
@@ -97,9 +100,9 @@
 </script>
 
 <div
-	class="w-full h-full rounded-lg overflow-hidden relative border border-slate-200 min-h-[320px]"
+	class="relative h-full min-h-[320px] w-full overflow-hidden rounded-lg border border-slate-200"
 	role="region"
 	aria-label="Carte interactive des lieux événementiels disponibles"
 >
-	<div bind:this={mapElement} class="w-full h-full min-h-[320px] bg-slate-100"></div>
+	<div bind:this={mapElement} class="h-full min-h-[320px] w-full bg-slate-100"></div>
 </div>

@@ -3,47 +3,60 @@
 	import Badge from '$lib/components/ui/badge/badge.svelte';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import * as Card from '$lib/components/ui/card/index.js';
-	import { ShieldCheck, Sparkles, ArrowRight, Star, MapPin, Users } from '@lucide/svelte';
+	import { ArrowRight } from '@lucide/svelte';
 
 	let { data } = $props();
 	const featuredListings = $derived(data.featuredListings || []);
 </script>
 
-<div class="space-y-16 pb-20 bg-white">
+<div class="space-y-16 bg-white pb-20">
 	<!-- Hero Section -->
-	<section class="relative pt-12 pb-20 bg-slate-50 border-b border-slate-200">
-		<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-			<h1 class="text-4xl sm:text-6xl font-extrabold text-slate-950 tracking-tight leading-tight max-w-4xl mx-auto">
+	<section class="relative border-b border-slate-200 bg-slate-50 pt-12 pb-20">
+		<div class="mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
+			<h1
+				class="mx-auto max-w-4xl text-4xl leading-tight font-extrabold tracking-tight text-slate-950 sm:text-6xl"
+			>
 				Louez des lieux uniques pour vos événements privés.
 			</h1>
 
-			<p class="mt-4 text-base sm:text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed">
-				Faites la fête l'esprit tranquille. Chaque réservation inclut nativement une <strong class="text-slate-950 font-semibold">assurance bris & dégradations Wakam</strong>.
+			<p class="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-slate-600 sm:text-lg">
+				Faites la fête l'esprit tranquille. Chaque réservation inclut nativement une <strong
+					class="font-semibold text-slate-950">assurance bris & dégradations Wakam</strong
+				>.
 			</p>
 
 			<!-- Reusable SearchEngine Component -->
-			<div class="mt-10 max-w-5xl mx-auto">
+			<div class="mx-auto mt-10 max-w-5xl">
 				<SearchEngine variant="hero" />
 			</div>
 		</div>
 	</section>
 
 	<!-- Featured Listings Grid -->
-	<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-		<div class="flex items-center justify-between mb-8">
+	<section class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+		<div class="mb-8 flex items-center justify-between">
 			<div>
-				<h2 class="text-2xl font-bold text-slate-950">Logements coup de cœur autorisant les soirées</h2>
-				<p class="text-slate-500 text-sm mt-1">Lieux vérifiés avec matériel audio et espaces réceptifs</p>
+				<h2 class="text-2xl font-bold text-slate-950">
+					Logements coup de cœur autorisant les soirées
+				</h2>
+				<p class="mt-1 text-sm text-slate-500">
+					Lieux vérifiés avec matériel audio et espaces réceptifs
+				</p>
 			</div>
 
-			<Button href="/listings" variant="ghost" size="sm" class="gap-1 text-slate-900 font-semibold hover:bg-slate-100">
-				Voir tout le catalogue <ArrowRight class="w-4 h-4" />
+			<Button
+				href="/listings"
+				variant="ghost"
+				size="sm"
+				class="gap-1 font-semibold text-slate-900 hover:bg-slate-100"
+			>
+				Voir tout le catalogue <ArrowRight class="h-4 w-4" />
 			</Button>
 		</div>
 
-		<div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+		<div class="grid grid-cols-1 gap-8 md:grid-cols-3">
 			{#each featuredListings as item (item.id)}
-				<Card.Root class="relative mx-auto w-full max-w-sm pt-0 h-full flex flex-col">
+				<Card.Root class="relative mx-auto flex h-full w-full max-w-sm flex-col pt-0">
 					<img
 						src={item.imageUrl}
 						alt={item.title}

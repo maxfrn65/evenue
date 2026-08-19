@@ -1,4 +1,5 @@
 import type { PageServerLoad } from './$types';
+import { toErrorMessage } from '$lib/utils';
 import { redirect } from '@sveltejs/kit';
 import { getDashboardData } from '$lib/server/dashboard';
 import { logger } from '$lib/server/logger';
@@ -16,18 +17,25 @@ export const load: PageServerLoad = async ({ parent }) => {
 			user,
 			dashboard
 		};
-	} catch (err: any) {
-		logger.error(`Error loading dashboard data for user ${user.id}: ${err?.message || err}`, {
+	} catch (err) {
+		const message = toErrorMessage(err);
+		logger.error(`Error loading dashboard data for user ${user.id}: ${message}`, {
 			context: 'DASHBOARD_LOAD',
 			userId: user.id,
-			error: err?.message || String(err),
-			stack: err?.stack
+			error: message,
+			stack: err instanceof Error ? err.stack : undefined
 		});
 
 		return {
 			user,
 			dashboard: {
-				stats: { totalBookings: 0, upcomingBookings: 0, totalSpent: 0, totalListings: 0, totalEarnings: 0 },
+				stats: {
+					totalBookings: 0,
+					upcomingBookings: 0,
+					totalSpent: 0,
+					totalListings: 0,
+					totalEarnings: 0
+				},
 				bookings: [],
 				listings: [],
 				hostReceivedBookings: []

@@ -1,10 +1,11 @@
 <script lang="ts">
 	import logoFull from '$lib/assets/full.png';
+	import { toErrorMessage } from '$lib/utils';
 	import Button from '$lib/components/ui/button/button.svelte';
 	import * as InputGroup from '$lib/components/ui/input-group/index.js';
 	import Label from '$lib/components/ui/label/label.svelte';
 	import Card from '$lib/components/ui/card/card.svelte';
-	import { User, Mail, Lock, ShieldCheck, ArrowRight } from '@lucide/svelte';
+	import { Mail, Lock, ArrowRight } from '@lucide/svelte';
 
 	import { page } from '$app/state';
 
@@ -16,7 +17,9 @@
 	let errorMessage = $state('');
 	let loading = $state(false);
 
-	const targetRedirect = $derived(page.url.searchParams.get('redirectTo') || (role === 'HOST' ? '/become-host' : '/dashboard'));
+	const targetRedirect = $derived(
+		page.url.searchParams.get('redirectTo') || (role === 'HOST' ? '/become-host' : '/dashboard')
+	);
 
 	async function handleSubmit(event: Event) {
 		event.preventDefault();
@@ -37,8 +40,8 @@
 			}
 
 			window.location.href = targetRedirect;
-		} catch (err: any) {
-			errorMessage = err.message;
+		} catch (err) {
+			errorMessage = toErrorMessage(err);
 		} finally {
 			loading = false;
 		}
@@ -49,7 +52,7 @@
 	<Card class="space-y-6 border-slate-200 p-8 shadow-md">
 		<div class="space-y-2 text-center">
 			<a href="/" class="inline-block">
-				<img src={logoFull} alt="Evenue" class="h-12 w-auto mx-auto object-contain mb-2" />
+				<img src={logoFull} alt="Evenue" class="mx-auto mb-2 h-12 w-auto object-contain" />
 			</a>
 			<h1 class="text-2xl font-bold text-slate-950">Créer un compte Evenue</h1>
 			<p class="text-xs text-slate-500">
@@ -70,8 +73,8 @@
 
 		<form onsubmit={handleSubmit} class="space-y-4">
 			<!-- Role Toggle -->
-			<fieldset class="flex flex-col gap-1.5 border-0 p-0 m-0">
-				<legend class="text-sm font-medium mb-1.5">Type de compte</legend>
+			<fieldset class="m-0 flex flex-col gap-1.5 border-0 p-0">
+				<legend class="mb-1.5 text-sm font-medium">Type de compte</legend>
 				<div class="grid grid-cols-2 gap-3">
 					<Button
 						type="button"

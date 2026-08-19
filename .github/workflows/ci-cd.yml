@@ -37,6 +37,9 @@ jobs:
       - name: Run svelte-check
         run: npm run check
 
+      - name: Run Prettier & ESLint
+        run: npm run lint
+
   # =========================================================
   # Job 2: Vitest Automated Unit Test Suite & Coverage (>80%)
   # =========================================================

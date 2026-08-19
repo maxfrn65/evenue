@@ -21,15 +21,15 @@ vi.mock('./db', () => ({
 }));
 
 import { prisma } from './db';
-import { submitClaim, disputeClaim, generateWakamCertificateHTML } from './claims';
+import { submitClaim, disputeClaim } from './claims';
 
-describe('Claims Service — Host RBAC, 48h Window & Guest Dispute', () => {
+describe('Claims Service — Host RBAC, 7-day Window & Guest Dispute', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 	});
 
 	describe('submitClaim', () => {
-		it('should submit a claim successfully when executed by Host within 48h window', async () => {
+		it('should submit a claim successfully when executed by Host within the 7-day window', async () => {
 			const recentEndDate = new Date(Date.now() - 10 * 3600 * 1000); // 10 hours ago
 
 			const mockBooking = {
@@ -55,9 +55,11 @@ describe('Claims Service — Host RBAC, 48h Window & Guest Dispute', () => {
 			vi.mocked(prisma.booking.update).mockResolvedValue({} as any);
 			vi.mocked(prisma.claim.create).mockResolvedValue({
 				id: 'claim-1',
+				claimNumber: 'SIN-WAK-123456',
 				bookingId: 'booking-1',
 				policyNumber: 'WAK-2026-89412',
 				estimatedDamage: 1500,
+				status: 'CLAIMED',
 				createdAt: new Date()
 			} as any);
 
@@ -71,8 +73,15 @@ describe('Claims Service — Host RBAC, 48h Window & Guest Dispute', () => {
 
 			expect(result.bookingId).toBe('booking-1');
 			expect(result.policyNumber).toBe('WAK-2026-89412');
-			expect(result.status).toBe('SUBMITTED');
-			expect(prisma.claim.create).toHaveBeenCalled();
+			// The returned status mirrors the persisted row rather than inventing one.
+			expect(result.status).toBe('CLAIMED');
+			// The claim number must be written to the database, not only returned.
+			expect(prisma.claim.create).toHaveBeenCalledWith(
+				expect.objectContaining({
+					data: expect.objectContaining({ claimNumber: expect.stringMatching(/^SIN-WAK-\d{6}$/) })
+				})
+			);
+			expect(result.claimNumber).toMatch(/^SIN-WAK-\d{6}$/);
 		});
 
 		it('should reject claim submission if user is NOT the host owner (Guest RBAC check)', async () => {
@@ -120,7 +129,9 @@ describe('Claims Service — Host RBAC, 48h Window & Guest Dispute', () => {
 					description: 'Description valide de plus de dix caractères',
 					estimatedCost: 2000
 				})
-			).rejects.toThrow('La fenêtre de déclaration de sinistre de 7 jours post-événement est expirée.');
+			).rejects.toThrow(
+				'La fenêtre de déclaration de sinistre de 7 jours post-événement est expirée.'
+			);
 		});
 	});
 
@@ -154,7 +165,7 @@ describe('Claims Service — Host RBAC, 48h Window & Guest Dispute', () => {
 			expect(prisma.claim.update).toHaveBeenCalledWith(
 				expect.objectContaining({
 					where: { id: 'claim-1' },
-					data: expect.objectContaining({ isDisputed: true, status: 'CLAIMED' })
+					data: expect.objectContaining({ isDisputed: true, status: 'UNDER_REVIEW' })
 				})
 			);
 		});
@@ -182,7 +193,10 @@ describe('Claims Service — Host RBAC, 48h Window & Guest Dispute', () => {
 
 	describe('getClaimByBookingId & generateWakamCertificateHTML', () => {
 		it('should return claim with history by bookingId', async () => {
-			vi.mocked(prisma.claim.findFirst).mockResolvedValue({ id: 'claim-1', bookingId: 'b-1' } as any);
+			vi.mocked(prisma.claim.findFirst).mockResolvedValue({
+				id: 'claim-1',
+				bookingId: 'b-1'
+			} as any);
 
 			const claim = await import('./claims').then((m) => m.getClaimByBookingId('b-1'));
 			expect(claim?.id).toBe('claim-1');
@@ -208,7 +222,9 @@ describe('Claims Service — Host RBAC, 48h Window & Guest Dispute', () => {
 
 			vi.mocked(prisma.booking.findFirst).mockResolvedValue(mockBooking as any);
 
-			const html = await import('./claims').then((m) => m.generateWakamCertificateHTML('booking-1', 'guest-1'));
+			const html = await import('./claims').then((m) =>
+				m.generateWakamCertificateHTML('booking-1', 'guest-1')
+			);
 			expect(html).toContain('WAK-2026-999');
 			expect(html).toContain('10 000,00 €');
 			expect(html).toContain('Alexandre Rivière');

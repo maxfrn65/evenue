@@ -1,4 +1,5 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
+import { toErrorMessage } from '$lib/utils';
 import { sendMessage, getConversations, getConversationMessages } from '$lib/server/messages';
 
 export const GET: RequestHandler = async ({ url, locals }) => {
@@ -17,8 +18,8 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 			const conversations = await getConversations(locals.user.id);
 			return json({ success: true, conversations });
 		}
-	} catch (error: any) {
-		return json({ success: false, error: error.message }, { status: 400 });
+	} catch (error) {
+		return json({ success: false, error: toErrorMessage(error) }, { status: 400 });
 	}
 };
 
@@ -37,7 +38,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		});
 
 		return json({ success: true, message });
-	} catch (error: any) {
-		return json({ success: false, error: error.message }, { status: 400 });
+	} catch (error) {
+		return json({ success: false, error: toErrorMessage(error) }, { status: 400 });
 	}
 };

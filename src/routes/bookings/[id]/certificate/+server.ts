@@ -1,8 +1,9 @@
 import type { RequestHandler } from './$types';
+import { toErrorMessage } from '$lib/utils';
 import { generateWakamCertificateHTML } from '$lib/server/claims';
 
-export const GET: RequestHandler = async ({ params, cookies }) => {
-	const userId = cookies.get('evenue_session');
+export const GET: RequestHandler = async ({ params, locals }) => {
+	const userId = locals.user?.id;
 
 	if (!userId) {
 		return new Response('Non authentifié.', { status: 401 });
@@ -15,7 +16,9 @@ export const GET: RequestHandler = async ({ params, cookies }) => {
 				'Content-Type': 'text/html; charset=utf-8'
 			}
 		});
-	} catch (error: any) {
-		return new Response(error.message || 'Erreur lors de la génération du certificat.', { status: 404 });
+	} catch (error) {
+		return new Response(toErrorMessage(error, 'Erreur lors de la génération du certificat.'), {
+			status: 404
+		});
 	}
 };

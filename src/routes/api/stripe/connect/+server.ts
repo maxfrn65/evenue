@@ -1,9 +1,10 @@
 import { json } from '@sveltejs/kit';
+import { toErrorMessage } from '$lib/utils';
 import type { RequestHandler } from './$types';
 import { createHostStripeAccount, createStripeOnboardingLink } from '$lib/server/stripe';
 
-export const POST: RequestHandler = async ({ cookies, url }) => {
-	const userId = cookies.get('evenue_session');
+export const POST: RequestHandler = async ({ url, locals }) => {
+	const userId = locals.user?.id;
 
 	if (!userId) {
 		return json({ error: 'Non authentifié.' }, { status: 401 });
@@ -19,7 +20,10 @@ export const POST: RequestHandler = async ({ cookies, url }) => {
 		const onboardingUrl = await createStripeOnboardingLink(stripeAccountId, refreshUrl, returnUrl);
 
 		return json({ success: true, stripeAccountId, onboardingUrl });
-	} catch (error: any) {
-		return json({ error: error.message || 'Erreur lors de l\'initialisation Stripe Connect.' }, { status: 500 });
+	} catch (error) {
+		return json(
+			{ error: toErrorMessage(error, "Erreur lors de l'initialisation Stripe Connect.") },
+			{ status: 500 }
+		);
 	}
 };

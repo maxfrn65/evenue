@@ -1,7 +1,8 @@
 import { json } from '@sveltejs/kit';
+import { toErrorMessage } from '$lib/utils';
 import type { RequestHandler } from './$types';
 import { registerUser } from '$lib/server/auth';
-import { SESSION_COOKIE_NAME, sessionCookieOptions } from '$lib/server/session';
+import { SESSION_COOKIE_NAME, createSession, sessionCookieOptions } from '$lib/server/session';
 import { rateLimit, clientKey } from '$lib/server/rate-limit';
 
 export const POST: RequestHandler = async ({ request, cookies, getClientAddress }) => {
@@ -26,7 +27,10 @@ export const POST: RequestHandler = async ({ request, cookies, getClientAddress 
 		}
 
 		if (password.length < 8) {
-			return json({ error: 'Le mot de passe doit contenir au moins 8 caractères.' }, { status: 400 });
+			return json(
+				{ error: 'Le mot de passe doit contenir au moins 8 caractères.' },
+				{ status: 400 }
+			);
 		}
 
 		const user = await registerUser({
@@ -37,11 +41,12 @@ export const POST: RequestHandler = async ({ request, cookies, getClientAddress 
 			role: role === 'HOST' ? 'HOST' : 'GUEST'
 		});
 
-		// Set hardened HTTP-only session cookie (httpOnly, sameSite, secure in prod)
-		cookies.set(SESSION_COOKIE_NAME, user.id, sessionCookieOptions);
+		// Opaque server-side session token, never the user id (OWASP A07).
+		const sessionToken = await createSession(user.id);
+		cookies.set(SESSION_COOKIE_NAME, sessionToken, sessionCookieOptions);
 
 		return json({ success: true, user }, { status: 201 });
-	} catch (error: any) {
-		return json({ error: error.message || 'Erreur lors de l\'inscription.' }, { status: 400 });
+	} catch (error) {
+		return json({ error: toErrorMessage(error, "Erreur lors de l'inscription.") }, { status: 400 });
 	}
 };

@@ -2,8 +2,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('$lib/server/db', () => ({
 	prisma: {
-		user: {
-			findUnique: vi.fn()
+		session: {
+			findUnique: vi.fn(),
+			deleteMany: vi.fn().mockResolvedValue({ count: 1 })
 		}
 	}
 }));
@@ -14,7 +15,7 @@ import { handle, handleError } from './hooks.server';
 
 function buildEvent(overrides: Record<string, unknown> = {}) {
 	return {
-		cookies: { get: vi.fn().mockReturnValue(undefined) },
+		cookies: { get: vi.fn().mockReturnValue(undefined), delete: vi.fn() },
 		locals: {},
 		request: { method: 'GET', headers: new Headers() },
 		url: new URL('https://evenue.test/listings'),
@@ -27,47 +28,80 @@ describe('session hook', () => {
 		vi.clearAllMocks();
 	});
 
-	it('adds the connected user to locals from the session cookie', async () => {
-		const user = {
-			id: 'guest-1',
-			email: 'guest@example.test',
-			firstName: 'Alice',
-			lastName: 'Martin',
-			role: 'GUEST'
-		};
-		vi.mocked(prisma.user.findUnique).mockResolvedValue(user as any);
+	const user = {
+		id: 'guest-1',
+		email: 'guest@example.test',
+		firstName: 'Alice',
+		lastName: 'Martin',
+		role: 'GUEST'
+	};
+
+	it('resolves the cookie as a session token, never as a user id', async () => {
+		vi.mocked(prisma.session.findUnique).mockResolvedValue({
+			expiresAt: new Date(Date.now() + 60_000),
+			user
+		} as any);
 
 		const event = {
-			cookies: { get: vi.fn().mockReturnValue('guest-1') },
+			cookies: { get: vi.fn().mockReturnValue('opaque-token'), delete: vi.fn() },
 			locals: {}
 		} as any;
 		const resolve = vi.fn().mockResolvedValue(new Response());
 
 		await handle({ event, resolve } as any);
 
-		expect(prisma.user.findUnique).toHaveBeenCalledWith({
-			where: { id: 'guest-1' },
-			select: {
-				id: true,
-				email: true,
-				firstName: true,
-				lastName: true,
-				role: true
-			}
-		});
+		// The lookup keys on the session id. Keying on a user id is what made the old
+		// cookie forgeable, so this assertion is the regression guard.
+		expect(prisma.session.findUnique).toHaveBeenCalledWith(
+			expect.objectContaining({ where: { id: 'opaque-token' } })
+		);
 		expect(event.locals.user).toEqual(user);
+		expect(event.cookies.delete).not.toHaveBeenCalled();
 	});
 
-	it('marks locals as anonymous when no session cookie exists', async () => {
+	it('rejects an expired session and clears the dead cookie', async () => {
+		vi.mocked(prisma.session.findUnique).mockResolvedValue({
+			expiresAt: new Date(Date.now() - 60_000),
+			user
+		} as any);
+
 		const event = {
-			cookies: { get: vi.fn().mockReturnValue(undefined) },
+			cookies: { get: vi.fn().mockReturnValue('stale-token'), delete: vi.fn() },
 			locals: {}
 		} as any;
 
 		await handle({ event, resolve: vi.fn().mockResolvedValue(new Response()) } as any);
 
-		expect(prisma.user.findUnique).not.toHaveBeenCalled();
 		expect(event.locals.user).toBeNull();
+		expect(prisma.session.deleteMany).toHaveBeenCalledWith({ where: { id: 'stale-token' } });
+		expect(event.cookies.delete).toHaveBeenCalled();
+	});
+
+	it('rejects a token the store does not know', async () => {
+		vi.mocked(prisma.session.findUnique).mockResolvedValue(null as any);
+
+		const event = {
+			cookies: { get: vi.fn().mockReturnValue('forged-token'), delete: vi.fn() },
+			locals: {}
+		} as any;
+
+		await handle({ event, resolve: vi.fn().mockResolvedValue(new Response()) } as any);
+
+		expect(event.locals.user).toBeNull();
+		expect(event.cookies.delete).toHaveBeenCalled();
+	});
+
+	it('marks locals as anonymous when no session cookie exists', async () => {
+		const event = {
+			cookies: { get: vi.fn().mockReturnValue(undefined), delete: vi.fn() },
+			locals: {}
+		} as any;
+
+		await handle({ event, resolve: vi.fn().mockResolvedValue(new Response()) } as any);
+
+		expect(prisma.session.findUnique).not.toHaveBeenCalled();
+		expect(event.locals.user).toBeNull();
+		expect(event.cookies.delete).not.toHaveBeenCalled();
 	});
 });
 

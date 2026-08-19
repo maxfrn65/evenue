@@ -34,6 +34,7 @@ enum InsuranceStatus {
   PENDING
   ACTIVE
   CLAIMED
+  UNDER_REVIEW
   EXPIRED
   FAILED
 }
@@ -45,73 +46,91 @@ enum PayoutStatus {
 }
 
 model User {
-  id              String      @id @default(uuid())
-  email           String      @unique
+  id              String    @id @default(uuid())
+  email           String    @unique
   passwordHash    String
   firstName       String
   lastName        String
-  role            UserRole    @default(GUEST)
-  kycStatus       KycStatus   @default(NOT_STARTED)
-  stripeAccountId String?     // Stripe Connect Express account for hosts
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
+  role            UserRole  @default(GUEST)
+  kycStatus       KycStatus @default(NOT_STARTED)
+  stripeAccountId String? // Stripe Connect Express account for hosts
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
-  listings        Listing[]   @relation("HostListings")
-  bookings        Booking[]   @relation("GuestBookings")
-  sentMessages    Message[]   @relation("SentMessages")
-  receivedMessages Message[]  @relation("ReceivedMessages")
+  listings         Listing[] @relation("HostListings")
+  bookings         Booking[] @relation("GuestBookings")
+  sentMessages     Message[] @relation("SentMessages")
+  receivedMessages Message[] @relation("ReceivedMessages")
+  sessions         Session[]
+}
+
+/// Server-side session store.
+///
+/// The cookie used to carry the raw user id, so anyone who learned or guessed an id could
+/// impersonate that account (OWASP A07). It now carries an opaque 256-bit token that only
+/// this table can resolve, which also makes sessions expirable and revocable on logout.
+model Session {
+  id        String   @id
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
 }
 
 model Listing {
-  id               String     @id @default(uuid())
-  hostId           String
-  title            String
-  description      String
-  address          String
-  city             String
-  zipCode          String
-  latitude         Float
-  longitude        Float
-  pricePerNight    Float
-  securityDeposit  Float      @default(500.0)
-  maxCapacity      Int
-  eventTypeAllowed String[]   // e.g. ["SOIRÉE", "ANNIVERSAIRE", "MARIAGE"]
-  imageUrl         String?
-  imageUrls        String[]   @default([])
-  icalSyncUrl      String?
+  id                 String    @id @default(uuid())
+  hostId             String
+  title              String
+  description        String
+  address            String
+  city               String
+  zipCode            String
+  latitude           Float
+  longitude          Float
+  pricePerNight      Float
+  securityDeposit    Float     @default(500.0)
+  maxCapacity        Int
+  eventTypeAllowed   String[] // e.g. ["SOIRÉE", "ANNIVERSAIRE", "MARIAGE"]
+  imageUrl           String?
+  imageUrls          String[]  @default([])
+  icalSyncUrl        String?
   availableStartDate DateTime?
   availableEndDate   DateTime?
   availabilityRanges Json?
-  createdAt        DateTime   @default(now())
-  updatedAt        DateTime   @updatedAt
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 
-  host             User       @relation("HostListings", fields: [hostId], references: [id], onDelete: Cascade)
-  bookings         Booking[]
+  host     User      @relation("HostListings", fields: [hostId], references: [id], onDelete: Cascade)
+  bookings Booking[]
 }
 
 model Booking {
-  id                   String           @id @default(uuid())
-  listingId            String
-  guestId              String
-  startDate            DateTime
-  endDate              DateTime
-  totalPrice           Float
-  hostEarnings         Float
-  platformFee          Float
-  insuranceFee         Float
+  id                    String        @id @default(uuid())
+  listingId             String
+  guestId               String
+  startDate             DateTime
+  endDate               DateTime
+  totalPrice            Float
+  hostEarnings          Float
+  platformFee           Float
+  insuranceFee          Float
   securityDepositAmount Float
-  status               BookingStatus    @default(PENDING_PAYMENT)
+  status                BookingStatus @default(PENDING_PAYMENT)
   stripePaymentIntentId String?
-  stripeEscrowHoldId   String?
-  createdAt            DateTime         @default(now())
-  updatedAt            DateTime         @updatedAt
+  stripeEscrowHoldId    String?
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
 
-  listing              Listing          @relation(fields: [listingId], references: [id], onDelete: Cascade)
-  guest                User             @relation("GuestBookings", fields: [guestId], references: [id], onDelete: Cascade)
-  insurancePolicy      InsurancePolicy?
-  payout               Payout?
-  messages             Message[]
-  claims               Claim[]
+  listing         Listing          @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  guest           User             @relation("GuestBookings", fields: [guestId], references: [id], onDelete: Cascade)
+  insurancePolicy InsurancePolicy?
+  payout          Payout?
+  messages        Message[]
+  claims          Claim[]
 }
 
 model InsurancePolicy {
@@ -125,11 +144,12 @@ model InsurancePolicy {
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
 
-  booking         Booking         @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
 }
 
 model Claim {
   id                  String          @id @default(uuid())
+  claimNumber         String?         @unique
   bookingId           String
   policyNumber        String
   declarantId         String
@@ -147,8 +167,8 @@ model Claim {
   createdAt           DateTime        @default(now())
   updatedAt           DateTime        @updatedAt
 
-  booking             Booking         @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-  history             ClaimHistory[]
+  booking Booking        @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  history ClaimHistory[]
 }
 
 model ClaimHistory {
@@ -160,35 +180,35 @@ model ClaimHistory {
   notes     String?
   createdAt DateTime @default(now())
 
-  claim     Claim    @relation(fields: [claimId], references: [id], onDelete: Cascade)
+  claim Claim @relation(fields: [claimId], references: [id], onDelete: Cascade)
 }
 
 model Payout {
-  id              String       @id @default(uuid())
-  bookingId       String       @unique
-  hostAmount      Float
-  platformAmount  Float
-  insurerAmount   Float
-  status          PayoutStatus @default(HELD_IN_ESCROW)
+  id               String       @id @default(uuid())
+  bookingId        String       @unique
+  hostAmount       Float
+  platformAmount   Float
+  insurerAmount    Float
+  status           PayoutStatus @default(HELD_IN_ESCROW)
   stripeTransferId String?
-  disbursedAt     DateTime?
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
+  disbursedAt      DateTime?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
 
-  booking         Booking      @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
 }
 
 model Message {
-  id          String    @id @default(uuid())
-  senderId    String
-  sender      User      @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
-  receiverId  String
-  receiver    User      @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
-  bookingId   String?
-  booking     Booking?  @relation(fields: [bookingId], references: [id], onDelete: SetNull)
-  content     String
-  read        Boolean   @default(false)
-  createdAt   DateTime  @default(now())
+  id         String   @id @default(uuid())
+  senderId   String
+  sender     User     @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  receiverId String
+  receiver   User     @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
+  bookingId  String?
+  booking    Booking? @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+  content    String
+  read       Boolean  @default(false)
+  createdAt  DateTime @default(now())
 
   @@index([senderId])
   @@index([receiverId])

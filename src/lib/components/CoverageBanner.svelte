@@ -1,9 +1,7 @@
 <script lang="ts">
 	import Card from '$lib/components/ui/card/card.svelte';
 	import Badge from '$lib/components/ui/badge/badge.svelte';
-	import { ShieldCheck, Sparkles, CheckCircle2, XCircle } from '@lucide/svelte';
-
-	let { compact = false }: { compact?: boolean } = $props();
+	import { ShieldCheck, CheckCircle2, XCircle } from '@lucide/svelte';
 
 	const coveredItems = [
 		'Bris de glace & dégradations de mobilier',

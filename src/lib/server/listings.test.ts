@@ -14,7 +14,13 @@ vi.mock('./db', () => ({
 }));
 
 import { prisma } from './db';
-import { getListings, getListingById, createListing, updateListing, deleteListing } from './listings';
+import {
+	getListings,
+	getListingById,
+	createListing,
+	updateListing,
+	deleteListing
+} from './listings';
 
 describe('Listings Service — Event Search & Filtering', () => {
 	beforeEach(() => {
@@ -74,7 +80,14 @@ describe('Listings Service — Event Search & Filtering', () => {
 		const mockListing = {
 			id: 'villa-aix-01',
 			title: "Villa d'Exception",
-			host: { id: 'host-1', firstName: 'Jean', lastName: 'Dupont', kycStatus: 'VERIFIED', stripeAccountId: null, createdAt: new Date() }
+			host: {
+				id: 'host-1',
+				firstName: 'Jean',
+				lastName: 'Dupont',
+				kycStatus: 'VERIFIED',
+				stripeAccountId: null,
+				createdAt: new Date()
+			}
 		};
 
 		vi.mocked(prisma.listing.findUnique).mockResolvedValue(mockListing as any);
@@ -114,9 +127,9 @@ describe('Listings Service — Event Search & Filtering', () => {
 			title: 'Old title'
 		} as any);
 
-		await expect(
-			updateListing('listing-1', 'host-1', { title: 'New title' })
-		).rejects.toThrow('Vous n\'êtes pas autorisé à modifier cette annonce.');
+		await expect(updateListing('listing-1', 'host-1', { title: 'New title' })).rejects.toThrow(
+			"Vous n'êtes pas autorisé à modifier cette annonce."
+		);
 	});
 
 	it('should delete listing if owned by host and no active bookings exist', async () => {

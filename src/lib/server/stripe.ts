@@ -1,6 +1,27 @@
 import Stripe from 'stripe';
 import { prisma } from './db';
 import { env } from '$env/dynamic/private';
+import { logger } from './logger';
+import { recordPartnerFallback } from './metrics';
+import { toErrorMessage } from '$lib/utils';
+
+/**
+ * Report that a Stripe call could not be honoured and a locally simulated response was
+ * returned instead.
+ *
+ * Every `catch` below used to swallow its error and hand back a `pi_mock_…` / `acct_mock_…`
+ * identifier with no log line, no metric and no flag: a payment failure was indistinguishable
+ * from a success. The mock stays — this build has no live Stripe account — but it is now
+ * announced, counted and carried in the return value.
+ */
+function reportStripeFallback(operation: string, error: unknown): void {
+	recordPartnerFallback('stripe', operation);
+	logger.warn(`Stripe ${operation} failed — falling back to a simulated response`, {
+		context: 'STRIPE_FALLBACK',
+		error: toErrorMessage(error),
+		metadata: { partner: 'stripe', operation, simulated: true }
+	});
+}
 
 /**
  * Stripe client, created on first use rather than on import — same reason as the Prisma
@@ -65,6 +86,7 @@ export async function createHostStripeAccount(userId: string, email: string): Pr
 
 		return account.id;
 	} catch (error) {
+		reportStripeFallback('accounts.create', error);
 		const mockId = `acct_mock_${userId.slice(0, 8)}`;
 		await prisma.user.update({
 			where: { id: userId },
@@ -91,8 +113,16 @@ export async function createStripeOnboardingLink(
 		});
 		return accountLink.url;
 	} catch (error) {
+		reportStripeFallback('accountLinks.create', error);
 		return `${returnUrl}?stripe_onboarding=success_mock`;
 	}
+}
+
+export interface EscrowResult {
+	paymentIntentId: string;
+	clientSecret: string | null;
+	/** True when no real payment intent exists behind this identifier. */
+	simulated: boolean;
 }
 
 /**
@@ -102,7 +132,7 @@ export async function createBookingPaymentIntent(
 	amount: number,
 	securityDeposit: number,
 	stripeAccountId?: string
-) {
+): Promise<EscrowResult> {
 	try {
 		const paymentIntent = await stripe.paymentIntents.create({
 			amount: Math.round(amount * 100),
@@ -117,13 +147,16 @@ export async function createBookingPaymentIntent(
 
 		return {
 			paymentIntentId: paymentIntent.id,
-			clientSecret: paymentIntent.client_secret
+			clientSecret: paymentIntent.client_secret,
+			simulated: false
 		};
 	} catch (error) {
+		reportStripeFallback('paymentIntents.create', error);
 		const mockId = `pi_mock_${Math.floor(100000 + Math.random() * 900000)}`;
 		return {
 			paymentIntentId: mockId,
-			clientSecret: `${mockId}_secret_mock`
+			clientSecret: `${mockId}_secret_mock`,
+			simulated: true
 		};
 	}
 }

@@ -2,8 +2,8 @@ import type { RequestHandler } from './$types';
 import { json } from '@sveltejs/kit';
 import { cancelBooking } from '$lib/server/dashboard';
 
-export const POST: RequestHandler = async ({ request, cookies }) => {
-	const userId = cookies.get('evenue_session');
+export const POST: RequestHandler = async ({ request, locals }) => {
+	const userId = locals.user?.id;
 
 	if (!userId) {
 		return json({ success: false, error: 'Non authentifié.' }, { status: 401 });
@@ -14,7 +14,10 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 		const { bookingId } = body;
 
 		if (!bookingId) {
-			return json({ success: false, error: 'Identifiant de réservation manquant.' }, { status: 400 });
+			return json(
+				{ success: false, error: 'Identifiant de réservation manquant.' },
+				{ status: 400 }
+			);
 		}
 
 		const cancelled = await cancelBooking(bookingId, userId);
@@ -27,7 +30,7 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 		}
 
 		return json({ success: true });
-	} catch (error) {
+	} catch {
 		return json({ success: false, error: 'Erreur interne.' }, { status: 500 });
 	}
 };
