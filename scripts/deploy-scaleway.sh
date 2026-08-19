@@ -58,13 +58,27 @@ echo "⏳ Waiting for the new deployment to become ready..."
 
 deadline=$(( SECONDS + POLL_TIMEOUT_SECONDS ))
 status=""
+raw_reported=false
 
 while [ "$SECONDS" -lt "$deadline" ]; do
-	status=$(scw container container get "$CONTAINER_ID" -o json \
-		| tr -d ' "' \
-		| sed -n 's/^status:\(.*\),*$/\1/p' \
-		| tr -d ',' \
-		| head -n 1)
+	payload=$(scw container container get "$CONTAINER_ID" -o json 2>&1) || payload=""
+
+	# `-o json` emits compact, single-line JSON: nothing can be matched line by line.
+	# Split on commas first, then read the first "status" field. Deliberately no jq —
+	# it is not guaranteed to be installed wherever this script runs.
+	status=$(printf '%s' "$payload" \
+		| tr ',' '\n' \
+		| grep -m1 '"status"' \
+		| sed 's/.*"status"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/')
+
+	# Without this, an unparsable response loops silently for five minutes and reports a
+	# timeout on a deployment that actually succeeded.
+	if [ -z "$status" ] && [ "$raw_reported" = "false" ]; then
+		raw_reported=true
+		echo "⚠️  Could not read the container status. Raw response:" >&2
+		printf '%s\n' "$payload" | head -c 500 >&2
+		echo >&2
+	fi
 
 	case "$status" in
 		ready)
