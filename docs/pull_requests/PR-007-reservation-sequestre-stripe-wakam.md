@@ -4,13 +4,14 @@
 **Branche source** : `feature/CU-007-reservation-sequestre-stripe-wakam`  
 **Branche cible** : `main`  
 **Assignataire Fictif** : Sarah Chen (Dev Backend)  
-**Revue par** : Alexandre Rivière (Lead Dev / Architecte)  
+**Revue par** : Alexandre Rivière (Lead Dev / Architecte)
 
 ---
 
 ## 1. Contexte & Description des changements
 
 Implémentation complète du moteur de réservation et du séquestre financier (Lot 6 & Lot 7) :
+
 - **Service Backend de Réservation (`src/lib/server/bookings.ts`)** :
   - Validation stricte des dates (`startDate < endDate`).
   - Détection automatique des chevauchements de dates sur les logements pour empêcher les doubles réservations.
@@ -45,7 +46,7 @@ Implémentation complète du moteur de réservation et du séquestre financier (
 ## 4. Simulation de Revue de Code (Pair Review)
 
 > **Revue par @AlexandreRiviere (Architecte)**  
-> *"L'implémentation du séquestre Stripe Connect et la protection Circuit Breaker sur l'émission de la police Wakam sont parfaitement conformes au cadrage du Bloc 1."*
+> _"L'implémentation du séquestre Stripe Connect et la protection Circuit Breaker sur l'émission de la police Wakam sont parfaitement conformes au cadrage du Bloc 1."_
 
 ---
 

@@ -4,13 +4,14 @@
 **Branche source** : `feature/CU-003-auth-kyc-stripe`  
 **Branche cible** : `main`  
 **Assignataire Fictif** : Sarah Chen (Dev Backend)  
-**Revue par** : Alexandre Rivière (Lead Dev / Architecte)  
+**Revue par** : Alexandre Rivière (Lead Dev / Architecte)
 
 ---
 
 ## 1. Contexte & Description des changements
 
 Développement du service d'authentification et de la gestion des rôles pour Evenue (Lot 4 - Auth & KYC) :
+
 - **Sécurité des Mots de Passe** : Implémentation du hashage scrypt natif Node.js avec sel aléatoire (`src/lib/server/auth.ts`).
 - **Prisma 7 Driver Adapter** : Configuration de l'adaptateur `PrismaPg` avec `pg.Pool` pour la compatibilité avec PostgreSQL (`src/lib/server/db.ts`).
 - **Endpoints d'API Auth SvelteKit** :
@@ -44,11 +45,11 @@ Développement du service d'authentification et de la gestion des rôles pour Ev
 ## 4. Simulation de Revue de Code (Pair Review)
 
 > **Revue par @AlexandreRiviere (Lead Dev / Architecte)**  
-> *"Très propre. L'utilisation de scrypt avec timingSafeEqual est exemplaire et respecte les recommandations OWASP. L'ajout de l'adaptateur PrismaPg règle parfaitement la compatibilité Prisma 7.*  
+> _"Très propre. L'utilisation de scrypt avec timingSafeEqual est exemplaire et respecte les recommandations OWASP. L'ajout de l'adaptateur PrismaPg règle parfaitement la compatibilité Prisma 7._  
 > **Point d'amélioration réclamé** : S'assurer que le champ email est systématiquement converti en minuscules avant la recherche et la création en BDD pour éviter la duplication de comptes liée à la casse (ex: User@Domain.com vs user@domain.com)."
 
 > **Réponse de @SarahChen (Auteure - Dev Backend)**  
-> *"Correction apportée : La méthode `registerUser` et `loginUser` appliquent désormais un `.toLowerCase().trim()` systématique sur l'adresse email. Les tests unitaires couvrent également ces scénarios."*
+> _"Correction apportée : La méthode `registerUser` et `loginUser` appliquent désormais un `.toLowerCase().trim()` systématique sur l'adresse email. Les tests unitaires couvrent également ces scénarios."_
 
 ---
 

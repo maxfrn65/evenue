@@ -1,6 +1,6 @@
 # Dossier Sécurité — Couverture OWASP Top 10 (2021)
 
-**Compétence visée (éliminatoire)** : **C2.2.3** — *Développer le logiciel en veillant à l'évolutivité et à la sécurisation du code source […] pour garantir une exécution conforme.*
+**Compétence visée (éliminatoire)** : **C2.2.3** — _Développer le logiciel en veillant à l'évolutivité et à la sécurisation du code source […] pour garantir une exécution conforme._
 **Critère d'évaluation associé** : « Les mesures prises permettent de couvrir les 10 failles de sécurité principales décrites par l'OWASP. »
 
 Ce document met en correspondance chaque catégorie du **OWASP Top 10 (2021)** avec les mesures **réellement implémentées** dans le code source d'Evenue, preuves à l'appui (`fichier:ligne`).
@@ -11,24 +11,25 @@ Ce document met en correspondance chaque catégorie du **OWASP Top 10 (2021)** a
 
 ## Synthèse
 
-| # | Catégorie OWASP 2021 | Statut | Preuve principale |
-|---|---|---|---|
-| A01 | Broken Access Control | ✅ Couvert | `hooks.server.ts`, guards de routes, contrôles propriétaire-ressource |
-| A02 | Cryptographic Failures | ✅ Couvert | scrypt + `timingSafeEqual`, cookies durcis, secrets hors code |
-| A03 | Injection | ✅ Couvert | Prisma paramétré, échappement iCal |
-| A04 | Insecure Design | ✅ Couvert | Séquestre à capture différée, Circuit Breaker, rate limiting |
-| A05 | Security Misconfiguration | ✅ Couvert | Headers de sécurité + CSP, cookies `secure`, suppression CDN |
-| A06 | Vulnerable & Outdated Components | ✅ Couvert | `npm audit` bloquant en CI, lockfile, deps récentes |
-| A07 | Identification & Auth Failures | ✅ Couvert | Rate limiting anti-brute-force, messages génériques |
-| A08 | Software & Data Integrity Failures | ✅ Couvert | `npm ci`, build multi-stage, images taggées par SHA |
+| #   | Catégorie OWASP 2021                   | Statut     | Preuve principale                                                       |
+| --- | -------------------------------------- | ---------- | ----------------------------------------------------------------------- |
+| A01 | Broken Access Control                  | ✅ Couvert | `hooks.server.ts`, guards de routes, contrôles propriétaire-ressource   |
+| A02 | Cryptographic Failures                 | ✅ Couvert | scrypt + `timingSafeEqual`, cookies durcis, secrets hors code           |
+| A03 | Injection                              | ✅ Couvert | Prisma paramétré, échappement iCal                                      |
+| A04 | Insecure Design                        | ✅ Couvert | Séquestre à capture différée, Circuit Breaker, rate limiting            |
+| A05 | Security Misconfiguration              | ✅ Couvert | Headers de sécurité + CSP, cookies `secure`, suppression CDN            |
+| A06 | Vulnerable & Outdated Components       | ✅ Couvert | `npm audit` bloquant en CI, lockfile, deps récentes                     |
+| A07 | Identification & Auth Failures         | ✅ Couvert | Rate limiting anti-brute-force, messages génériques                     |
+| A08 | Software & Data Integrity Failures     | ✅ Couvert | `npm ci`, build multi-stage, images taggées par SHA                     |
 | A09 | Security Logging & Monitoring Failures | ✅ Couvert | Logger JSON structuré, endpoint `/api/metrics`, alertes Circuit Breaker |
-| A10 | Server-Side Request Forgery (SSRF) | ✅ Couvert | Validation d'URL iCal (allowlist schéma + déni IP privées) |
+| A10 | Server-Side Request Forgery (SSRF)     | ✅ Couvert | Validation d'URL iCal (allowlist schéma + déni IP privées)              |
 
 ---
 
 ## A01 — Broken Access Control
 
 **Mesures.**
+
 - **Authentification centralisée** dans le hook serveur : le cookie de session `evenue_session` est résolu en `event.locals.user` pour chaque requête — `src/hooks.server.ts:38-56`.
 - **Guards de routes** par redirection systématique : espace connecté (`src/routes/dashboard/+page.server.ts`), création d'annonce réservée aux hôtes (`src/routes/listings/new/+page.server.ts`), édition réservée au propriétaire (`src/routes/listings/[id]/edit/+page.server.ts`).
 - **Contrôles « propriétaire de la ressource »** au niveau métier :
@@ -43,6 +44,7 @@ Ce document met en correspondance chaque catégorie du **OWASP Top 10 (2021)** a
 ## A02 — Cryptographic Failures
 
 **Mesures.**
+
 - **Hachage des mots de passe** via **scrypt** avec sel aléatoire de 16 octets et clé dérivée de 64 octets ; vérification en temps constant avec `timingSafeEqual` — `src/lib/server/auth.ts:8-23`.
 - **Cookie de session durci** centralisé : `httpOnly`, `sameSite=lax`, et **`secure` activé en production** — `src/lib/server/session.ts` (appliqué dans `api/auth/login`, `api/auth/register`, `api/auth/logout`).
 - **Aucun secret en dur dans le code source** : la chaîne de connexion base de données et la clé Stripe sont lues depuis l'environnement runtime SvelteKit (`$env/dynamic/private`), sans valeur de repli codée en dur — `src/lib/server/db.ts:4-16`, `src/lib/server/stripe.ts:4-15`. En production, l'absence de secret provoque un échec explicite au démarrage plutôt qu'un repli silencieux.
@@ -52,6 +54,7 @@ Ce document met en correspondance chaque catégorie du **OWASP Top 10 (2021)** a
 ## A03 — Injection
 
 **Mesures.**
+
 - **ORM Prisma** utilisé pour 100 % des accès données : requêtes **paramétrées** par construction, aucune concaténation SQL. Aucun `$queryRaw`/`$executeRaw`/`Unsafe` dans le code applicatif.
 - Les filtres de recherche passent par les opérateurs Prisma typés — `src/lib/server/listings.ts:63-130`.
 - **Échappement des retours chariot** lors de la génération iCal (prévention d'injection dans le flux .ics) — `src/lib/server/ical.ts`.
@@ -59,6 +62,7 @@ Ce document met en correspondance chaque catégorie du **OWASP Top 10 (2021)** a
 ## A04 — Insecure Design
 
 **Mesures.**
+
 - **Séquestre financier à capture différée** : les fonds sont autorisés puis capturés manuellement (`capture_method: 'manual'`), garantissant la protection caution/location — `src/lib/server/stripe.ts`.
 - **Circuit Breaker** natif à 3 états (CLOSED/OPEN/HALF_OPEN, seuil de 3 échecs, mode dégradé) protégeant l'appel à l'assureur Wakam — `src/lib/server/circuit-breaker.ts`, `src/lib/server/wakam.ts`.
 - **Rate limiting** (fenêtre fixe en mémoire) sur les points sensibles — `src/lib/server/rate-limit.ts` : inscription (5 / 15 min / IP), upload (30 / 10 min / IP).
@@ -67,6 +71,7 @@ Ce document met en correspondance chaque catégorie du **OWASP Top 10 (2021)** a
 ## A05 — Security Misconfiguration
 
 **Mesures.** En-têtes de sécurité appliqués à **chaque réponse** dans `src/hooks.server.ts` :
+
 - **Content-Security-Policy** stricte : `default-src 'self'`, `object-src 'none'`, `frame-ancestors 'none'`, `base-uri 'self'`, `form-action 'self'` ; origines externes explicitement restreintes aux fournisseurs de tuiles cartographiques (CartoDB/OpenStreetMap) et de polices (Google Fonts).
 - **X-Content-Type-Options: nosniff**, **X-Frame-Options: DENY**, **Referrer-Policy: strict-origin-when-cross-origin**, **Permissions-Policy** (caméra/micro/paiement désactivés), **Cross-Origin-Opener-Policy: same-origin**.
 - **HSTS** (`Strict-Transport-Security`) activé sur HTTPS.
@@ -78,6 +83,7 @@ Ce document met en correspondance chaque catégorie du **OWASP Top 10 (2021)** a
 ## A06 — Vulnerable and Outdated Components
 
 **Mesures.**
+
 - **Job d'audit de dépendances (SCA)** ajouté à la CI : `npm audit --audit-level=high` (rapport) + **gate bloquant sur les vulnérabilités critiques** — `.github/workflows/ci-cd.yml` (job `security-audit`, requis avant le build).
 - **Installations déterministes** via `package-lock.json` et `npm ci`.
 - Dépendances majeures récentes et épinglées (Prisma 7, SvelteKit 2, Stripe 22).
@@ -87,6 +93,7 @@ Ce document met en correspondance chaque catégorie du **OWASP Top 10 (2021)** a
 ## A07 — Identification and Authentication Failures
 
 **Mesures.**
+
 - **Anti-brute-force** : rate limiting sur la connexion (10 tentatives / 5 min / IP), réponse `429` avec `Retry-After` — `src/routes/api/auth/login/+server.ts`.
 - **Vérification en temps constant** (`timingSafeEqual`) et **message d'erreur générique** « Identifiants incorrects » empêchant l'énumération de comptes — `src/lib/server/auth.ts`.
 - **Longueur minimale de mot de passe** (8 caractères) — `src/routes/api/auth/register/+server.ts`.
@@ -95,6 +102,7 @@ Ce document met en correspondance chaque catégorie du **OWASP Top 10 (2021)** a
 ## A08 — Software and Data Integrity Failures
 
 **Mesures.**
+
 - **Pipeline CI/CD** contrôlé : lint → tests+couverture → audit SCA → build Docker → push registre Scaleway, images taggées par `github.sha` — `.github/workflows/ci-cd.yml`.
 - **Intégrité des dépendances** garantie par `npm ci` (respect strict du lockfile).
 - **Build multi-stage** isolant les dépendances de build de l'image runtime — `Dockerfile`.
@@ -104,6 +112,7 @@ Ce document met en correspondance chaque catégorie du **OWASP Top 10 (2021)** a
 ## A09 — Security Logging and Monitoring Failures
 
 **Mesures.**
+
 - **Logger JSON structuré** (niveaux INFO/WARN/ERROR/ALERT, horodatage, service, environnement) — `src/lib/server/logger.ts`.
 - **Journalisation HTTP** de chaque requête avec durée (`x-response-time`) et **capture globale des exceptions** non gérées avec stack — `src/hooks.server.ts`.
 - **Alertes critiques** émises sur chaque transition d'état du Circuit Breaker — `src/lib/server/circuit-breaker.ts`.
@@ -114,6 +123,7 @@ Ce document met en correspondance chaque catégorie du **OWASP Top 10 (2021)** a
 **Contexte.** La synchronisation iCal effectue une requête serveur vers une URL fournie par l'hôte (`icalSyncUrl`), surface SSRF potentielle.
 
 **Mesures.** Module de validation dédié `src/lib/server/url-safety.ts` :
+
 - **Allowlist de schémas** : seuls `http`/`https` acceptés (rejet de `file:`, `ftp:`, `gopher:`…).
 - **Déni des hôtes internes** : `localhost`, domaines `.local`/`.localhost`, **boucle locale** (`127.0.0.0/8`, `::1`), **plages privées RFC 1918** (`10/8`, `172.16/12`, `192.168/16`), **CGNAT** (`100.64/10`), et surtout l'**endpoint de métadonnées cloud** `169.254.169.254` (link-local `169.254/16`), y compris sous forme **IPv6 mappée**.
 - **Rejet des identifiants embarqués** dans l'URL (`user:pass@`).

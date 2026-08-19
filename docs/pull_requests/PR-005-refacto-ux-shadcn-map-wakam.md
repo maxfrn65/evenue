@@ -4,13 +4,14 @@
 **Branche source** : `feature/CU-005-refacto-ux-shadcn-map-wakam`  
 **Branche cible** : `main`  
 **Assignataire Fictif** : Thomas Moreau (Dev Frontend)  
-**Revue par** : Julie Dupuis (UI/UX Designer)  
+**Revue par** : Julie Dupuis (UI/UX Designer)
 
 ---
 
 ## 1. Contexte & Description des changements
 
 Prise en compte des retours UX et refactorisation complète de l'interface (Lot 5 - Frontend SvelteKit & UI) :
+
 - **Composants UI Shadcn-Svelte** : Implémentation du helper `cn` (`src/lib/utils.ts`) et création des composants standardisés shadcn-svelte dans `src/lib/components/ui/` (`Button`, `Card`, `Input`, `Label`, `Badge`, `Select`).
 - **Moteur de Recherche Héro (Page d'accueil)** : Correction du formulaire avec redirection dynamique vers `/listings?city=...&date=...&minCapacity=...`.
 - **Typage & Formats des Champs** :
@@ -42,11 +43,11 @@ Prise en compte des retours UX et refactorisation complète de l'interface (Lot 
 ## 4. Simulation de Revue de Code (Pair Review)
 
 > **Revue par @JulieDupuis (UI/UX Designer)**  
-> *"La migration vers les composants shadcn-svelte et l'intégration de la carte Leaflet changent radicalement l'expérience utilisateur. Les labels explicites apportent la lisibilité requise.*  
+> _"La migration vers les composants shadcn-svelte et l'intégration de la carte Leaflet changent radicalement l'expérience utilisateur. Les labels explicites apportent la lisibilité requise._  
 > **Point d'amélioration réclamé** : Confirmer que la carte interactive se charge sans bloquer le rendu serveur SSR."
 
 > **Réponse de @ThomasMoreau (Auteur - Dev Frontend)**  
-> *"Confirmation : Le module Leaflet est importé dynamiquement au sein de `onMount` (`await import('leaflet')`), ce qui empêche tout problème d'exécution côté serveur (SSR)."*
+> _"Confirmation : Le module Leaflet est importé dynamiquement au sein de `onMount` (`await import('leaflet')`), ce qui empêche tout problème d'exécution côté serveur (SSR)."_
 
 ---
 

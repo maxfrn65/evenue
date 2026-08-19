@@ -4,13 +4,14 @@
 **Branche source** : `feature/CU-006-light-theme-auth-session-dynamic-listing`  
 **Branche cible** : `main`  
 **Assignataire Fictif** : Julie Dupuis (UI/UX Designer)  
-**Revue par** : Alexandre Rivière (Lead Dev / Architecte)  
+**Revue par** : Alexandre Rivière (Lead Dev / Architecte)
 
 ---
 
 ## 1. Contexte & Description des changements
 
 Refactorisation ergonomique et direction artistique épurée (Lot 2 - UI/UX Design System & Lot 5 - Frontend SvelteKit) :
+
 - **Direction Artistique Épurée (Shadcn preset `--preset b3XngymGGW`)** :
   - Palette globale convertie sur fond blanc (`bg-white` / `bg-slate-50`), textes sombres (`slate-950` / `slate-700`) et bordures grises épurées (`slate-200`).
   - Boutons d'action principaux (CTA) en noir intense (`bg-slate-950 hover:bg-slate-800 text-white`).
@@ -41,7 +42,7 @@ Refactorisation ergonomique et direction artistique épurée (Lot 2 - UI/UX Desi
 ## 4. Simulation de Revue de Code (Pair Review)
 
 > **Revue par @AlexandreRiviere (Architecte)**  
-> *"La bascule sur la DA épurée fond blanc rend l'application immédiatement plus lisible et professionnelle. L'ajout du loader SSR `+layout.server.ts` résout proprement l'affichage du menu profil dans le Header."*
+> _"La bascule sur la DA épurée fond blanc rend l'application immédiatement plus lisible et professionnelle. L'ajout du loader SSR `+layout.server.ts` résout proprement l'affichage du menu profil dans le Header."_
 
 ---
 

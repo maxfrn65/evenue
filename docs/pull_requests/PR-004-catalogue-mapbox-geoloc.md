@@ -4,13 +4,14 @@
 **Branche source** : `feature/CU-004-catalogue-mapbox-geoloc`  
 **Branche cible** : `main`  
 **Assignataire Fictif** : Thomas Moreau (Dev Frontend)  
-**Revue par** : Julie Dupuis (UI/UX Designer)  
+**Revue par** : Julie Dupuis (UI/UX Designer)
 
 ---
 
 ## 1. Contexte & Description des changements
 
 Développement du catalogue de logements et du moteur de recherche géolocalisée d'Evenue (Lot 5 - Frontend SvelteKit & UI) :
+
 - **Service Métier de Recherche** : `src/lib/server/listings.ts` gérant le géo-filtrage par ville, la fourchette de prix, la capacité minimale d'invités, et les types d'événements autorisés (`SOIRÉE`, `ANNIVERSAIRE`, `MARIAGE`, `COCKTAIL`).
 - **Endpoints API SvelteKit** :
   - `/api/listings` (GET/POST) pour la recherche dynamique et la création de logements en BDD.
@@ -44,11 +45,11 @@ Développement du catalogue de logements et du moteur de recherche géolocalisé
 ## 4. Simulation de Revue de Code (Pair Review)
 
 > **Revue par @JulieDupuis (UI/UX Designer)**  
-> *"L'ergonomie du catalogue et de la carte Mapbox est excellente. La mise en valeur du badge Wakam rassurerait immédiatement un invité.*  
+> _"L'ergonomie du catalogue et de la carte Mapbox est excellente. La mise en valeur du badge Wakam rassurerait immédiatement un invité._  
 > **Point d'amélioration réclamé** : S'assurer que le composant de carte réagit bien sans bloquer le défilement mobile sur les petits écrans."
 
 > **Réponse de @ThomasMoreau (Auteur - Dev Frontend)**  
-> *"Correction validée : La colonne carte passe en dessous de la grille sur écran mobile (`grid-cols-1 lg:grid-cols-3`) avec un conteneur collant `sticky top-24` actif sur écran desktop."*
+> _"Correction validée : La colonne carte passe en dessous de la grille sur écran mobile (`grid-cols-1 lg:grid-cols-3`) avec un conteneur collant `sticky top-24` actif sur écran desktop."_
 
 ---
 

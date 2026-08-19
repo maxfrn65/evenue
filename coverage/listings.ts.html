@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">60.49% </span>
+                <span class="strong">61.25% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>49/81</span>
+                <span class='fraction'>49/80</span>
             </div>
         
             
@@ -410,8 +410,9 @@
 <a name='L345'></a><a href='#L345'>345</a>
 <a name='L346'></a><a href='#L346'>346</a>
 <a name='L347'></a><a href='#L347'>347</a>
-<a name='L348'></a><a href='#L348'>348</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L348'></a><a href='#L348'>348</a>
+<a name='L349'></a><a href='#L349'>349</a>
+<a name='L350'></a><a href='#L350'>350</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -521,12 +522,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -553,8 +548,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -630,6 +623,10 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -647,6 +644,13 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -758,8 +762,12 @@
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { prisma } from './db';
+import type { Prisma } from '../../../generated/prisma/client';
+import type { AvailabilityRange } from '$lib/types';
 import { fetchAndParseExternalICal } from './ical';
 import { assertSafeExternalUrl } from './url-safety';
+&nbsp;
+export type { AvailabilityRange };
 &nbsp;
 export interface ListingFilterInput {
 	city?: string;
@@ -769,11 +777,6 @@ export interface ListingFilterInput {
 	eventType?: string;
 	startDate?: string;
 	endDate?: string;
-}
-&nbsp;
-export interface AvailabilityRange {
-	startDate: string;
-	endDate: string;
 }
 &nbsp;
 export interface CreateListingInput {
@@ -821,7 +824,7 @@ export interface UpdateListingInput {
  * Get listings from PostgreSQL database with dynamic search &amp; date filters.
  */
 export async function getListings(filters: ListingFilterInput = {}) {
-	const where: any = {};
+	const where: Prisma.ListingWhereInput = {};
 &nbsp;
 	if (filters.city) {
 		where.city = { contains: filters.city, mode: 'insensitive' };
@@ -849,16 +852,10 @@ export async function getListings(filters: ListingFilterInput = {}) {
 <span class="cstat-no" title="statement not covered" >		if (!isNaN(reqStart.getTime()) &amp;&amp; !isNaN(reqEnd.getTime()) &amp;&amp; reqStart &lt; reqEnd) {</span>
 <span class="cstat-no" title="statement not covered" >			where.AND = [</span>
 				{
-					OR: [
-						{ availableStartDate: null },
-						{ availableStartDate: { lte: reqStart } }
-					]
+					OR: [{ availableStartDate: null }, { availableStartDate: { lte: reqStart } }]
 				},
 				{
-					OR: [
-						{ availableEndDate: null },
-						{ availableEndDate: { gte: reqEnd } }
-					]
+					OR: [{ availableEndDate: null }, { availableEndDate: { gte: reqEnd } }]
 				},
 				// Ensure no overlapping confirmed or pending bookings
 				{
@@ -899,9 +896,7 @@ export async function getListings(filters: ListingFilterInput = {}) {
 <span class="cstat-no" title="statement not covered" >			if (ranges.length === 0) <span class="cstat-no" title="statement not covered" >return true; // Default open if no custom ranges configured</span></span>
 &nbsp;
 			// Must fall inside AT LEAST ONE defined availability range
-<span class="cstat-no" title="statement not covered" >			return ranges.<span class="fstat-no" title="function not covered" >some(</span></span>
-				(r) =&gt; <span class="cstat-no" title="statement not covered" >r.startDate &lt;= reqStartStr &amp;&amp; r.endDate &gt;= reqEndStr</span>
-			);
+<span class="cstat-no" title="statement not covered" >			return ranges.<span class="fstat-no" title="function not covered" >some((r</span>) =&gt; <span class="cstat-no" title="statement not covered" >r.startDate &lt;= reqStartStr &amp;&amp; r.endDate &gt;= reqEndStr)</span>;</span>
 		});
 	}
 &nbsp;
@@ -977,8 +972,12 @@ export async function <span class="fstat-no" title="function not covered" >getLi
 	}
 &nbsp;
 <span class="cstat-no" title="statement not covered" >	return {</span>
-		availableStartDate: listing.availableStartDate ? listing.availableStartDate.toISOString().split('T')[0] : null,
-		availableEndDate: listing.availableEndDate ? listing.availableEndDate.toISOString().split('T')[0] : null,
+		availableStartDate: listing.availableStartDate
+			? listing.availableStartDate.toISOString().split('T')[0]
+			: null,
+		availableEndDate: listing.availableEndDate
+			? listing.availableEndDate.toISOString().split('T')[0]
+			: null,
 		availabilityRanges: (listing.availabilityRanges as unknown as AvailabilityRange[]) || [],
 		disabledRanges
 	};
@@ -1008,11 +1007,18 @@ export async function createListing(input: CreateListingInput) {
 			maxCapacity: input.maxCapacity,
 			eventTypeAllowed: input.eventTypeAllowed,
 			imageUrl: input.imageUrl?.trim(),
-			imageUrls: input.imageUrls &amp;&amp; <span class="branch-1 cbranch-no" title="branch not covered" >input.imageUrls.length &gt; 0 ? <span class="branch-0 cbranch-no" title="branch not covered" >i</span>nput.imageUrls : i</span>nput.imageUrl ? <span class="branch-0 cbranch-no" title="branch not covered" >[input.imageUrl.trim()] : [</span>],
+			imageUrls:
+				input.imageUrls &amp;&amp; <span class="branch-1 cbranch-no" title="branch not covered" >input.imageUrls.length &gt; 0</span>
+					? <span class="branch-0 cbranch-no" title="branch not covered" >input.imageUrls</span>
+					: input.imageUrl
+						? <span class="branch-0 cbranch-no" title="branch not covered" >[input.imageUrl.trim()]</span>
+						: [],
 			icalSyncUrl: input.icalSyncUrl?.trim(),
 			availableStartDate: input.availableStartDate ? <span class="branch-0 cbranch-no" title="branch not covered" >new Date(input.availableStartDate) : n</span>ull,
 			availableEndDate: input.availableEndDate ? <span class="branch-0 cbranch-no" title="branch not covered" >new Date(input.availableEndDate) : n</span>ull,
-			availabilityRanges: input.availabilityRanges ? (<span class="branch-0 cbranch-no" title="branch not covered" >input.availabilityRanges as any) : u</span>ndefined
+			availabilityRanges: input.availabilityRanges
+				? (<span class="branch-0 cbranch-no" title="branch not covered" >input.availabilityRanges as unknown as Prisma.InputJsonValue)</span>
+				: undefined
 		}
 	});
 &nbsp;
@@ -1040,7 +1046,7 @@ export async function updateListing(id: string, hostId: string, input: UpdateLis
 		assertSafeExternalUrl(input.icalSyncUrl);
 	}
 &nbsp;
-	const data: any = {};
+	const data: Prisma.ListingUpdateInput = {};
 	<span class="missing-if-branch" title="else path not taken" >E</span>if (input.title !== undefined) data.title = input.title.trim();
 	<span class="missing-if-branch" title="if path not taken" >I</span>if (input.description !== undefined) <span class="cstat-no" title="statement not covered" >data.description = input.description.trim();</span>
 	<span class="missing-if-branch" title="if path not taken" >I</span>if (input.address !== undefined) <span class="cstat-no" title="statement not covered" >data.address = input.address.trim();</span>
@@ -1062,7 +1068,7 @@ export async function updateListing(id: string, hostId: string, input: UpdateLis
 <span class="cstat-no" title="statement not covered" >		data.availableEndDate = input.availableEndDate ? new Date(input.availableEndDate) : null;</span>
 	}
 	<span class="missing-if-branch" title="if path not taken" >I</span>if (input.availabilityRanges !== undefined) {
-<span class="cstat-no" title="statement not covered" >		data.availabilityRanges = input.availabilityRanges as any;</span>
+<span class="cstat-no" title="statement not covered" >		data.availabilityRanges = input.availabilityRanges as unknown as Prisma.InputJsonValue;</span>
 	}
 &nbsp;
 	return await prisma.listing.update({
@@ -1111,7 +1117,7 @@ export async function deleteListing(id: string, hostId: string) {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-08-15T02:11:23.087Z
+                at 2026-08-19T09:49:36.667Z
             </div>
         <script src="prettify.js"></script>
         <script>

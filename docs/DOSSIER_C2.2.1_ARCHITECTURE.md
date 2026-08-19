@@ -1,6 +1,6 @@
 # Dossier Architecture Logicielle & Prototype
 
-**Compétence visée (éliminatoire)** : **C2.2.1** — *Concevoir un prototype de l'application logicielle en tenant compte des spécificités ergonomiques et des équipements ciblés (web, mobile…) afin de répondre aux fonctionnalités attendues et aux exigences en termes de sécurité.*
+**Compétence visée (éliminatoire)** : **C2.2.1** — _Concevoir un prototype de l'application logicielle en tenant compte des spécificités ergonomiques et des équipements ciblés (web, mobile…) afin de répondre aux fonctionnalités attendues et aux exigences en termes de sécurité._
 
 **Critères d'évaluation associés** : architecture structurée permettant la maintenabilité ; bonnes pratiques (frameworks, paradigmes) ; prototype fonctionnel couvrant les fonctionnalités principales et les user stories ; composants d'interface présents et fonctionnels ; exigences de sécurité satisfaites.
 
@@ -16,21 +16,22 @@
 
 ## 2. Pile technologique (frameworks & paradigmes)
 
-| Couche | Technologie | Version | Rôle |
-|---|---|---|---|
-| Framework applicatif | **SvelteKit** | ^2.63 | SSR, routing, endpoints, form actions |
-| Langage UI | **Svelte 5 (runes)** | ^5.56 | Réactivité (`$props`, `$state`, `$derived`, `$effect`) |
-| Langage | **TypeScript** | ^6.0 | Typage statique de bout en bout |
-| ORM | **Prisma** | ^7.9 | Accès données typé, migrations, adapter `PrismaPg` |
-| Base de données | **PostgreSQL** | — | Transactions ACID (indispensables au séquestre) |
-| Paiement | **Stripe (Connect)** | ^22.3 | Séquestre, onboarding KYC, versements |
-| Design system | **shadcn-svelte + bits-ui** | — | Primitives accessibles (Button, Input, Dialog…) |
-| Style | **Tailwind CSS** | ^4.3 | Utilitaires, tokens de thème (oklch) |
-| Cartographie | **Leaflet** | ^1.9 | Carte interactive, tuiles CartoDB/OSM |
-| Build / test | **Vite / Vitest** | ^8 / ^4 | Bundling, tests unitaires + couverture v8 |
-| Déploiement | **adapter-node + Docker** | — | Conteneur serverless Scaleway |
+| Couche               | Technologie                 | Version | Rôle                                                   |
+| -------------------- | --------------------------- | ------- | ------------------------------------------------------ |
+| Framework applicatif | **SvelteKit**               | ^2.63   | SSR, routing, endpoints, form actions                  |
+| Langage UI           | **Svelte 5 (runes)**        | ^5.56   | Réactivité (`$props`, `$state`, `$derived`, `$effect`) |
+| Langage              | **TypeScript**              | ^6.0    | Typage statique de bout en bout                        |
+| ORM                  | **Prisma**                  | ^7.9    | Accès données typé, migrations, adapter `PrismaPg`     |
+| Base de données      | **PostgreSQL**              | —       | Transactions ACID (indispensables au séquestre)        |
+| Paiement             | **Stripe (Connect)**        | ^22.3   | Séquestre, onboarding KYC, versements                  |
+| Design system        | **shadcn-svelte + bits-ui** | —       | Primitives accessibles (Button, Input, Dialog…)        |
+| Style                | **Tailwind CSS**            | ^4.3    | Utilitaires, tokens de thème (oklch)                   |
+| Cartographie         | **Leaflet**                 | ^1.9    | Carte interactive, tuiles CartoDB/OSM                  |
+| Build / test         | **Vite / Vitest**           | ^8 / ^4 | Bundling, tests unitaires + couverture v8              |
+| Déploiement          | **adapter-node + Docker**   | —       | Conteneur serverless Scaleway                          |
 
 **Paradigmes de développement mis en œuvre** :
+
 - **Rendu côté serveur (SSR)** avec fonctions `load` (`+page.server.ts`) et middleware d'authentification centralisé (`hooks.server.ts`).
 - **Composition de composants** via le pattern shadcn-svelte / bits-ui.
 - **Pattern Circuit Breaker** (3 états) pour la résilience des dépendances tierces.
@@ -73,6 +74,7 @@ src/
 ```
 
 **Principe de séparation des responsabilités** :
+
 - **Présentation** (`routes/*.svelte`, `lib/components`) : rendu et interactions.
 - **Logique métier & accès données** (`lib/server/*.ts`) : **seule couche autorisée à interroger Prisma**.
 - **Intégrations externes** isolées derrière des modules dédiés (`stripe.ts`, `wakam.ts`).
@@ -97,18 +99,18 @@ Entités principales et relations (`prisma/schema.prisma`) :
 
 ## 5. Fonctionnalités principales & user stories couvertes
 
-| User story | Implémentation |
-|---|---|
+| User story                                                            | Implémentation                                                                   |
+| --------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
 | Rechercher un lieu par ville, prix, capacité, type d'événement, dates | `listings.ts::getListings`, `SearchEngine.svelte`, carte `InteractiveMap.svelte` |
-| Consulter une fiche et ses disponibilités (bookings + iCal externe) | `routes/listings/[id]`, `ical.ts` |
-| S'inscrire / se connecter (invité ou hôte) | `auth.ts`, `routes/auth/**`, `api/auth/**` |
-| Devenir hôte + onboarding KYC Stripe | `routes/become-host`, `stripe.ts` |
-| Créer / éditer / supprimer une annonce (avec upload d'images) | `listings.ts`, `routes/listings/new`, `[id]/edit`, `api/upload` |
-| Réserver avec séquestre + assurance automatique | `bookings.ts`, `stripe.ts`, `wakam.ts` |
-| Déclarer / contester un sinistre, télécharger une attestation | `claims.ts`, `routes/claims/new`, `bookings/[id]/certificate` |
-| Échanger via messagerie | `messages.ts`, `routes/messages` |
-| Tableau de bord invité/hôte | `dashboard.ts`, `routes/dashboard` |
-| Synchronisation calendrier iCal bidirectionnelle | `ical.ts`, `routes/listings/[id]/ical` |
+| Consulter une fiche et ses disponibilités (bookings + iCal externe)   | `routes/listings/[id]`, `ical.ts`                                                |
+| S'inscrire / se connecter (invité ou hôte)                            | `auth.ts`, `routes/auth/**`, `api/auth/**`                                       |
+| Devenir hôte + onboarding KYC Stripe                                  | `routes/become-host`, `stripe.ts`                                                |
+| Créer / éditer / supprimer une annonce (avec upload d'images)         | `listings.ts`, `routes/listings/new`, `[id]/edit`, `api/upload`                  |
+| Réserver avec séquestre + assurance automatique                       | `bookings.ts`, `stripe.ts`, `wakam.ts`                                           |
+| Déclarer / contester un sinistre, télécharger une attestation         | `claims.ts`, `routes/claims/new`, `bookings/[id]/certificate`                    |
+| Échanger via messagerie                                               | `messages.ts`, `routes/messages`                                                 |
+| Tableau de bord invité/hôte                                           | `dashboard.ts`, `routes/dashboard`                                               |
+| Synchronisation calendrier iCal bidirectionnelle                      | `ical.ts`, `routes/listings/[id]/ical`                                           |
 
 ---
 

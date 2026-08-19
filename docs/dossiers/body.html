@@ -93,11 +93,13 @@
 		<p>
 			Ce dossier présente la phase d'exploitation d'Evenue, plateforme développée au cours de la
 			formation. L'application est déployée en production : interface et logique métier en
-			<strong>SvelteKit</strong> (routes serveur), persistance <strong>PostgreSQL</strong> managée sur
-			<strong>Neon</strong> et accédée via l'ORM <strong>Prisma v7</strong>, exécution en conteneur
-			sur <strong>Scaleway Serverless Containers</strong>, avec une chaîne
+			<strong>SvelteKit</strong> (routes serveur), persistance <strong>PostgreSQL</strong> managée
+			sur <strong>Neon</strong> et accédée via l'ORM <strong>Prisma v7</strong>, exécution en
+			conteneur sur <strong>Scaleway Serverless Containers</strong>, avec une chaîne
 			<strong>CI/CD GitHub Actions</strong>. Les briques critiques sont
-			<strong>Stripe Connect</strong> (paiement sous séquestre et KYC) et l'<strong>API Wakam</strong>
+			<strong>Stripe Connect</strong> (paiement sous séquestre et KYC) et l'<strong
+				>API Wakam</strong
+			>
 			(assurance à la demande, protégée par un Circuit Breaker).
 		</p>
 		<p>
@@ -119,8 +121,8 @@
 
 		<h2>2. Processus de mise à jour des dépendances <span class="badge-comp">C4.1.1</span></h2>
 		<p>
-			Evenue repose sur un écosystème JavaScript/TypeScript dont la sécurité et la stabilité dépendent
-			directement de la tenue à jour des dépendances.
+			Evenue repose sur un écosystème JavaScript/TypeScript dont la sécurité et la stabilité
+			dépendent directement de la tenue à jour des dépendances.
 		</p>
 
 		<h3>2.1 — Inventaire des dépendances critiques</h3>
@@ -169,9 +171,9 @@
 		<h3>2.2 — Veille et détection des vulnérabilités</h3>
 		<p>
 			La veille combine trois sources : la documentation officielle et les notes de version
-			(SvelteKit, Prisma, Stripe), le suivi des dépôts via <code>GitHub Watch &amp; Stars</code> pour
-			être notifié des <em>releases</em> critiques, et surtout un
-			<strong>contrôle automatisé en intégration continue</strong>. Un job CI d'<strong
+			(SvelteKit, Prisma, Stripe), le suivi des dépôts via
+			<code>GitHub Watch &amp; Stars</code> pour être notifié des <em>releases</em> critiques, et
+			surtout un <strong>contrôle automatisé en intégration continue</strong>. Un job CI d'<strong
 				>audit de dépendances</strong
 			>
 			(<code>npm audit</code>) a été ajouté à la pipeline : il est
@@ -208,9 +210,9 @@
 		<div class="callout callout-proof">
 			<p>
 				<strong>Preuve projet.</strong> Migration Prisma v7 (<code>#CU-018</code> et correctifs
-				associés), passage Node 20→22, remplacement
-				<code>lucide-svelte</code> → <code>@lucide/svelte</code>, et job CI d'audit bloquant
-				(<code>#CU-020</code>). Tous visibles dans l'historique Git.
+				associés), passage Node 20→22, remplacement <code>lucide-svelte</code> →
+				<code>@lucide/svelte</code>, et job CI d'audit bloquant (<code>#CU-020</code>). Tous
+				visibles dans l'historique Git.
 			</p>
 		</div>
 
@@ -256,8 +258,8 @@
 
 		<h3>3.2 — Indicateurs de suivi pertinents</h3>
 		<p>
-			Les seuils reprennent le référentiel d'indicateurs de risque (KRI) défini au cadrage, complétés
-			d'un objectif de disponibilité (SLO) de 99,9 %.
+			Les seuils reprennent le référentiel d'indicateurs de risque (KRI) défini au cadrage,
+			complétés d'un objectif de disponibilité (SLO) de 99,9 %.
 		</p>
 		<table>
 			<thead>
@@ -315,9 +317,9 @@
 		</p>
 		<ul>
 			<li>
-				<strong>Logger JSON structuré :</strong> chaque événement applicatif est journalisé au format
-				JSON, ce qui permet une agrégation et une recherche fines dans <strong>Loki</strong>. Chaque
-				ligne porte un identifiant de corrélation, également renvoyé au client dans l'en-tête
+				<strong>Logger JSON structuré :</strong> chaque événement applicatif est journalisé au
+				format JSON, ce qui permet une agrégation et une recherche fines dans <strong>Loki</strong>.
+				Chaque ligne porte un identifiant de corrélation, également renvoyé au client dans l'en-tête
 				<code>x-request-id</code>.
 			</li>
 			<li>
@@ -358,9 +360,9 @@
 
 		<h3>3.4 — Modalité des signalements (alerting)</h3>
 		<p>
-			Les alertes sont pilotées par <strong>Grafana Alerting</strong> : des règles évaluent en continu
-			les métriques natives d'infrastructure et les logs Loki. Lorsqu'un seuil est franchi, une
-			notification est émise selon la sévérité :
+			Les alertes sont pilotées par <strong>Grafana Alerting</strong> : des règles évaluent en
+			continu les métriques natives d'infrastructure et les logs Loki. Lorsqu'un seuil est franchi,
+			une notification est émise selon la sévérité :
 		</p>
 		<table>
 			<thead>
@@ -393,8 +395,8 @@
 			</tbody>
 		</table>
 		<p>
-			Ce dispositif ferme la boucle « détection → signalement → intervention » et alimente directement
-			le processus de consignation des anomalies décrit au §4.
+			Ce dispositif ferme la boucle « détection → signalement → intervention » et alimente
+			directement le processus de consignation des anomalies décrit au §4.
 		</p>
 
 		<h2>
@@ -403,7 +405,8 @@
 		</h2>
 		<p>
 			La compétence exige un <strong>processus de collecte et de consignation</strong>, l'usage d'un
-			<strong>outil</strong> et l'intégration de <strong>toutes les informations pertinentes</strong>
+			<strong>outil</strong> et l'intégration de
+			<strong>toutes les informations pertinentes</strong>
 			pour déterminer le correctif.
 		</p>
 
@@ -477,8 +480,9 @@
 
 		<h3>4.4 — Workflow de traitement</h3>
 		<p>
-			<strong>Détection → Qualification &amp; triage (sévérité) → Consignation (fiche ANO) →
-				Assignation → Correction → Test de non-régression → Déploiement → Vérification → Clôture /
+			<strong
+				>Détection → Qualification &amp; triage (sévérité) → Consignation (fiche ANO) → Assignation
+				→ Correction → Test de non-régression → Déploiement → Vérification → Clôture /
 				Post-mortem.</strong
 			>
 			Les anomalies bloquantes (SEV1) suivent la procédure d'escalade du §3.4.
@@ -531,9 +535,9 @@
 				<tr>
 					<td>Impact</td>
 					<td>
-						Un appel <strong>anonyme</strong> créait une <strong>réservation de 840 €</strong> au nom
-						d'un tiers. Atteinte à l'intégrité des données, exposition financière et responsabilité
-						de la plateforme (contrôle d'accès rompu).
+						Un appel <strong>anonyme</strong> créait une <strong>réservation de 840 €</strong> au
+						nom d'un tiers. Atteinte à l'intégrité des données, exposition financière et
+						responsabilité de la plateforme (contrôle d'accès rompu).
 					</td>
 				</tr>
 				<tr>
@@ -567,14 +571,17 @@
 		</table>
 
 		<h2>6. Traitement d'une anomalie détectée <span class="badge-comp">C4.2.2</span></h2>
-		<p>Cycle complet de résolution de l'anomalie <strong>ANO-013</strong>, de la détection à la clôture.</p>
+		<p>
+			Cycle complet de résolution de l'anomalie <strong>ANO-013</strong>, de la détection à la
+			clôture.
+		</p>
 
 		<h3>6.1 — Détection et qualification</h3>
 		<p>
 			L'anomalie a été identifiée durant la campagne de sécurisation en analysant le chemin
-			d'exécution de <code>POST /api/bookings</code>. Qualifiée <strong>SEV1</strong> car elle combine
-			une faille de contrôle d'accès (OWASP A01), un impact financier direct (réservation de 840 €
-			frauduleuse) et un risque sur l'intégrité des données.
+			d'exécution de <code>POST /api/bookings</code>. Qualifiée <strong>SEV1</strong> car elle
+			combine une faille de contrôle d'accès (OWASP A01), un impact financier direct (réservation de
+			840 € frauduleuse) et un risque sur l'intégrité des données.
 		</p>
 
 		<h3>6.2 — Diagnostic</h3>
@@ -589,8 +596,9 @@
 		<h3>6.3 — Correction</h3>
 		<p>
 			Le repli a été supprimé et remplacé par une <strong>garde d'authentification</strong> : toute
-			requête sans session valide reçoit désormais un <code>401 Unauthorized</code>. La correction est
-			isolée dans une branche dédiée et une Pull Request, selon la convention de commits du projet.
+			requête sans session valide reçoit désormais un <code>401 Unauthorized</code>. La correction
+			est isolée dans une branche dédiée et une Pull Request, selon la convention de commits du
+			projet.
 		</p>
 
 		<h3>6.4 — Tests de non-régression</h3>
@@ -598,7 +606,8 @@
 			Un test automatisé vérifie explicitement que l'endpoint refuse une requête anonyme. Il rejoint
 			la suite Vitest (<strong>104 tests</strong>), dont les
 			<strong>seuils de couverture sont bloquants</strong> dans <code>vite.config.ts</code> (80,0 %
-			d'instructions, 83,1 % de lignes sur la couche métier) : aucune régression ne peut passer la CI.
+			d'instructions, 83,1 % de lignes sur la couche métier) : aucune régression ne peut passer la
+			CI.
 		</p>
 
 		<h3>6.5 — Déploiement et vérification</h3>
@@ -610,19 +619,17 @@
 
 		<h3>6.6 — Post-mortem</h3>
 		<p>
-			<strong>Leçons :</strong> (1) proscrire tout repli « démo » dans les chemins de production ; (2)
-			systématiser une garde d'authentification au niveau des endpoints sensibles ; (3) couvrir chaque
-			correctif de sécurité par un test de non-régression. Ces enseignements alimentent les
+			<strong>Leçons :</strong> (1) proscrire tout repli « démo » dans les chemins de production ;
+			(2) systématiser une garde d'authentification au niveau des endpoints sensibles ; (3) couvrir
+			chaque correctif de sécurité par un test de non-régression. Ces enseignements alimentent les
 			recommandations du §9.
 		</p>
 
-		<h2>
-			7. Journal des versions déployées <span class="badge-elim">ÉLIMINATOIRE · C4.3.2</span>
-		</h2>
+		<h2>7. Journal des versions déployées <span class="badge-elim">ÉLIMINATOIRE · C4.3.2</span></h2>
 		<p>
-			La compétence exige un <strong>journal des versions déployées intégrant la documentation des
-				correctifs</strong
-			>, pour suivre les évolutions du logiciel.
+			La compétence exige un
+			<strong>journal des versions déployées intégrant la documentation des correctifs</strong>,
+			pour suivre les évolutions du logiciel.
 		</p>
 
 		<h3>7.1 — Politique de versionnement</h3>
@@ -681,8 +688,8 @@
 					<td>CU-018</td>
 					<td>fix</td>
 					<td>
-						Correction du tag de l'action Scaleway (v2 → v0) ; correctifs Dockerfile (copie du client
-						Prisma, <code>apk add</code>).
+						Correction du tag de l'action Scaleway (v2 → v0) ; correctifs Dockerfile (copie du
+						client Prisma, <code>apk add</code>).
 					</td>
 				</tr>
 				<tr>
@@ -708,8 +715,8 @@
 					<td>#8 / CU-020</td>
 					<td>feat / security</td>
 					<td>
-						Durcissement OWASP (dont correctif <strong>ANO-013</strong>), accessibilité RGAA, recette
-						exécutée (68 scénarios). Suite portée à 89 tests.
+						Durcissement OWASP (dont correctif <strong>ANO-013</strong>), accessibilité RGAA,
+						recette exécutée (68 scénarios). Suite portée à 89 tests.
 					</td>
 				</tr>
 			</tbody>
@@ -720,10 +727,10 @@
 
 		<div class="callout callout-note">
 			<p>
-				<strong>Amélioration identifiée.</strong> Le journal est actuellement dérivé des merge commits
-				et des PR. La pose de <strong>tags Git annotés</strong> par version et une génération
-				automatique du <em>changelog</em> (ex. <code>semantic-release</code>) fiabiliseraient encore
-				la traçabilité (cf. §9).
+				<strong>Amélioration identifiée.</strong> Le journal est actuellement dérivé des merge
+				commits et des PR. La pose de <strong>tags Git annotés</strong> par version et une
+				génération automatique du <em>changelog</em> (ex. <code>semantic-release</code>)
+				fiabiliseraient encore la traçabilité (cf. §9).
 			</p>
 		</div>
 
@@ -734,7 +741,9 @@
 
 		<div class="callout callout-fiction">
 			<p>
-				<strong>Exemple réaliste — à remplacer par ton véritable échange support avant dépôt.</strong>
+				<strong
+					>Exemple réaliste — à remplacer par ton véritable échange support avant dépôt.</strong
+				>
 				Le cas ci-dessous est cohérent avec le projet (déclaration de sinistre Wakam, fenêtre de 7
 				jours post-événement du ticket CU-014) mais reste fictif.
 			</p>
@@ -742,7 +751,8 @@
 
 		<h3>8.1 — Contexte</h3>
 		<p>
-			Un hôte contacte le support : après son événement, il tente de <strong>déclarer un sinistre</strong>
+			Un hôte contacte le support : après son événement, il tente de
+			<strong>déclarer un sinistre</strong>
 			(dégradations) via son espace, mais le formulaire refuse sa déclaration avec un message
 			générique. Il estime être dans les délais.
 		</p>
@@ -774,9 +784,9 @@
 				<tr>
 					<td>J0 — Cause</td>
 					<td>
-						La fenêtre était calculée à partir de la <strong>date de réservation</strong> et non de la
-						<strong>date de fin d'événement</strong> : l'hôte, pourtant dans les délais réels, était
-						bloqué à tort.
+						La fenêtre était calculée à partir de la <strong>date de réservation</strong> et non de
+						la <strong>date de fin d'événement</strong> : l'hôte, pourtant dans les délais réels,
+						était bloqué à tort.
 					</td>
 				</tr>
 				<tr>
@@ -796,8 +806,8 @@
 				<tr>
 					<td>J1 — Clôture</td>
 					<td>
-						Ticket clos, anomalie consignée et reliée à la version déployée. Post-mortem : ajouter un
-						test couvrant explicitement les bornes de la fenêtre.
+						Ticket clos, anomalie consignée et reliée à la version déployée. Post-mortem : ajouter
+						un test couvrant explicitement les bornes de la fenêtre.
 					</td>
 				</tr>
 			</tbody>
@@ -827,8 +837,8 @@
 					<td>Finaliser l'entité <code>Payout</code> du séquestre (ANO-014)</td>
 					<td>
 						Anomalie ouverte et tracée : l'entité de répartition des fonds n'est jamais alimentée.
-						Sans elle, la ventilation hôte / plateforme / assureur après événement — cœur du modèle —
-						n'est pas garantie. Correction prioritaire.
+						Sans elle, la ventilation hôte / plateforme / assureur après événement — cœur du modèle
+						— n'est pas garantie. Correction prioritaire.
 					</td>
 					<td class="sev1">Haute</td>
 					<td>Moyen</td>
@@ -892,21 +902,22 @@
 
 		<h2>10. Conclusion</h2>
 		<p>
-			Evenue dispose d'un dispositif de maintien en condition opérationnelle complet et outillé : des
-			dépendances tenues à jour et auditées automatiquement, une supervision réelle (logs structurés,
-			métriques d'infrastructure et endpoint Prometheus applicatif, alertes Grafana/Loki, surveillance
-			du Circuit Breaker), un processus de consignation adossé à GitHub Issues, et un journal de
-			versions traçable jusqu'au correctif. L'anomalie critique <strong>ANO-013</strong> illustre la
-			chaîne complète, de la détection au déploiement vérifié, avec test de non-régression. Les axes
-			d'amélioration — au premier rang desquels la finalisation de l'entité
-			<code>Payout</code> (ANO-014) — dessinent la trajectoire de fiabilisation de la plateforme.
+			Evenue dispose d'un dispositif de maintien en condition opérationnelle complet et outillé :
+			des dépendances tenues à jour et auditées automatiquement, une supervision réelle (logs
+			structurés, métriques d'infrastructure et endpoint Prometheus applicatif, alertes
+			Grafana/Loki, surveillance du Circuit Breaker), un processus de consignation adossé à GitHub
+			Issues, et un journal de versions traçable jusqu'au correctif. L'anomalie critique
+			<strong>ANO-013</strong> illustre la chaîne complète, de la détection au déploiement vérifié,
+			avec test de non-régression. Les axes d'amélioration — au premier rang desquels la
+			finalisation de l'entité <code>Payout</code> (ANO-014) — dessinent la trajectoire de
+			fiabilisation de la plateforme.
 		</p>
 
 		<div class="callout callout-annex">
 			<p>
 				<strong>Annexes (hors 20 pages) :</strong> A — captures des dashboards et règles d'alerte
-				Grafana ; B — journal des versions complet (export Git / PR) ; C — fiche ANO-013 détaillée et
-				extrait de logs Loki ; D — extrait du cahier de recettes (68 scénarios).
+				Grafana ; B — journal des versions complet (export Git / PR) ; C — fiche ANO-013 détaillée
+				et extrait de logs Loki ; D — extrait du cahier de recettes (68 scénarios).
 			</p>
 		</div>
 	</body>
