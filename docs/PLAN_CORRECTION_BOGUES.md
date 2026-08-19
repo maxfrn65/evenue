@@ -170,7 +170,7 @@ Détection → Consignation → Qualification → Priorisation → Correction �
 
 | Indicateur                              | Cible  | Valeur actuelle    |
 | --------------------------------------- | ------ | ------------------ |
-| Tests automatisés passants              | 100 %  | **89 / 89** ✅     |
+| Tests automatisés passants              | 100 %  | **104 / 104** ✅     |
 | Couverture instructions (couche métier) | ≥ 75 % | **79,2 %** ✅      |
 | Couverture lignes                       | ≥ 78 % | **82,3 %** ✅      |
 | Erreurs de typage                       | 0      | **0** ✅           |

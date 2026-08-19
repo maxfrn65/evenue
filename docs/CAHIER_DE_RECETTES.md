@@ -136,7 +136,7 @@ Exécutés automatiquement (`npm test`, `npm run test:coverage`, `npm run check`
 
 | ID   | Objectif                       | Résultat attendu                | Statut | Résultat constaté                                            |
 | ---- | ------------------------------ | ------------------------------- | ------ | ------------------------------------------------------------ |
-| S-01 | Exécution de la suite unitaire | 100 % passants                  | ✅     | **89 tests / 18 fichiers, 100 % passants**                   |
+| S-01 | Exécution de la suite unitaire | 100 % passants                  | ✅     | **104 tests, 100 % passants**                   |
 | S-02 | Couverture de la couche métier | ≥ 75 % instructions             | ✅     | 79,2 % instructions / 82,3 % lignes                          |
 | S-03 | Seuils de couverture bloquants | Build en échec sous les seuils  | ✅     | Seuils actifs dans `vite.config.ts`                          |
 | S-04 | Contrôle de typage statique    | 0 erreur                        | ✅     | `svelte-check` : **0 erreur**, 8 avertissements préexistants |
