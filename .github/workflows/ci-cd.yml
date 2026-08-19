@@ -2,9 +2,9 @@ name: Evenue CI/CD Pipeline & Scaleway Deploy
 
 on:
   push:
-    branches: [ main, feature/* ]
+    branches: [main, feature/*]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 env:
   SCALEWAY_REGISTRY: rg.fr-par.scw.cloud/evenue
@@ -153,8 +153,6 @@ jobs:
         with:
           access-key: ${{ secrets.SCW_ACCESS_KEY }}
           secret-key: ${{ secrets.SCW_SECRET_KEY }}
-          default-project-id: ${{ secrets.SCW_DEFAULT_PROJECT_ID }}
-          default-organization-id: ${{ secrets.SCW_DEFAULT_PROJECT_ID }}
           export-config: true
 
       # Deploys the exact image built by the previous job (SHA-tagged, not :latest) so the
@@ -169,8 +167,6 @@ jobs:
           # sa configuration : le CLI lit nativement ces variables.
           SCW_ACCESS_KEY: ${{ secrets.SCW_ACCESS_KEY }}
           SCW_SECRET_KEY: ${{ secrets.SCW_SECRET_KEY }}
-          SCW_DEFAULT_PROJECT_ID: ${{ secrets.SCW_DEFAULT_PROJECT_ID }}
-          SCW_DEFAULT_ORGANIZATION_ID: ${{ secrets.SCW_DEFAULT_PROJECT_ID }}
           SCW_DEFAULT_REGION: fr-par
           SCW_CONTAINER_ID: ${{ secrets.SCW_CONTAINER_ID }}
           IMAGE_URI: ${{ env.SCALEWAY_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
