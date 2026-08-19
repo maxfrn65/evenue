@@ -31,11 +31,19 @@ if ! command -v scw >/dev/null 2>&1; then
 fi
 
 # The CLI's own "No credentials provided" fires halfway through the deployment and reads
-# like a Scaleway outage rather than a CI misconfiguration. Check up front instead.
+# like a Scaleway outage rather than a CI misconfiguration. Check up front instead, and name
+# the offending variable: a GitHub secret that exists but holds an empty value looks exactly
+# like a correctly configured one in every listing, which is a long thing to work out.
 if [ -z "${SCW_ACCESS_KEY:-}" ] || [ -z "${SCW_SECRET_KEY:-}" ]; then
 	if [ ! -f "${HOME}/.config/scw/config.yaml" ]; then
-		echo "❌ No Scaleway credentials: set SCW_ACCESS_KEY and SCW_SECRET_KEY," >&2
-		echo "   or run 'scw init' locally. In CI they are passed as step env vars." >&2
+		echo "❌ Missing Scaleway credentials." >&2
+		[ -z "${SCW_ACCESS_KEY:-}" ] && echo "   - SCW_ACCESS_KEY is empty or unset" >&2
+		[ -z "${SCW_SECRET_KEY:-}" ] && echo "   - SCW_SECRET_KEY is empty or unset" >&2
+		# Lengths only — never the values. Enough to tell "empty" from "wrong".
+		echo "   (lengths: access-key=${#SCW_ACCESS_KEY} secret-key=${#SCW_SECRET_KEY})" >&2
+		echo "   In CI these come from repository secrets. A secret can exist with an empty" >&2
+		echo "   value: re-set it from the GitHub UI and check the value is really stored." >&2
+		echo "   Locally, run 'scw init' instead." >&2
 		exit 1
 	fi
 fi
