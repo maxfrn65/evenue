@@ -4,11 +4,11 @@ Source HTML/CSS du dossier « Maintien de l'application logicielle en condition
 opérationnelle », versionnée pour que le PDF soit **régénérable** — le document ne dépend
 plus d'un fichier isolé dans un dossier de téléchargements.
 
-| Fichier      | Rôle                                                       |
-| ------------ | ---------------------------------------------------------- |
-| `cover.html` | Page de garde (sans pied de page)                          |
-| `body.html`  | Corps du dossier, §1 à §10                                 |
-| `styles.css` | Mise en forme (format A4, titres, tableaux, encadrés)      |
+| Fichier      | Rôle                                                        |
+| ------------ | ----------------------------------------------------------- |
+| `cover.html` | Page de garde (sans pied de page)                           |
+| `body.html`  | Corps du dossier, §1 à §10                                  |
+| `styles.css` | Mise en forme (format A4, titres, tableaux, encadrés)       |
 | `build.mjs`  | Rendu PDF via le Chrome installé (Puppeteer en mode `core`) |
 
 ## Régénérer le PDF

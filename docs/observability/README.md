@@ -17,12 +17,17 @@ Les requêtes détaillées et les libellés de labels sont documentés dans
 ## Importer le dashboard
 
 1. Grafana (Scaleway Cockpit) → **Dashboards** → **New** → **Import**.
-2. Coller le contenu de `dashboard-evenue-mco.json`.
-3. Sélectionner la source de données Loki lorsqu'elle est demandée.
+2. Coller le contenu de `dashboard-evenue-mco.json`, puis **Load**.
+3. Une fois le dashboard ouvert, choisir la source Loki dans le sélecteur **Source Loki** en
+   haut de page, puis **Save dashboard**.
 
 Le dashboard n'embarque aucun identifiant de source de données : il expose deux variables,
 `datasource` (choix de la source Loki) et `container` (nom du conteneur). Il est donc
-importable tel quel dans n'importe quel projet Cockpit, sans édition préalable.
+importable tel quel dans n'importe quel projet Cockpit, sans édition préalable — mais il ne
+demande rien à l'import, la source se choisit après ouverture.
+
+**La procédure console complète** — contact points, règles d'alerte, rétention, health
+check — est détaillée dans [PROCEDURE-CONSOLE.md](PROCEDURE-CONSOLE.md).
 
 Les six panneaux couvrent les indicateurs du §3.2 du dossier : taux d'erreur 5xx, latence
 p95 par route, état du Circuit Breaker Wakam, exceptions serveur, tentatives de connexion

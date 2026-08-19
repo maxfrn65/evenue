@@ -4,17 +4,18 @@
 **Branche source** : `feature/CU-001-setup-socle-prisma-circuit-breaker`  
 **Branche cible** : `main`  
 **Auteur** : Lead Dev / Architecte (Simulé)  
-**Revue par** : QA / Tech Lead (Simulé)  
+**Revue par** : QA / Tech Lead (Simulé)
 
 ---
 
 ## 1. Contexte & Description des changements
 
 Initialisation du projet greenfield **Evenue** :
+
 - **SvelteKit & Typescript** : Projet configuré en mode strict TypeScript avec Vite et adapter Node.
 - **Base de Données PostgreSQL & Prisma 7** : Schéma complet modélisant les entités métier (`User`, `Listing`, `Booking`, `InsurancePolicy`, `Payout`).
 - **Infrastructure locale** : Fichier `docker-compose.yml` avec service PostgreSQL 16 Alpine et healthcheck.
-- **Engine Circuit Breaker** : Module serveur TypeScript implémentant les 3 états (*CLOSED*, *OPEN*, *HALF_OPEN*) pour protéger les appels réseau vers l'API d'assurance Wakam.
+- **Engine Circuit Breaker** : Module serveur TypeScript implémentant les 3 états (_CLOSED_, _OPEN_, _HALF_OPEN_) pour protéger les appels réseau vers l'API d'assurance Wakam.
 - **Framework de Test** : Vitest configuré pour les tests unitaires et de composants.
 
 ---
@@ -38,11 +39,11 @@ Initialisation du projet greenfield **Evenue** :
 ## 4. Simulation de Revue de Code (Pair Review)
 
 > **Revue par @TechLead (QA / Senior Dev)**  
-> *"Très bonne initialisation de la structure et du schéma Prisma. L'implémentation du Circuit Breaker respecte bien les 3 états du brief.*  
+> _"Très bonne initialisation de la structure et du schéma Prisma. L'implémentation du Circuit Breaker respecte bien les 3 états du brief._  
 > **Point d'amélioration réclamé** : Dans `circuit-breaker.ts`, lorsque l'état passe à `OPEN`, il faut s'assurer que `lastStateChangeTime` est mis à jour précisément lors du basculement pour éviter toute réouverture prématurée du circuit lors du check de timeout. Peux-tu confirmer que `transitionTo` met à jour ce timestamp à chaque changement d'état ?"
 
 > **Réponse de @LeadDev (Auteur)**  
-> *"Merci pour la remarque judicieuse. Dans la méthode `transitionTo(newState: CircuitState)`, nous avons bien `this.lastStateChangeTime = Date.now()` qui est exécuté dès que `this.state !== newState`, ce qui garantit que le compte à rebours de `resetTimeoutMs` repart précisément au moment de la transition vers `OPEN`. Le test unitaire `should transition to HALF_OPEN after resetTimeoutMs` valide ce comportement exact avec `vi.advanceTimersByTime`."*
+> _"Merci pour la remarque judicieuse. Dans la méthode `transitionTo(newState: CircuitState)`, nous avons bien `this.lastStateChangeTime = Date.now()` qui est exécuté dès que `this.state !== newState`, ce qui garantit que le compte à rebours de `resetTimeoutMs` repart précisément au moment de la transition vers `OPEN`. Le test unitaire `should transition to HALF_OPEN after resetTimeoutMs` valide ce comportement exact avec `vi.advanceTimersByTime`."_
 
 ---
 

@@ -12,7 +12,7 @@ Ce registre consigne l'ensemble des décisions d'architecture, de sécurité et 
 - **Options envisagées** :
   1. Utiliser un ORM alternatif ou SQL brut.
   2. Utiliser une bibliothèque tierce pour le Circuit Breaker (ex. Opossum).
-  3. Développer un module Circuit Breaker TypeScript natif à 3 états (*CLOSED*, *OPEN*, *HALF_OPEN*) sur-mesure.
+  3. Développer un module Circuit Breaker TypeScript natif à 3 états (_CLOSED_, _OPEN_, _HALF_OPEN_) sur-mesure.
 - **Décision & Justification** :
   - **Prisma 7 + PostgreSQL** : Retenu pour la sécurité du typage, la garantie des transactions ACID indispensables aux séquestres financiers, et les migrations déclaratives.
   - **Circuit Breaker Natif TypeScript** : Retenu plutôt qu'une dépendance lourde pour garder le contrôle total sur le fallback d'assurance, éliminer la dette technique inutile, et garantir un temps d'exécution < 5ms sans surcharge runtime.
@@ -124,14 +124,14 @@ Ce registre consigne l'ensemble des décisions d'architecture, de sécurité et 
 
 ## Suivi des Arbitrages
 
-| ID | Domaine | Description / Sujet | Statut |
-|---|---|---|---|
-| ARB-001 | Architecture / Résilience | Prisma 7 + Circuit Breaker Engine natif | ✅ Validé |
-| ARB-002 | UI/UX / Transparence | Design System Sombre, Svelte 5 Runes & Bannière Wakam | ✅ Validé |
-| ARB-003 | Sécurité / Auth & KYC | Scrypt, PrismaPg & Onboarding Stripe Connect Express | ✅ Validé |
-| ARB-004 | Frontend / Géolocalisation | Moteur de recherche multicritère & Carte Mapbox | ✅ Validé |
-| ARB-005 | UI/UX / System | Composants Shadcn-Svelte, Carte Leaflet & Scope Wakam | ✅ Validé |
-| ARB-006 | UI/UX / DA | Thème clair minimaliste, Session Header & Fiche Dynamique | ✅ Validé |
-| ARB-007 | Backend / Finance | Moteur de réservation, Séquestre Stripe & Circuit Breaker Wakam | ✅ Validé |
-| ARB-008 | Frontend / Dashboard | Espace Dashboard complet, annulation & Générateur Prisma 7 | ✅ Validé |
-| ARB-009 | Backend / Assurance | Déclaration de sinistre & Attestations Wakam PDF/HTML | ✅ Validé |
+| ID      | Domaine                    | Description / Sujet                                             | Statut    |
+| ------- | -------------------------- | --------------------------------------------------------------- | --------- |
+| ARB-001 | Architecture / Résilience  | Prisma 7 + Circuit Breaker Engine natif                         | ✅ Validé |
+| ARB-002 | UI/UX / Transparence       | Design System Sombre, Svelte 5 Runes & Bannière Wakam           | ✅ Validé |
+| ARB-003 | Sécurité / Auth & KYC      | Scrypt, PrismaPg & Onboarding Stripe Connect Express            | ✅ Validé |
+| ARB-004 | Frontend / Géolocalisation | Moteur de recherche multicritère & Carte Mapbox                 | ✅ Validé |
+| ARB-005 | UI/UX / System             | Composants Shadcn-Svelte, Carte Leaflet & Scope Wakam           | ✅ Validé |
+| ARB-006 | UI/UX / DA                 | Thème clair minimaliste, Session Header & Fiche Dynamique       | ✅ Validé |
+| ARB-007 | Backend / Finance          | Moteur de réservation, Séquestre Stripe & Circuit Breaker Wakam | ✅ Validé |
+| ARB-008 | Frontend / Dashboard       | Espace Dashboard complet, annulation & Générateur Prisma 7      | ✅ Validé |
+| ARB-009 | Backend / Assurance        | Déclaration de sinistre & Attestations Wakam PDF/HTML           | ✅ Validé |
