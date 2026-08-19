@@ -30,6 +30,16 @@ if ! command -v scw >/dev/null 2>&1; then
 	exit 1
 fi
 
+# The CLI's own "No credentials provided" fires halfway through the deployment and reads
+# like a Scaleway outage rather than a CI misconfiguration. Check up front instead.
+if [ -z "${SCW_ACCESS_KEY:-}" ] || [ -z "${SCW_SECRET_KEY:-}" ]; then
+	if [ ! -f "${HOME}/.config/scw/config.yaml" ]; then
+		echo "❌ No Scaleway credentials: set SCW_ACCESS_KEY and SCW_SECRET_KEY," >&2
+		echo "   or run 'scw init' locally. In CI they are passed as step env vars." >&2
+		exit 1
+	fi
+fi
+
 echo "🚀 Deploying $IMAGE_URI to serverless container $CONTAINER_ID..."
 
 # Updating the registry image both pins the exact build being shipped (traceable, and
