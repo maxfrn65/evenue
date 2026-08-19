@@ -3,6 +3,10 @@ import type { PageServerLoad } from './$types';
 import { getConversations, getConversationMessages } from '$lib/server/messages';
 import { prisma } from '$lib/server/db';
 
+type Conversation = Awaited<ReturnType<typeof getConversations>>[number];
+type ConversationPartner = Conversation['partner'] & { email?: string };
+type ConversationMessage = Awaited<ReturnType<typeof getConversationMessages>>[number];
+
 export const load: PageServerLoad = async ({ locals, url }) => {
 	if (!locals.user) {
 		const redirectTo = encodeURIComponent(url.pathname + url.search);
@@ -13,8 +17,8 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 	const targetUserId = url.searchParams.get('partnerId') || url.searchParams.get('hostId');
 	const requestedBookingId = url.searchParams.get('bookingId');
 
-	let activePartner: any = null;
-	let activeMessages: any[] = [];
+	let activePartner: ConversationPartner | null = null;
+	let activeMessages: ConversationMessage[] = [];
 	let bookingId: string | undefined;
 
 	if (targetUserId) {

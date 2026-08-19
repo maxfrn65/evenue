@@ -11,7 +11,11 @@ vi.mock('./db', () => ({
 }));
 
 import { prisma } from './db';
-import { createHostStripeAccount, createStripeOnboardingLink, createBookingPaymentIntent } from './stripe';
+import {
+	createHostStripeAccount,
+	createStripeOnboardingLink,
+	createBookingPaymentIntent
+} from './stripe';
 
 describe('Stripe Connect Escrow Service', () => {
 	beforeEach(() => {
@@ -40,7 +44,11 @@ describe('Stripe Connect Escrow Service', () => {
 	});
 
 	it('should return onboarding link for host KYC', async () => {
-		const url = await createStripeOnboardingLink('acct_123', 'http://localhost/refresh', 'http://localhost/return');
+		const url = await createStripeOnboardingLink(
+			'acct_123',
+			'http://localhost/refresh',
+			'http://localhost/return'
+		);
 		expect(url).toBeDefined();
 		expect(url).toContain('http');
 	});

@@ -138,5 +138,3 @@ export class CircuitBreaker<T = unknown> {
 		this.transitionTo('CLOSED');
 	}
 }
-
-export const wakamCircuitBreaker = new CircuitBreaker({ partner: 'wakam' });

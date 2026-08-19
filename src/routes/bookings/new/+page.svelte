@@ -1,6 +1,8 @@
 <script lang="ts">
-	import { page } from '$app/state';
+	import type { DateValue } from '@internationalized/date';
+	import type { AvailabilityRange } from '$lib/types';
 	import CoverageBanner from '$lib/components/CoverageBanner.svelte';
+	import { toErrorMessage } from '$lib/utils';
 	import Button from '$lib/components/ui/button/button.svelte';
 	import * as InputGroup from '$lib/components/ui/input-group/index.js';
 	import Label from '$lib/components/ui/label/label.svelte';
@@ -22,7 +24,7 @@
 	const listing = $derived(data.listing);
 	const availabilityInfo = $derived(data.availabilityInfo || { disabledRanges: [] });
 
-	let listingId = $state(listing.id);
+	const listingId = $derived(listing.id);
 	let startDate = $state('');
 	let endDate = $state('');
 	let guestCount = $state(25);
@@ -33,14 +35,14 @@
 
 	const todayIso = new Date().toISOString().split('T')[0];
 
-	function isDateDisabled(dateVal: any) {
+	function isDateDisabled(dateVal: DateValue) {
 		const dateStr = `${dateVal.year}-${String(dateVal.month).padStart(2, '0')}-${String(dateVal.day).padStart(2, '0')}`;
 		if (dateStr < todayIso) return true;
 
 		const ranges = availabilityInfo.availabilityRanges || [];
 		if (ranges.length > 0) {
 			const isInsideAnyRange = ranges.some(
-				(r: any) => dateStr >= r.startDate && dateStr <= r.endDate
+				(r: AvailabilityRange) => dateStr >= r.startDate && dateStr <= r.endDate
 			);
 			if (!isInsideAnyRange) return true;
 		} else {
@@ -88,8 +90,8 @@
 
 			generatedPolicy = data.insurancePolicy?.policyNumber || 'WAK-2026-88492';
 			bookingSuccess = true;
-		} catch (err: any) {
-			errorMessage = err.message;
+		} catch (err) {
+			errorMessage = toErrorMessage(err);
 		} finally {
 			loading = false;
 		}
@@ -188,14 +190,14 @@
 
 					<!-- Visual Availability Calendar -->
 					<div class="space-y-1.5 pt-2">
-						<Label class="text-xs font-semibold text-slate-700">Calendrier des jours réservables</Label>
-						<p class="text-[11px] text-slate-500">Les jours grisés sont occupés ou hors plage de disponibilité de l'hôte.</p>
-						<div class="flex justify-center bg-slate-50/50 rounded-xl p-2 border border-slate-200">
-							<CalendarWidget
-								type="single"
-								{isDateDisabled}
-								class="rounded-md"
-							/>
+						<Label class="text-xs font-semibold text-slate-700"
+							>Calendrier des jours réservables</Label
+						>
+						<p class="text-[11px] text-slate-500">
+							Les jours grisés sont occupés ou hors plage de disponibilité de l'hôte.
+						</p>
+						<div class="flex justify-center rounded-xl border border-slate-200 bg-slate-50/50 p-2">
+							<CalendarWidget type="single" {isDateDisabled} class="rounded-md" />
 						</div>
 					</div>
 

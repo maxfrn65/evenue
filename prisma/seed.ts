@@ -84,7 +84,7 @@ async function main() {
 		}
 	});
 
-	const listing2 = await prisma.listing.create({
+	await prisma.listing.create({
 		data: {
 			id: 'loft-paris-02',
 			hostId: host2.id,
@@ -110,7 +110,7 @@ async function main() {
 		}
 	});
 
-	const listing3 = await prisma.listing.create({
+	await prisma.listing.create({
 		data: {
 			id: 'domaine-lyon-03',
 			hostId: host1.id,
@@ -136,7 +136,7 @@ async function main() {
 		}
 	});
 
-	const listing4 = await prisma.listing.create({
+	await prisma.listing.create({
 		data: {
 			id: 'chateau-bordeaux-04',
 			hostId: host2.id,
@@ -162,13 +162,13 @@ async function main() {
 		}
 	});
 
-	const listing5 = await prisma.listing.create({
+	await prisma.listing.create({
 		data: {
 			id: 'bastide-marseille-05',
 			hostId: host1.id,
 			title: 'Bastide Provençale & Terrasses Vue Mer',
 			description:
-				"Magnifique bastide nichée sur les calanques avec vue panoramique sur la Méditerranée. Terrasses en restanque, terrain de pétanque et sonorisation extérieure.",
+				'Magnifique bastide nichée sur les calanques avec vue panoramique sur la Méditerranée. Terrasses en restanque, terrain de pétanque et sonorisation extérieure.',
 			address: '88 Corniche Kennedy',
 			city: 'Marseille',
 			zipCode: '13007',
@@ -183,7 +183,7 @@ async function main() {
 		}
 	});
 
-	const listing6 = await prisma.listing.create({
+	await prisma.listing.create({
 		data: {
 			id: 'penthouse-nice-06',
 			hostId: host2.id,
@@ -224,7 +224,7 @@ async function main() {
 		}
 	});
 
-	const insurance1 = await prisma.insurancePolicy.create({
+	await prisma.insurancePolicy.create({
 		data: {
 			id: 'policy-demo-01',
 			bookingId: booking1.id,

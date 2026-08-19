@@ -13,7 +13,7 @@
 	let { type = 'single', name, value = $bindable(''), onValueChange, children }: Props = $props();
 </script>
 
-<Select.Root type="single" {name} bind:value {onValueChange}>
+<Select.Root {type} {name} bind:value {onValueChange}>
 	{#if children}
 		{@render children()}
 	{/if}

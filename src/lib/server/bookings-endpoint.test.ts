@@ -23,7 +23,7 @@ describe('Bookings API Endpoint — POST /api/bookings', () => {
 	it('rejects an unauthenticated booking attempt with 401', async () => {
 		const mockEvent: any = {
 			request: { json: vi.fn() },
-			cookies: { get: vi.fn().mockReturnValue(undefined) }
+			locals: { user: null }
 		};
 
 		const response = await POST(mockEvent);
@@ -43,7 +43,7 @@ describe('Bookings API Endpoint — POST /api/bookings', () => {
 					endDate: '2027-01-12'
 				})
 			},
-			cookies: { get: vi.fn().mockReturnValue(undefined) }
+			locals: { user: null }
 		};
 
 		const response = await POST(mockEvent);
@@ -69,7 +69,7 @@ describe('Bookings API Endpoint — POST /api/bookings', () => {
 					guestCount: 4
 				})
 			},
-			cookies: { get: vi.fn().mockReturnValue('session-user-42') }
+			locals: { user: { id: 'session-user-42' } }
 		};
 
 		const response = await POST(mockEvent);
@@ -85,7 +85,7 @@ describe('Bookings API Endpoint — POST /api/bookings', () => {
 	it('returns 400 when mandatory booking parameters are missing', async () => {
 		const mockEvent: any = {
 			request: { json: vi.fn().mockResolvedValue({ listingId: 'listing-1' }) },
-			cookies: { get: vi.fn().mockReturnValue('session-user-42') }
+			locals: { user: { id: 'session-user-42' } }
 		};
 
 		const response = await POST(mockEvent);

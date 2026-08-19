@@ -34,6 +34,16 @@ la version déployée.
 - Modèle de fiche de consignation d'anomalie (`.github/ISSUE_TEMPLATE/anomalie.yml`).
 - Fermeture au public des endpoints de métriques : jeton `METRICS_TOKEN` exigé en
   production, endpoints désactivés si le jeton n'est pas configuré (_fail closed_).
+- Sessions serveur (`model Session`) : le cookie porte désormais un jeton opaque de
+  256 bits, expirable et révocable, à la place de l'identifiant utilisateur (OWASP A07).
+- Compteur `evenue_partner_fallback_total{partner,operation}` : rend visibles dans Grafana
+  les appels partenaires servis par une réponse simulée localement.
+- Colonne `Claim.claimNumber` : le numéro de dossier affiché à l'hôte est enregistré en
+  base au lieu d'être généré en mémoire.
+- Statut `UNDER_REVIEW` dans `InsuranceStatus`, pour représenter un sinistre contesté.
+- Filtre « type d'événement » dans le moteur de recherche (le `<select>` avait disparu du
+  gabarit alors que le filtre restait implémenté côté serveur).
+- `npm run lint` exécuté par la CI, dans le job qui s'annonçait déjà comme « Check & Lint ».
 
 ### Corrigé
 
@@ -44,6 +54,28 @@ la version déployée.
   `ERROR` sous le balayage permanent des robots.
 - Le script de déploiement Scaleway avalait ses erreurs et se terminait toujours en succès :
   la CI restait verte sans jamais déployer, et la production dérivait silencieusement.
+- Le cookie de session contenait l'identifiant utilisateur en clair : toute personne
+  connaissant ou devinant un identifiant pouvait se faire passer pour ce compte, et la
+  déconnexion n'invalidait rien côté serveur (OWASP A07).
+- Les appels Stripe en échec étaient rattrapés en silence et renvoyaient un identifiant
+  factice `pi_mock_…` : une réservation était enregistrée `CONFIRMED` sans séquestre réel,
+  sans ligne de log ni métrique. Le repli est conservé — la plateforme est une simulation —
+  mais il est journalisé, compté et exposé via un indicateur `simulated` dans la réponse.
+- Les métriques publiaient l'état d'une seconde instance de Circuit Breaker, jamais
+  exécutée : `/metrics` affichait `CLOSED / 0` quoi qu'il arrive sur le chemin d'appel.
+- Le numéro de sinistre `SIN-WAK-…` affiché après déclaration n'existait nulle part en base
+  et disparaissait au rechargement de la page.
+- `disputeClaim` inscrivait `UNDER_REVIEW` dans l'historique tout en laissant le sinistre en
+  `CLAIMED` : les deux se contredisaient définitivement.
+- La recherche du catalogue appelait `GET /api/listings`, un verbe que l'endpoint n'expose
+  pas : chaque recherche recevait un 405 avalé par un `catch`. Elle passe désormais par le
+  `load` serveur, qui implémente déjà tous les filtres.
+- Une URL d'annonce inconnue servait une villa codée en dur au lieu d'un 404 : n'importe
+  quelle adresse affichait une annonce crédible avec un bouton de réservation actif.
+- Blocs d'interface morts : la section « Équipements & Sonorisation » (`listing.amenities`)
+  et le badge de note (`item.rating`) référençaient des champs absents du schéma.
+- Identifiants des comptes de démonstration erronés dans le README : la connexion échouait
+  en suivant la procédure documentée.
 
 ---
 

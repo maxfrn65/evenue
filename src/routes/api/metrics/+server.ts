@@ -1,6 +1,6 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { wakamCircuitBreaker } from '$lib/server/circuit-breaker';
+import { wakamCircuitBreaker } from '$lib/server/wakam';
 import { prisma } from '$lib/server/db';
 import { denyMetricsAccess } from '$lib/server/metrics-auth';
 

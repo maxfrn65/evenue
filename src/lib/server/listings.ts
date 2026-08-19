@@ -1,6 +1,10 @@
 import { prisma } from './db';
+import type { Prisma } from '../../../generated/prisma/client';
+import type { AvailabilityRange } from '$lib/types';
 import { fetchAndParseExternalICal } from './ical';
 import { assertSafeExternalUrl } from './url-safety';
+
+export type { AvailabilityRange };
 
 export interface ListingFilterInput {
 	city?: string;
@@ -10,11 +14,6 @@ export interface ListingFilterInput {
 	eventType?: string;
 	startDate?: string;
 	endDate?: string;
-}
-
-export interface AvailabilityRange {
-	startDate: string;
-	endDate: string;
 }
 
 export interface CreateListingInput {
@@ -62,7 +61,7 @@ export interface UpdateListingInput {
  * Get listings from PostgreSQL database with dynamic search & date filters.
  */
 export async function getListings(filters: ListingFilterInput = {}) {
-	const where: any = {};
+	const where: Prisma.ListingWhereInput = {};
 
 	if (filters.city) {
 		where.city = { contains: filters.city, mode: 'insensitive' };
@@ -90,16 +89,10 @@ export async function getListings(filters: ListingFilterInput = {}) {
 		if (!isNaN(reqStart.getTime()) && !isNaN(reqEnd.getTime()) && reqStart < reqEnd) {
 			where.AND = [
 				{
-					OR: [
-						{ availableStartDate: null },
-						{ availableStartDate: { lte: reqStart } }
-					]
+					OR: [{ availableStartDate: null }, { availableStartDate: { lte: reqStart } }]
 				},
 				{
-					OR: [
-						{ availableEndDate: null },
-						{ availableEndDate: { gte: reqEnd } }
-					]
+					OR: [{ availableEndDate: null }, { availableEndDate: { gte: reqEnd } }]
 				},
 				// Ensure no overlapping confirmed or pending bookings
 				{
@@ -140,9 +133,7 @@ export async function getListings(filters: ListingFilterInput = {}) {
 			if (ranges.length === 0) return true; // Default open if no custom ranges configured
 
 			// Must fall inside AT LEAST ONE defined availability range
-			return ranges.some(
-				(r) => r.startDate <= reqStartStr && r.endDate >= reqEndStr
-			);
+			return ranges.some((r) => r.startDate <= reqStartStr && r.endDate >= reqEndStr);
 		});
 	}
 
@@ -218,8 +209,12 @@ export async function getListingDisabledDates(listingId: string) {
 	}
 
 	return {
-		availableStartDate: listing.availableStartDate ? listing.availableStartDate.toISOString().split('T')[0] : null,
-		availableEndDate: listing.availableEndDate ? listing.availableEndDate.toISOString().split('T')[0] : null,
+		availableStartDate: listing.availableStartDate
+			? listing.availableStartDate.toISOString().split('T')[0]
+			: null,
+		availableEndDate: listing.availableEndDate
+			? listing.availableEndDate.toISOString().split('T')[0]
+			: null,
 		availabilityRanges: (listing.availabilityRanges as unknown as AvailabilityRange[]) || [],
 		disabledRanges
 	};
@@ -249,11 +244,18 @@ export async function createListing(input: CreateListingInput) {
 			maxCapacity: input.maxCapacity,
 			eventTypeAllowed: input.eventTypeAllowed,
 			imageUrl: input.imageUrl?.trim(),
-			imageUrls: input.imageUrls && input.imageUrls.length > 0 ? input.imageUrls : input.imageUrl ? [input.imageUrl.trim()] : [],
+			imageUrls:
+				input.imageUrls && input.imageUrls.length > 0
+					? input.imageUrls
+					: input.imageUrl
+						? [input.imageUrl.trim()]
+						: [],
 			icalSyncUrl: input.icalSyncUrl?.trim(),
 			availableStartDate: input.availableStartDate ? new Date(input.availableStartDate) : null,
 			availableEndDate: input.availableEndDate ? new Date(input.availableEndDate) : null,
-			availabilityRanges: input.availabilityRanges ? (input.availabilityRanges as any) : undefined
+			availabilityRanges: input.availabilityRanges
+				? (input.availabilityRanges as unknown as Prisma.InputJsonValue)
+				: undefined
 		}
 	});
 
@@ -281,7 +283,7 @@ export async function updateListing(id: string, hostId: string, input: UpdateLis
 		assertSafeExternalUrl(input.icalSyncUrl);
 	}
 
-	const data: any = {};
+	const data: Prisma.ListingUpdateInput = {};
 	if (input.title !== undefined) data.title = input.title.trim();
 	if (input.description !== undefined) data.description = input.description.trim();
 	if (input.address !== undefined) data.address = input.address.trim();
@@ -303,7 +305,7 @@ export async function updateListing(id: string, hostId: string, input: UpdateLis
 		data.availableEndDate = input.availableEndDate ? new Date(input.availableEndDate) : null;
 	}
 	if (input.availabilityRanges !== undefined) {
-		data.availabilityRanges = input.availabilityRanges as any;
+		data.availabilityRanges = input.availabilityRanges as unknown as Prisma.InputJsonValue;
 	}
 
 	return await prisma.listing.update({

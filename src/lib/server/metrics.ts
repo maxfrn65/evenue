@@ -75,6 +75,22 @@ export const circuitBreakerOpenedTotal = new Counter({
 	registers: [registry]
 });
 
+/**
+ * Simulated partner responses.
+ *
+ * Stripe and Wakam are not really called in this build; when the SDK call fails (or is
+ * skipped) the app falls back to a locally generated identifier. That fallback used to be
+ * completely silent — a booking could be stored as CONFIRMED with a fake payment intent and
+ * the only trace was a 201 in the access log. This counter makes the degraded path visible
+ * in Grafana, and `operation` says which call degraded.
+ */
+export const partnerFallbackTotal = new Counter({
+	name: 'evenue_partner_fallback_total',
+	help: 'Calls served by a local simulated response instead of the real partner API.',
+	labelNames: ['partner', 'operation'] as const,
+	registers: [registry]
+});
+
 const STATE_VALUES: Record<CircuitState, number> = {
 	CLOSED: 0,
 	HALF_OPEN: 1,
@@ -102,6 +118,10 @@ export function setCircuitBreakerState(
 ): void {
 	circuitBreakerState.set({ partner }, STATE_VALUES[state]);
 	circuitBreakerFailures.set({ partner }, consecutiveFailures);
+}
+
+export function recordPartnerFallback(partner: string, operation: string): void {
+	partnerFallbackTotal.inc({ partner, operation });
 }
 
 export function recordCircuitBreakerOpened(partner: string): void {

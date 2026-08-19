@@ -17,9 +17,7 @@ describe('Upload API Endpoint — POST /api/upload', () => {
 			request: {
 				formData: vi.fn()
 			},
-			cookies: {
-				get: vi.fn().mockReturnValue(null)
-			}
+			locals: { user: null }
 		};
 
 		const response = await POST(mockEvent);
@@ -41,9 +39,7 @@ describe('Upload API Endpoint — POST /api/upload', () => {
 			request: {
 				formData: vi.fn().mockResolvedValue(formDataMock)
 			},
-			cookies: {
-				get: vi.fn().mockReturnValue('host-user-1')
-			}
+			locals: { user: { id: 'host-user-1' } }
 		};
 
 		const response = await POST(mockEvent);

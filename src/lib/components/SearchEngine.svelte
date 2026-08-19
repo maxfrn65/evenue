@@ -1,21 +1,20 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
-	import Badge from '$lib/components/ui/badge/badge.svelte';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import * as Card from '$lib/components/ui/card/index.js';
 	import * as InputGroup from '$lib/components/ui/input-group/index.js';
-	import Label from '$lib/components/ui/label/label.svelte';
 	import * as Select from '$lib/components/ui/select/index.js';
+	import Label from '$lib/components/ui/label/label.svelte';
 	import {
 		Search,
 		MapPin,
 		Calendar,
 		Users,
 		X,
-		SlidersHorizontal,
 		Check,
-		RotateCcw
+		RotateCcw,
+		PartyPopper
 	} from '@lucide/svelte';
 	import { resolve } from '$app/paths';
 
@@ -29,7 +28,10 @@
 		onsearch = undefined as ((filters: Record<string, string>) => void) | undefined
 	} = $props();
 
-	let selectedCity = $state(initialCity);
+	// Writable deriveds: they follow the props on navigation, and the handlers below can
+	// still overwrite them between two navigations. The previous $state + $effect pair only
+	// captured the initial value, which is what svelte-check kept flagging.
+	let selectedCity = $derived(initialCity);
 	let cityInput = $state('');
 	let showCityDropdown = $state(false);
 	let availableCities = $state<string[]>([
@@ -43,18 +45,10 @@
 		'Lille'
 	]);
 
-	let startDate = $state(initialStartDate);
-	let endDate = $state(initialEndDate);
-	let minCapacity = $state<number | undefined>(initialMinCapacity);
-	let eventType = $state(initialEventType);
-
-	$effect(() => {
-		selectedCity = initialCity;
-		startDate = initialStartDate;
-		endDate = initialEndDate;
-		minCapacity = initialMinCapacity;
-		eventType = initialEventType;
-	});
+	let startDate = $derived(initialStartDate);
+	let endDate = $derived(initialEndDate);
+	let minCapacity = $derived<number | undefined>(initialMinCapacity);
+	let eventType = $derived(initialEventType);
 
 	onMount(async () => {
 		try {
@@ -67,6 +61,18 @@
 			console.error('Failed to load cities:', e);
 		}
 	});
+
+	const eventTypes = [
+		{ value: '', label: 'Tous événements' },
+		{ value: 'SOIRÉE', label: 'Soirée privée' },
+		{ value: 'ANNIVERSAIRE', label: 'Anniversaire' },
+		{ value: 'MARIAGE', label: 'Mariage / Réception' },
+		{ value: 'COCKTAIL', label: 'Cocktail professionnel' }
+	];
+
+	const eventTypeLabel = $derived(
+		eventTypes.find((e) => e.value === eventType)?.label ?? 'Tous événements'
+	);
 
 	const filteredCities = $derived(
 		availableCities.filter((c) => c.toLowerCase().includes(cityInput.toLowerCase().trim()))
@@ -103,6 +109,9 @@
 		e.preventDefault();
 		showCityDropdown = false;
 
+		// Plain URLSearchParams on purpose: this instance is a local builder for the
+		// query string, never reactive state.
+		// eslint-disable-next-line svelte/prefer-svelte-reactivity
 		const params = new URLSearchParams();
 		if (selectedCity) params.set('city', selectedCity);
 		if (startDate) params.set('startDate', startDate);
@@ -118,31 +127,25 @@
 			goto(resolve(`/listings?${params.toString()}`));
 		}
 	}
-
-	const eventTypes = [
-		{ value: '', label: 'Tous événements' },
-		{ value: 'SOIRÉE', label: 'Soirée privée' },
-		{ value: 'ANNIVERSAIRE', label: 'Anniversaire' },
-		{ value: 'MARIAGE', label: 'Mariage / Réception' },
-		{ value: 'COCKTAIL', label: 'Cocktail professionnel' }
-	];
-
-	const triggerEventTypeLabel = $derived(
-		eventTypes.find((e) => e.value === eventType)?.label ?? 'Tous événements'
-	);
 </script>
 
-<Card.Root class={`p-4 overflow-visible md:p-6 text-left border-slate-200 shadow-lg ${variant === 'hero' ? 'bg-white' : 'bg-slate-50/50'}`}>
-	<form onsubmit={handleSubmit} class="grid grid-cols-1 gap-4 md:grid-cols-12 items-end">
+<Card.Root
+	class={`overflow-visible border-slate-200 p-4 text-left shadow-lg md:p-6 ${variant === 'hero' ? 'bg-white' : 'bg-slate-50/50'}`}
+>
+	<form onsubmit={handleSubmit} class="grid grid-cols-1 items-end gap-4 md:grid-cols-12">
 		<!-- City Autocomplete & Tag Field -->
-		<div class="relative md:col-span-4 flex flex-col gap-1.5">
-			<Label for="search-city-input" class="text-xs font-bold text-slate-700">Ville / Destination</Label>
+		<div class="relative flex flex-col gap-1.5 md:col-span-4">
+			<Label for="search-city-input" class="text-xs font-bold text-slate-700"
+				>Ville / Destination</Label
+			>
 			<div class="relative flex items-center">
 				{#if selectedCity}
 					<!-- Selected City Tag/Pill -->
-					<div class="flex h-10 w-full items-center gap-2 rounded-lg border border-purple-300 bg-purple-50/80 px-3">
+					<div
+						class="flex h-10 w-full items-center gap-2 rounded-lg border border-purple-300 bg-purple-50/80 px-3"
+					>
 						<MapPin class="h-4 w-4 shrink-0" />
-						<span class="text-xs font-bold text-purple-950 flex-1 truncate">{selectedCity}</span>
+						<span class="flex-1 truncate text-xs font-bold text-purple-950">{selectedCity}</span>
 						<button
 							type="button"
 							onclick={removeCityTag}
@@ -175,8 +178,12 @@
 
 			<!-- Autocomplete Suggestions Dropdown -->
 			{#if showCityDropdown && !selectedCity}
-				<div class="absolute left-0 top-full z-100 mt-1 max-h-60 w-full overflow-y-auto rounded-xl border border-slate-200 bg-white p-2 shadow-xl">
-					<div class="px-2 py-1 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Villes Disponibles</div>
+				<div
+					class="absolute top-full left-0 z-100 mt-1 max-h-60 w-full overflow-y-auto rounded-xl border border-slate-200 bg-white p-2 shadow-xl"
+				>
+					<div class="px-2 py-1 text-[11px] font-bold tracking-wider text-slate-400 uppercase">
+						Villes Disponibles
+					</div>
 					{#if filteredCities.length === 0}
 						<div class="px-3 py-2 text-xs text-slate-500">Aucune ville trouvée.</div>
 					{:else}
@@ -184,7 +191,7 @@
 							<button
 								type="button"
 								onclick={() => selectCity(cityOption)}
-								class="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-xs font-semibold text-slate-800 hover:bg-purple-50 hover:text-purple-950 transition-colors"
+								class="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-xs font-semibold text-slate-800 transition-colors hover:bg-purple-50 hover:text-purple-950"
 							>
 								<span class="flex items-center gap-2">
 									<MapPin class="h-3.5 w-3.5 text-purple-600" />
@@ -201,7 +208,7 @@
 		</div>
 
 		<!-- Date Range Selection (Airbnb style) -->
-		<div class="md:col-span-4 grid grid-cols-2 gap-2">
+		<div class="grid grid-cols-2 gap-2 md:col-span-4">
 			<!-- Start Date -->
 			<div class="flex flex-col gap-1.5">
 				<Label for="search-start-date" class="text-xs font-bold text-slate-700">Début</Label>
@@ -209,11 +216,7 @@
 					<InputGroup.Addon>
 						<Calendar class="h-4 w-4 text-slate-400" />
 					</InputGroup.Addon>
-					<InputGroup.Input
-						id="search-start-date"
-						type="date"
-						bind:value={startDate}
-					/>
+					<InputGroup.Input id="search-start-date" type="date" bind:value={startDate} />
 				</InputGroup.Root>
 			</div>
 
@@ -224,17 +227,13 @@
 					<InputGroup.Addon>
 						<Calendar class="h-4 w-4 text-slate-400" />
 					</InputGroup.Addon>
-					<InputGroup.Input
-						id="search-end-date"
-						type="date"
-						bind:value={endDate}
-					/>
+					<InputGroup.Input id="search-end-date" type="date" bind:value={endDate} />
 				</InputGroup.Root>
 			</div>
 		</div>
 
 		<!-- Capacity & Filters -->
-		<div class="md:col-span-2 flex flex-col gap-1.5">
+		<div class="flex flex-col gap-1.5 md:col-span-2">
 			<Label for="search-capacity" class="text-xs font-bold text-slate-700">Capacité min.</Label>
 			<InputGroup.Root>
 				<InputGroup.Addon>
@@ -250,12 +249,33 @@
 			</InputGroup.Root>
 		</div>
 
+		<!-- Event Type -->
+		<div class="flex flex-col gap-1.5 md:col-span-2">
+			<Label for="search-event-type" class="text-xs font-bold text-slate-700">Événement</Label>
+			<Select.Root type="single" name="eventType" bind:value={eventType}>
+				<Select.Trigger id="search-event-type" class="w-full">
+					<span class="flex items-center gap-2 truncate">
+						<PartyPopper class="h-4 w-4 shrink-0 text-slate-400" />
+						{eventTypeLabel}
+					</span>
+				</Select.Trigger>
+				<Select.Content>
+					<Select.Group>
+						<Select.Label>Type d'événement</Select.Label>
+						{#each eventTypes as type (type.value)}
+							<Select.Item value={type.value} label={type.label}>{type.label}</Select.Item>
+						{/each}
+					</Select.Group>
+				</Select.Content>
+			</Select.Root>
+		</div>
+
 		<!-- Submit Action Button -->
-		<div class="md:col-span-2 flex gap-2">
+		<div class="flex gap-2 md:col-span-12">
 			<Button
 				type="submit"
 				variant="default"
-				class="flex-1 gap-2 bg-slate-950 text-white font-bold hover:bg-slate-800 h-10"
+				class="h-10 flex-1 gap-2 bg-slate-950 font-bold text-white hover:bg-slate-800"
 			>
 				<Search class="h-4 w-4" />
 				Rechercher

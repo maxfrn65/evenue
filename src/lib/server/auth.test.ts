@@ -111,7 +111,9 @@ describe('Auth Service — Hashing, Registration & Login', () => {
 		it('should throw error on login with invalid credentials', async () => {
 			vi.mocked(prisma.user.findUnique).mockResolvedValue(null);
 
-			await expect(loginUser('wrong@evenue.fr', 'password')).rejects.toThrow('Identifiants incorrects.');
+			await expect(loginUser('wrong@evenue.fr', 'password')).rejects.toThrow(
+				'Identifiants incorrects.'
+			);
 		});
 	});
 });

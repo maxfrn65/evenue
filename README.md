@@ -67,6 +67,11 @@ npx prisma db push
 npx prisma db seed
 ```
 
+> **Évolutions du schéma** : le projet n'utilise pas de migrations versionnées. Après un
+> `git pull` qui modifie `prisma/schema.prisma`, relancez `npx prisma db push` puis
+> `npx prisma generate`. Pour la production, voir
+> [docs/DEPLOYMENT_SCALEWAY.md](docs/DEPLOYMENT_SCALEWAY.md#️-mise-à-jour-du-schéma-de-base).
+
 ---
 
 ### 4. Démarrer le serveur de développement local
@@ -85,11 +90,11 @@ Ouvrez votre navigateur sur **[http://localhost:5173](http://localhost:5173)** !
 
 Pour tester immédiatement l'ensemble des fonctionnalités de la plateforme (réservation, dashboard hôte, déclaration de sinistre, messagerie) :
 
-| Rôle                   | Adresse Email                 | Mot de Passe  | Fonctionnalités accessibles                                                                                |
-| ---------------------- | ----------------------------- | ------------- | ---------------------------------------------------------------------------------------------------------- |
-| **Hôte Propriétaire**  | `jean.dupont@evenue.fr`       | `password123` | Création/Édition d'annonces, réservations reçues, déclaration de sinistres Wakam 7j, synchronisation iCal. |
-| **Hôte Propriétaire**  | `sophie.martin@evenue.fr`     | `password123` | Gestion de lofts & villas, acceptation de réservations.                                                    |
-| **Invité / Locataire** | `alexandre.riviere@evenue.fr` | `password123` | Recherche géolocalisée, réservation avec séquestre Stripe, contestation de sinistre 7j, messagerie.        |
+| Rôle                   | Adresse Email                 | Mot de Passe        | Fonctionnalités accessibles                                                                                |
+| ---------------------- | ----------------------------- | ------------------- | ---------------------------------------------------------------------------------------------------------- |
+| **Hôte Propriétaire**  | `jean.dupont@evenue.fr`       | `HostPassword123!`  | Création/Édition d'annonces, réservations reçues, déclaration de sinistres Wakam 7j, synchronisation iCal. |
+| **Hôte Propriétaire**  | `sophie.martin@evenue.fr`     | `HostPassword123!`  | Gestion de lofts & villas, acceptation de réservations.                                                    |
+| **Invité / Locataire** | `alexandre.riviere@evenue.fr` | `GuestPassword123!` | Recherche géolocalisée, réservation avec séquestre Stripe, contestation de sinistre 7j, messagerie.        |
 
 ---
 
@@ -99,7 +104,10 @@ Pour tester immédiatement l'ensemble des fonctionnalités de la plateforme (ré
 # 1. Lancer la vérification du typage Svelte 5 / TypeScript
 npm run check
 
-# 2. Exécuter l'ensemble de la suite de tests unitaires (63 tests)
+# 1 bis. Vérifier le formatage Prettier et les règles ESLint
+npm run lint
+
+# 2. Exécuter l'ensemble de la suite de tests unitaires (109 tests)
 npm run test:unit -- --run
 
 # 3. Générer le rapport de couverture de code (Coverage v8 > 80%)

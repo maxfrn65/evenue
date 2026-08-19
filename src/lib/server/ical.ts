@@ -43,7 +43,7 @@ export async function generateListingICal(listingId: string): Promise<string> {
 		return date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
 	};
 
-	let ical = [
+	const ical = [
 		'BEGIN:VCALENDAR',
 		'VERSION:2.0',
 		'PRODID:-//Evenue Inc//NONSGML Event Platform//FR',
@@ -149,7 +149,7 @@ export async function fetchAndParseExternalICal(url: string): Promise<ICalEvent[
 
 		const content = await response.text();
 		return parseICalEvents(content);
-	} catch (error) {
+	} catch {
 		// Graceful fallback on network error or timeout
 		return [];
 	}

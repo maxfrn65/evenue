@@ -69,7 +69,7 @@ export function clientKey(
 	request: Request | undefined,
 	scope: string
 ): string {
-	let ip = '';
+	let ip: string;
 	try {
 		ip = getClientAddress?.() ?? '';
 	} catch {

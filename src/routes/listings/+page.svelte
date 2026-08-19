@@ -1,51 +1,33 @@
 <script lang="ts">
+	import type { PageData } from './$types';
 	import { page } from '$app/state';
 	import InteractiveMap from '$lib/components/InteractiveMap.svelte';
 	import SearchEngine from '$lib/components/SearchEngine.svelte';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import Badge from '$lib/components/ui/badge/badge.svelte';
 	import * as Card from '$lib/components/ui/card/index.js';
-	import { MapPin, Users } from '@lucide/svelte';
+	import { MapPin } from '@lucide/svelte';
 
-	let { data } = $props();
+	let { data }: { data: PageData } = $props();
 
-	let city = $state(page.url.searchParams.get('city') || '');
-	let startDate = $state(page.url.searchParams.get('startDate') || '');
-	let endDate = $state(page.url.searchParams.get('endDate') || '');
-	let minCapacity = $state<number | undefined>(
+	// Filters come from the query string and are applied by +page.server.ts.
+	//
+	// This page used to hand SearchEngine an `onsearch` callback that fetched
+	// `GET /api/listings?…` — an endpoint that only ever exported POST, so every search
+	// from the catalogue hit a 405 and was swallowed by a catch. Letting the search bar
+	// navigate instead reuses the server load that already implements every filter, and
+	// keeps the resulting URL shareable.
+	const city = $derived(page.url.searchParams.get('city') || '');
+	const startDate = $derived(page.url.searchParams.get('startDate') || '');
+	const endDate = $derived(page.url.searchParams.get('endDate') || '');
+	const eventType = $derived(page.url.searchParams.get('eventType') || '');
+	const minCapacity = $derived(
 		page.url.searchParams.get('minCapacity')
 			? Number(page.url.searchParams.get('minCapacity'))
 			: undefined
 	);
 
-	let listings = $state<any[]>(data.listings || []);
-	let loading = $state(false);
-
-	$effect(() => {
-		if (data.listings) {
-			listings = data.listings;
-		}
-	});
-
-	async function handleFilterSearch(filters: Record<string, string>) {
-		loading = true;
-		try {
-			const params = new URLSearchParams(filters);
-			const res = await fetch(`/api/listings?${params.toString()}`);
-			const resData = await res.json();
-			if (resData.success && Array.isArray(resData.listings)) {
-				listings = resData.listings;
-			}
-			if (typeof window !== 'undefined') {
-				const newUrl = params.toString() ? `/listings?${params.toString()}` : '/listings';
-				window.history.replaceState({}, '', newUrl);
-			}
-		} catch (e) {
-			console.error(e);
-		} finally {
-			loading = false;
-		}
-	}
+	const listings = $derived(data.listings || []);
 </script>
 
 <div class="mx-auto max-w-7xl space-y-8 bg-white px-4 py-10 sm:px-6 lg:px-8">
@@ -68,7 +50,7 @@
 		initialStartDate={startDate}
 		initialEndDate={endDate}
 		initialMinCapacity={minCapacity}
-		onsearch={handleFilterSearch}
+		initialEventType={eventType}
 	/>
 
 	<!-- Main Layout: Grid + Map Section -->
@@ -86,7 +68,8 @@
 						/>
 						<Card.Header class="flex-1">
 							<Card.Action>
-								<Badge variant="secondary">{item.rating ? `★ ${item.rating}` : 'Featured'}</Badge>
+								<!-- No rating exists in the schema yet: this badge always read 'Featured'. -->
+								<Badge variant="secondary">Featured</Badge>
 							</Card.Action>
 							<Card.Title>{item.title}</Card.Title>
 							<Card.Description>

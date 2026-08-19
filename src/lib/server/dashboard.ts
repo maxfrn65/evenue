@@ -98,7 +98,7 @@ export async function getDashboardData(userId: string, userRole: string): Promis
 			orderBy: { createdAt: 'desc' }
 		});
 
-		listings = rawListings.map((l: typeof rawListings[number]) => ({
+		listings = rawListings.map((l: (typeof rawListings)[number]) => ({
 			id: l.id,
 			title: l.title,
 			city: l.city,
@@ -106,7 +106,10 @@ export async function getDashboardData(userId: string, userRole: string): Promis
 			maxCapacity: l.maxCapacity,
 			createdAt: l.createdAt,
 			_count: l._count,
-			totalRevenue: l.bookings.reduce((sum: number, b: { hostEarnings: number }) => sum + b.hostEarnings, 0)
+			totalRevenue: l.bookings.reduce(
+				(sum: number, b: { hostEarnings: number }) => sum + b.hostEarnings,
+				0
+			)
 		}));
 
 		// Received bookings on listings owned by this host
@@ -140,11 +143,16 @@ export async function getDashboardData(userId: string, userRole: string): Promis
 	}
 
 	// Compute stats
-	const upcomingBookings = bookings.filter((b: typeof bookings[number]) => new Date(b.startDate) >= now).length;
+	const upcomingBookings = bookings.filter(
+		(b: (typeof bookings)[number]) => new Date(b.startDate) >= now
+	).length;
 	const totalSpent = bookings
-		.filter((b: typeof bookings[number]) => b.status === 'CONFIRMED' || b.status === 'COMPLETED')
-		.reduce((sum: number, b: typeof bookings[number]) => sum + b.totalPrice, 0);
-	const totalEarnings = listings.reduce((sum: number, l: DashboardListing) => sum + l.totalRevenue, 0);
+		.filter((b: (typeof bookings)[number]) => b.status === 'CONFIRMED' || b.status === 'COMPLETED')
+		.reduce((sum: number, b: (typeof bookings)[number]) => sum + b.totalPrice, 0);
+	const totalEarnings = listings.reduce(
+		(sum: number, l: DashboardListing) => sum + l.totalRevenue,
+		0
+	);
 
 	return {
 		bookings,

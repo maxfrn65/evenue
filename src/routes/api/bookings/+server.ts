@@ -1,12 +1,13 @@
 import { json } from '@sveltejs/kit';
+import { toErrorMessage } from '$lib/utils';
 import type { RequestHandler } from './$types';
 import { createBooking } from '$lib/server/bookings';
 
-export const POST: RequestHandler = async ({ request, cookies }) => {
+export const POST: RequestHandler = async ({ request, locals }) => {
 	// A booking creates financial records (escrow, insurance policy) on behalf of
 	// a user: it must never be attributed to a fallback account. Authentication is
 	// mandatory (OWASP A01: Broken Access Control).
-	const guestId = cookies.get('evenue_session');
+	const guestId = locals.user?.id;
 
 	if (!guestId) {
 		return json({ success: false, error: 'Non authentifié.' }, { status: 401 });
@@ -36,13 +37,14 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 				success: true,
 				booking: result.booking,
 				insurancePolicy: result.insurancePolicy,
-				stripeClientSecret: result.stripeClientSecret
+				stripeClientSecret: result.stripeClientSecret,
+				simulated: result.simulated
 			},
 			{ status: 201 }
 		);
-	} catch (error: any) {
+	} catch (error) {
 		return json(
-			{ success: false, error: error.message || 'Erreur lors de la réservation.' },
+			{ success: false, error: toErrorMessage(error, 'Erreur lors de la réservation.') },
 			{ status: 400 }
 		);
 	}

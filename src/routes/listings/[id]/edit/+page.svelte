@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { toErrorMessage } from '$lib/utils';
 	import Badge from '$lib/components/ui/badge/badge.svelte';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import ListingForm, { type ListingFormData } from '$lib/components/ListingForm.svelte';
@@ -33,8 +34,8 @@
 			setTimeout(() => {
 				goto(`/listings/${listing.id}`);
 			}, 1000);
-		} catch (err: any) {
-			errorMessage = err.message;
+		} catch (err) {
+			errorMessage = toErrorMessage(err);
 		} finally {
 			loading = false;
 		}
@@ -52,9 +53,7 @@
 	</div>
 
 	<div class="space-y-2 text-center">
-		<h1 class="text-3xl font-extrabold tracking-tight text-slate-950">
-			Éditer mon annonce
-		</h1>
+		<h1 class="text-3xl font-extrabold tracking-tight text-slate-950">Éditer mon annonce</h1>
 		<p class="text-xs text-slate-500">
 			Mettez à jour les informations, la capacité, les tarifs et la photo de votre logement.
 		</p>

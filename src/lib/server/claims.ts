@@ -1,4 +1,7 @@
 import { prisma } from './db';
+import type { ClaimResult } from '$lib/types';
+
+export type { ClaimResult };
 
 export interface SubmitClaimInput {
 	bookingId: string;
@@ -16,19 +19,9 @@ export interface DisputeClaimInput {
 	disputeEvidenceUrls?: string[];
 }
 
-export interface ClaimResult {
-	claimId: string;
-	claimNumber: string;
-	bookingId: string;
-	policyNumber: string;
-	status: 'SUBMITTED' | 'UNDER_REVIEW' | 'CLAIMED';
-	estimatedCost: number;
-	submittedAt: Date;
-}
-
 /**
  * Submit an insurance claim for a covered booking.
- * RESTRICTED TO HOST OWNER ONLY within 48 hours post-event.
+ * Restricted to the owning host, within the 7-day window after the event ends.
  */
 export async function submitClaim(input: SubmitClaimInput): Promise<ClaimResult> {
 	if (!input.description || input.description.trim().length < 10) {
@@ -63,11 +56,13 @@ export async function submitClaim(input: SubmitClaimInput): Promise<ClaimResult>
 	const hoursDiff = (now.getTime() - eventEnd.getTime()) / (1000 * 60 * 60);
 
 	if (hoursDiff < 0) {
-		throw new Error("L'événement n'est pas encore terminé. La déclaration de sinistre sera disponible à la fin de la réservation.");
+		throw new Error(
+			"L'événement n'est pas encore terminé. La déclaration de sinistre sera disponible à la fin de la réservation."
+		);
 	}
 
 	if (hoursDiff > 7 * 24) {
-		throw new Error("La fenêtre de déclaration de sinistre de 7 jours post-événement est expirée.");
+		throw new Error('La fenêtre de déclaration de sinistre de 7 jours post-événement est expirée.');
 	}
 
 	if (!booking.insurancePolicy) {
@@ -86,11 +81,14 @@ export async function submitClaim(input: SubmitClaimInput): Promise<ClaimResult>
 		data: { status: 'DISPUTED' }
 	});
 
+	// Stored, not just returned: the number is printed on the confirmation screen and was
+	// previously generated in memory only, so it vanished on the next page load.
 	const claimNumber = `SIN-WAK-${Math.floor(100000 + Math.random() * 900000)}`;
 
 	// 3. Create Claim record and ClaimHistory entry
 	const claim = await prisma.claim.create({
 		data: {
+			claimNumber,
 			bookingId: booking.id,
 			policyNumber: updatedPolicy.policyNumber,
 			declarantId: input.userId,
@@ -115,7 +113,7 @@ export async function submitClaim(input: SubmitClaimInput): Promise<ClaimResult>
 		claimNumber,
 		bookingId: booking.id,
 		policyNumber: updatedPolicy.policyNumber,
-		status: 'SUBMITTED',
+		status: claim.status,
 		estimatedCost: input.estimatedCost,
 		submittedAt: claim.createdAt
 	};
@@ -146,7 +144,7 @@ export async function disputeClaim(input: DisputeClaimInput) {
 	}
 
 	if (claim.isDisputed) {
-		throw new Error('Ce sinistre a déjà fait l\'objet d\'une contestation.');
+		throw new Error("Ce sinistre a déjà fait l'objet d'une contestation.");
 	}
 
 	const updatedClaim = await prisma.claim.update({
@@ -156,7 +154,9 @@ export async function disputeClaim(input: DisputeClaimInput) {
 			disputeReason: input.disputeReason.trim(),
 			disputeEvidenceUrls: input.disputeEvidenceUrls || [],
 			disputedAt: new Date(),
-			status: 'CLAIMED',
+			// A contested claim goes under review. It used to stay 'CLAIMED' while the
+			// history entry announced 'UNDER_REVIEW', so the two disagreed forever.
+			status: 'UNDER_REVIEW',
 			history: {
 				create: {
 					authorId: input.userId,
@@ -189,7 +189,10 @@ export async function getClaimByBookingId(bookingId: string) {
 /**
  * Generate official printable HTML certificate for a Wakam Insurance Policy.
  */
-export async function generateWakamCertificateHTML(bookingId: string, userId: string): Promise<string> {
+export async function generateWakamCertificateHTML(
+	bookingId: string,
+	userId: string
+): Promise<string> {
 	const booking = await prisma.booking.findFirst({
 		where: {
 			id: bookingId,
@@ -207,7 +210,7 @@ export async function generateWakamCertificateHTML(bookingId: string, userId: st
 	});
 
 	if (!booking || !booking.insurancePolicy) {
-		throw new Error('Réservation ou police d\'assurance introuvable.');
+		throw new Error("Réservation ou police d'assurance introuvable.");
 	}
 
 	const policy = booking.insurancePolicy;

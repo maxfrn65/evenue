@@ -1,26 +1,22 @@
 <script lang="ts">
-	import Badge from '$lib/components/ui/badge/badge.svelte';
+	import type { ListingFormSource } from '$lib/types';
 	import { Button } from '$lib/components/ui/button/index.js';
+	import { toErrorMessage } from '$lib/utils';
 	import Card from '$lib/components/ui/card/card.svelte';
 	import * as InputGroup from '$lib/components/ui/input-group/index.js';
 	import Label from '$lib/components/ui/label/label.svelte';
 	import Textarea from '$lib/components/ui/textarea/textarea.svelte';
 	import {
 		Building2,
-		ArrowLeft,
 		Save,
 		ShieldCheck,
 		MapPin,
 		Euro,
 		Users,
-		Upload, 
-		X, 
-		Loader2, 
-		Image as ImageIcon, 
-		Calendar, 
-		Plus, 
-		Trash2,
-		UploadCloud
+		Upload,
+		Calendar,
+		Plus,
+		Trash2
 	} from '@lucide/svelte';
 
 	export interface ListingFormData {
@@ -43,7 +39,7 @@
 
 	interface Props {
 		mode: 'create' | 'edit';
-		listing?: any;
+		listing?: ListingFormSource | null;
 		cancelHref: string;
 		onSubmit: (data: ListingFormData) => Promise<void>;
 		loading?: boolean;
@@ -105,10 +101,18 @@
 						: [];
 			eventTypesList = listing.eventTypeAllowed || ['SOIRÉE', 'ANNIVERSAIRE'];
 			icalSyncUrl = listing.icalSyncUrl || '';
-			availableStartDate = listing.availableStartDate ? new Date(listing.availableStartDate).toISOString().split('T')[0] : '';
-			availableEndDate = listing.availableEndDate ? new Date(listing.availableEndDate).toISOString().split('T')[0] : '';
-			
-			if (listing.availabilityRanges && Array.isArray(listing.availabilityRanges) && listing.availabilityRanges.length > 0) {
+			availableStartDate = listing.availableStartDate
+				? new Date(listing.availableStartDate).toISOString().split('T')[0]
+				: '';
+			availableEndDate = listing.availableEndDate
+				? new Date(listing.availableEndDate).toISOString().split('T')[0]
+				: '';
+
+			if (
+				listing.availabilityRanges &&
+				Array.isArray(listing.availabilityRanges) &&
+				listing.availabilityRanges.length > 0
+			) {
 				availabilityRanges = [...listing.availabilityRanges];
 			} else if (availableStartDate || availableEndDate) {
 				availabilityRanges = [{ startDate: availableStartDate, endDate: availableEndDate }];
@@ -153,8 +157,8 @@
 				throw new Error(resData.error || 'Erreur lors du téléversement.');
 			}
 			imagesList = [...imagesList, ...resData.urls];
-		} catch (err: any) {
-			uploadError = err.message;
+		} catch (err) {
+			uploadError = toErrorMessage(err);
 		} finally {
 			uploading = false;
 			target.value = '';
@@ -177,8 +181,15 @@
 			securityDeposit: Number(securityDeposit),
 			maxCapacity: Number(maxCapacity),
 			eventTypeAllowed: eventTypesList,
-			imageUrl: imagesList[0] || 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80',
-			imageUrls: imagesList.length > 0 ? imagesList : ['https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80'],
+			imageUrl:
+				imagesList[0] ||
+				'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80',
+			imageUrls:
+				imagesList.length > 0
+					? imagesList
+					: [
+							'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80'
+						],
 			icalSyncUrl: icalSyncUrl.trim(),
 			availableStartDate: availableStartDate || undefined,
 			availableEndDate: availableEndDate || undefined,
@@ -189,13 +200,17 @@
 
 <div class="space-y-6">
 	{#if errorMessage || uploadError}
-		<div class="rounded-lg border border-rose-200 bg-rose-50 p-3 text-center text-xs font-medium text-rose-700">
+		<div
+			class="rounded-lg border border-rose-200 bg-rose-50 p-3 text-center text-xs font-medium text-rose-700"
+		>
 			{errorMessage || uploadError}
 		</div>
 	{/if}
 
 	{#if successMessage}
-		<div class="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-center text-xs font-medium text-emerald-800">
+		<div
+			class="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-center text-xs font-medium text-emerald-800"
+		>
 			{successMessage}
 		</div>
 	{/if}
@@ -240,7 +255,13 @@
 				<div class="flex flex-col gap-1.5">
 					<Label for="listing-city">Ville</Label>
 					<InputGroup.Root>
-						<InputGroup.Input id="listing-city" type="text" bind:value={city} placeholder="Paris" required />
+						<InputGroup.Input
+							id="listing-city"
+							type="text"
+							bind:value={city}
+							placeholder="Paris"
+							required
+						/>
 					</InputGroup.Root>
 				</div>
 			</div>
@@ -253,7 +274,13 @@
 						<InputGroup.Addon>
 							<Euro />
 						</InputGroup.Addon>
-						<InputGroup.Input id="listing-price" type="number" min="1" bind:value={pricePerNight} required />
+						<InputGroup.Input
+							id="listing-price"
+							type="number"
+							min="1"
+							bind:value={pricePerNight}
+							required
+						/>
 					</InputGroup.Root>
 				</div>
 
@@ -263,7 +290,13 @@
 						<InputGroup.Addon>
 							<ShieldCheck />
 						</InputGroup.Addon>
-						<InputGroup.Input id="listing-deposit" type="number" min="0" bind:value={securityDeposit} required />
+						<InputGroup.Input
+							id="listing-deposit"
+							type="number"
+							min="0"
+							bind:value={securityDeposit}
+							required
+						/>
 					</InputGroup.Root>
 				</div>
 
@@ -273,7 +306,13 @@
 						<InputGroup.Addon>
 							<Users />
 						</InputGroup.Addon>
-						<InputGroup.Input id="listing-capacity" type="number" min="1" bind:value={maxCapacity} required />
+						<InputGroup.Input
+							id="listing-capacity"
+							type="number"
+							min="1"
+							bind:value={maxCapacity}
+							required
+						/>
 					</InputGroup.Root>
 				</div>
 			</div>
@@ -281,13 +320,22 @@
 			<!-- Gallery Images Section -->
 			<div class="flex flex-col gap-2">
 				<Label>Photos du Logement (Téléversement)</Label>
-				<p class="text-[11px] text-slate-500">Téléversez les photos de votre bien (formats JPG, PNG, WEBP acceptés).</p>
+				<p class="text-[11px] text-slate-500">
+					Téléversez les photos de votre bien (formats JPG, PNG, WEBP acceptés).
+				</p>
 
 				{#if imagesList.length > 0}
-					<div class="grid grid-cols-2 gap-3 sm:grid-cols-4 my-2">
+					<div class="my-2 grid grid-cols-2 gap-3 sm:grid-cols-4">
 						{#each imagesList as img, idx (idx)}
-							<div class="relative group h-24 overflow-hidden rounded-xl border border-slate-200 shadow-sm">
-								<img src={img} alt={`Photo ${idx + 1}`} referrerpolicy="no-referrer" class="h-full w-full object-cover" />
+							<div
+								class="group relative h-24 overflow-hidden rounded-xl border border-slate-200 shadow-sm"
+							>
+								<img
+									src={img}
+									alt={`Photo ${idx + 1}`}
+									referrerpolicy="no-referrer"
+									class="h-full w-full object-cover"
+								/>
 								<button
 									type="button"
 									onclick={() => removeImage(idx)}
@@ -301,12 +349,14 @@
 				{/if}
 
 				<!-- File Dropzone Input -->
-				<label class="flex flex-col items-center justify-center border-2 border-dashed rounded-2xl p-6 cursor-pointer transition-all">
-					<Upload class="h-8 w-8 mb-2" />
+				<label
+					class="flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed p-6 transition-all"
+				>
+					<Upload class="mb-2 h-8 w-8" />
 					<span class="text-xs font-semibold text-slate-900">
 						{uploading ? 'Téléversement en cours...' : 'Cliquez ou glissez-déposez vos images ici'}
 					</span>
-					<span class="text-[10px] text-slate-500 mt-0.5">PNG, JPG, WEBP jusqu'à 10 Mo</span>
+					<span class="mt-0.5 text-[10px] text-slate-500">PNG, JPG, WEBP jusqu'à 10 Mo</span>
 					<input
 						type="file"
 						accept="image/*"
@@ -326,7 +376,7 @@
 						<button
 							type="button"
 							onclick={() => toggleEventType(et.value)}
-							class={`rounded-xl border p-3 text-xs font-semibold transition-all text-left ${
+							class={`rounded-xl border p-3 text-left text-xs font-semibold transition-all ${
 								eventTypesList.includes(et.value)
 									? 'border-slate-600 bg-slate-50 text-slate-950'
 									: 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
@@ -342,7 +392,9 @@
 			<div class="flex flex-col gap-3 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
 				<div class="flex items-center justify-between">
 					<div>
-						<Label class="text-sm font-bold text-slate-950">Plages de disponibilité du logement</Label>
+						<Label class="text-sm font-bold text-slate-950"
+							>Plages de disponibilité du logement</Label
+						>
 					</div>
 					<Button
 						type="button"
@@ -357,8 +409,11 @@
 				</div>
 
 				{#if availabilityRanges.length === 0}
-					<div class="rounded-lg border border-dashed border-slate-200 bg-white p-3 text-center text-xs text-slate-500">
-						Aucune restriction configurée (disponible toute l'année). Cliquez sur « Ajouter une plage » pour limiter les disponibilités.
+					<div
+						class="rounded-lg border border-dashed border-slate-200 bg-white p-3 text-center text-xs text-slate-500"
+					>
+						Aucune restriction configurée (disponible toute l'année). Cliquez sur « Ajouter une
+						plage » pour limiter les disponibilités.
 					</div>
 				{:else}
 					<div class="space-y-3">
@@ -366,7 +421,8 @@
 							<div class="flex items-center gap-3 rounded-lg border border-slate-200 bg-white p-3">
 								<div class="grid flex-1 grid-cols-1 gap-3 sm:grid-cols-2">
 									<div class="flex flex-col gap-1">
-										<Label for={`avail-start-${index}`} class="text-[11px]">Début de la plage</Label>
+										<Label for={`avail-start-${index}`} class="text-[11px]">Début de la plage</Label
+										>
 										<InputGroup.Root>
 											<InputGroup.Addon>
 												<Calendar class="h-3.5 w-3.5" />
@@ -411,7 +467,10 @@
 			<!-- iCal Sync URL -->
 			<div class="flex flex-col gap-1.5">
 				<Label for="listing-ical">Importation Calendrier iCal (.ics) — Synchronisation Tiers</Label>
-				<p class="text-[11px] text-slate-500">Insérez l'URL d'export iCal de votre annonce Airbnb ou Booking.com pour bloquer automatiquement les dates indisponibles.</p>
+				<p class="text-[11px] text-slate-500">
+					Insérez l'URL d'export iCal de votre annonce Airbnb ou Booking.com pour bloquer
+					automatiquement les dates indisponibles.
+				</p>
 				<InputGroup.Root>
 					<InputGroup.Addon>
 						<Calendar />
@@ -439,18 +498,16 @@
 
 			<!-- Submit Buttons -->
 			<div class="flex justify-end gap-4 pt-4">
-				<Button href={cancelHref} variant="outline">
-					Annuler
-				</Button>
-				<Button
-					type="submit"
-					variant="default"
-					disabled={loading || uploading}
-				>
+				<Button href={cancelHref} variant="outline">Annuler</Button>
+				<Button type="submit" variant="default" disabled={loading || uploading}>
 					<Save class="h-4 w-4" />
 					{loading
-						? mode === 'create' ? 'Publication...' : 'Enregistrement...'
-						: mode === 'create' ? 'Publier mon annonce' : 'Enregistrer les modifications'}
+						? mode === 'create'
+							? 'Publication...'
+							: 'Enregistrement...'
+						: mode === 'create'
+							? 'Publier mon annonce'
+							: 'Enregistrer les modifications'}
 				</Button>
 			</div>
 		</form>

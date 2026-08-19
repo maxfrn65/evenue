@@ -1,11 +1,10 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { toErrorMessage } from '$lib/utils';
 	import Badge from '$lib/components/ui/badge/badge.svelte';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import ListingForm, { type ListingFormData } from '$lib/components/ListingForm.svelte';
 	import { ArrowLeft } from '@lucide/svelte';
-
-	let { data } = $props();
 
 	let loading = $state(false);
 	let errorMessage = $state('');
@@ -23,12 +22,12 @@
 
 			const resData = await res.json();
 			if (!res.ok || !resData.success) {
-				throw new Error(resData.error || 'Erreur lors de la création de l\'annonce.');
+				throw new Error(resData.error || "Erreur lors de la création de l'annonce.");
 			}
 
 			goto(`/listings/${resData.listing.id}`);
-		} catch (err: any) {
-			errorMessage = err.message;
+		} catch (err) {
+			errorMessage = toErrorMessage(err);
 		} finally {
 			loading = false;
 		}
@@ -50,7 +49,8 @@
 			Publier une nouvelle annonce
 		</h1>
 		<p class="text-xs text-slate-500">
-			Remplissez les détails de votre logement pour ouvrir vos réservations avec la protection Wakam.
+			Remplissez les détails de votre logement pour ouvrir vos réservations avec la protection
+			Wakam.
 		</p>
 	</div>
 

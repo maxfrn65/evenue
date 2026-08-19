@@ -1,4 +1,7 @@
 <script lang="ts">
+	import type { DateValue } from '@internationalized/date';
+	import type { PageData } from './$types';
+	import type { AvailabilityRange } from '$lib/types';
 	import Button from '$lib/components/ui/button/button.svelte';
 	import Card from '$lib/components/ui/card/card.svelte';
 	import Badge from '$lib/components/ui/badge/badge.svelte';
@@ -8,7 +11,6 @@
 		Users,
 		ShieldCheck,
 		Star,
-		Music,
 		Sparkles,
 		CheckCircle2,
 		Lock,
@@ -23,14 +25,14 @@
 		AlertTriangle
 	} from '@lucide/svelte';
 
-	let { data }: { data: { listing: any; user?: any; existingUserBooking?: any; availabilityInfo?: any } } = $props();
+	let { data }: { data: PageData } = $props();
 
 	const listing = $derived(data.listing);
 	const user = $derived(data.user);
 	const existingBooking = $derived(data.existingUserBooking);
 	const availabilityInfo = $derived(data.availabilityInfo || { disabledRanges: [] });
 
-	function isDateDisabled(dateVal: any) {
+	function isDateDisabled(dateVal: DateValue) {
 		const dateStr = `${dateVal.year}-${String(dateVal.month).padStart(2, '0')}-${String(dateVal.day).padStart(2, '0')}`;
 		const todayStr = new Date().toISOString().split('T')[0];
 		if (dateStr < todayStr) return true;
@@ -38,7 +40,7 @@
 		const ranges = availabilityInfo.availabilityRanges || [];
 		if (ranges.length > 0) {
 			const isInsideAnyRange = ranges.some(
-				(r: any) => dateStr >= r.startDate && dateStr <= r.endDate
+				(r: AvailabilityRange) => dateStr >= r.startDate && dateStr <= r.endDate
 			);
 			if (!isInsideAnyRange) return true;
 		} else {
@@ -68,7 +70,10 @@
 	const galleryImages = $derived(
 		listing.imageUrls && listing.imageUrls.length > 0
 			? listing.imageUrls
-			: [listing.imageUrl || 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1200&q=80']
+			: [
+					listing.imageUrl ||
+						'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1200&q=80'
+				]
 	);
 
 	function prevImage() {
@@ -134,7 +139,7 @@
 						type="button"
 						onclick={prevImage}
 						aria-label="Image précédente"
-						class="absolute left-4 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/80 text-slate-900 shadow-md backdrop-blur-md transition-all hover:bg-white hover:scale-110"
+						class="absolute top-1/2 left-4 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/80 text-slate-900 shadow-md backdrop-blur-md transition-all hover:scale-110 hover:bg-white"
 					>
 						<ChevronLeft class="h-6 w-6" />
 					</button>
@@ -143,13 +148,15 @@
 						type="button"
 						onclick={nextImage}
 						aria-label="Image suivante"
-						class="absolute right-4 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/80 text-slate-900 shadow-md backdrop-blur-md transition-all hover:bg-white hover:scale-110"
+						class="absolute top-1/2 right-4 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/80 text-slate-900 shadow-md backdrop-blur-md transition-all hover:scale-110 hover:bg-white"
 					>
 						<ChevronRight class="h-6 w-6" />
 					</button>
 
 					<!-- Image Counter Badge -->
-					<div class="absolute bottom-4 right-4 rounded-full bg-slate-950/70 px-3 py-1 text-xs font-semibold text-white backdrop-blur-md">
+					<div
+						class="absolute right-4 bottom-4 rounded-full bg-slate-950/70 px-3 py-1 text-xs font-semibold text-white backdrop-blur-md"
+					>
 						{activeImageIndex + 1} / {galleryImages.length}
 					</div>
 				{/if}
@@ -173,10 +180,17 @@
 							type="button"
 							onclick={() => (activeImageIndex = idx)}
 							class={`h-20 w-28 flex-shrink-0 overflow-hidden rounded-xl border-2 transition-all ${
-								activeImageIndex === idx ? 'border-slate-600 scale-105 shadow-md' : 'border-transparent opacity-60 hover:opacity-100'
+								activeImageIndex === idx
+									? 'scale-105 border-slate-600 shadow-md'
+									: 'border-transparent opacity-60 hover:opacity-100'
 							}`}
 						>
-							<img src={imgUrl} alt={`Vignette ${idx + 1}`} referrerpolicy="no-referrer" class="h-full w-full object-cover" />
+							<img
+								src={imgUrl}
+								alt={`Vignette ${idx + 1}`}
+								referrerpolicy="no-referrer"
+								class="h-full w-full object-cover"
+							/>
 						</button>
 					{/each}
 				</div>
@@ -217,26 +231,6 @@
 					{listing.description}
 				</p>
 			</Card>
-
-			<!-- Equipment & Sound System -->
-			{#if listing.amenities}
-				<Card class="space-y-4 border-slate-200 p-6">
-					<h3 class="flex items-center gap-2 text-lg font-bold text-slate-950">
-						<Music class="h-5 w-5 text-slate-950" />
-						Équipements Événementiels & Sonorisation
-					</h3>
-					<div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-						{#each listing.amenities as item (item)}
-							<div
-								class="flex items-center gap-2.5 rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700"
-							>
-								<CheckCircle2 class="h-4 w-4 shrink-0 text-emerald-600" />
-								<span>{item}</span>
-							</div>
-						{/each}
-					</div>
-				</Card>
-			{/if}
 		</div>
 
 		<!-- Right: Booking Calculation Widget -->
@@ -276,11 +270,7 @@
 						<span class="text-[10px] font-normal text-slate-500">Grisé = Indisponible</span>
 					</div>
 					<div class="flex justify-center rounded-xl border border-slate-200 bg-slate-50/50 p-2">
-						<CalendarWidget
-							type="single"
-							{isDateDisabled}
-							class="rounded-md"
-						/>
+						<CalendarWidget type="single" {isDateDisabled} class="rounded-md" />
 					</div>
 				</div>
 
@@ -321,7 +311,9 @@
 							Réservation confirmée sur ce lieu
 						</div>
 						<p class="text-[11px] text-slate-600">
-							Du {new Date(existingBooking.startDate).toLocaleDateString()} au {new Date(existingBooking.endDate).toLocaleDateString()}
+							Du {new Date(existingBooking.startDate).toLocaleDateString()} au {new Date(
+								existingBooking.endDate
+							).toLocaleDateString()}
 						</p>
 
 						<div class="space-y-2 pt-1">

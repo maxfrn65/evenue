@@ -34,7 +34,9 @@ export async function createBooking(input: CreateBookingInput) {
 	}
 
 	if (input.guestCount > listing.maxCapacity) {
-		throw new Error(`Le nombre d'invités (${input.guestCount}) dépasse la capacité maximale du lieu (${listing.maxCapacity}).`);
+		throw new Error(
+			`Le nombre d'invités (${input.guestCount}) dépasse la capacité maximale du lieu (${listing.maxCapacity}).`
+		);
 	}
 
 	// 2. Check overlap with internal bookings and external iCal calendars
@@ -44,7 +46,10 @@ export async function createBooking(input: CreateBookingInput) {
 	}
 
 	// Calculate breakdown
-	const nightsCount = Math.max(1, Math.ceil((end.getTime() - start.getTime()) / (1000 * 3600 * 24)));
+	const nightsCount = Math.max(
+		1,
+		Math.ceil((end.getTime() - start.getTime()) / (1000 * 3600 * 24))
+	);
 	const totalPrice = listing.pricePerNight * nightsCount;
 	const platformFee = Math.round(totalPrice * 0.1 * 100) / 100;
 	const hostEarnings = totalPrice - platformFee;
@@ -93,17 +98,20 @@ export async function createBooking(input: CreateBookingInput) {
 	return {
 		booking,
 		insurancePolicy: policy,
-		stripeClientSecret: stripeEscrow.clientSecret
+		stripeClientSecret: stripeEscrow.clientSecret,
+		// Surfaced so the caller — and the API response — never present a locally simulated
+		// escrow or policy as a real one.
+		simulated: {
+			escrow: stripeEscrow.simulated,
+			insurance: insurance.simulated
+		}
 	};
 }
 
 export async function getUserBookings(userId: string) {
 	return await prisma.booking.findMany({
 		where: {
-			OR: [
-				{ guestId: userId },
-				{ listing: { hostId: userId } }
-			]
+			OR: [{ guestId: userId }, { listing: { hostId: userId } }]
 		},
 		include: {
 			listing: true,

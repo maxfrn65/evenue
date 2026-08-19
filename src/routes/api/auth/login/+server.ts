@@ -1,7 +1,8 @@
 import { json } from '@sveltejs/kit';
+import { toErrorMessage } from '$lib/utils';
 import type { RequestHandler } from './$types';
 import { loginUser } from '$lib/server/auth';
-import { SESSION_COOKIE_NAME, sessionCookieOptions } from '$lib/server/session';
+import { SESSION_COOKIE_NAME, createSession, sessionCookieOptions } from '$lib/server/session';
 import { rateLimit, clientKey } from '$lib/server/rate-limit';
 import { logger } from '$lib/server/logger';
 import { recordLoginFailure } from '$lib/server/metrics';
@@ -41,11 +42,12 @@ export const POST: RequestHandler = async ({ request, cookies, getClientAddress,
 
 		const user = await loginUser(email, password);
 
-		// Set hardened HTTP-only session cookie (httpOnly, sameSite, secure in prod)
-		cookies.set(SESSION_COOKIE_NAME, user.id, sessionCookieOptions);
+		// Opaque server-side session token, never the user id (OWASP A07).
+		const sessionToken = await createSession(user.id);
+		cookies.set(SESSION_COOKIE_NAME, sessionToken, sessionCookieOptions);
 
 		return json({ success: true, user }, { status: 200 });
-	} catch (error: any) {
+	} catch (error) {
 		recordLoginFailure('invalid_credentials');
 		logger.warn('Failed login attempt', {
 			context: 'AUTH_FAILURE',
@@ -56,6 +58,6 @@ export const POST: RequestHandler = async ({ request, cookies, getClientAddress,
 			metadata: { reason: 'invalid_credentials', ip: clientIp }
 		});
 
-		return json({ error: error.message || 'Identifiants invalides.' }, { status: 401 });
+		return json({ error: toErrorMessage(error, 'Identifiants invalides.') }, { status: 401 });
 	}
 };

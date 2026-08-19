@@ -1,9 +1,10 @@
 import type { RequestHandler } from './$types';
+import { toErrorMessage } from '$lib/utils';
 import { json } from '@sveltejs/kit';
 import { updateListing, deleteListing } from '$lib/server/listings';
 
-export const PUT: RequestHandler = async ({ params, request, cookies }) => {
-	const userId = cookies.get('evenue_session');
+export const PUT: RequestHandler = async ({ params, request, locals }) => {
+	const userId = locals.user?.id;
 
 	if (!userId) {
 		return json({ success: false, error: 'Non authentifié.' }, { status: 401 });
@@ -14,13 +15,16 @@ export const PUT: RequestHandler = async ({ params, request, cookies }) => {
 		const updated = await updateListing(params.id, userId, body);
 
 		return json({ success: true, listing: updated });
-	} catch (error: any) {
-		return json({ success: false, error: error.message || 'Erreur lors de la mise à jour.' }, { status: 400 });
+	} catch (error) {
+		return json(
+			{ success: false, error: toErrorMessage(error, 'Erreur lors de la mise à jour.') },
+			{ status: 400 }
+		);
 	}
 };
 
-export const DELETE: RequestHandler = async ({ params, cookies }) => {
-	const userId = cookies.get('evenue_session');
+export const DELETE: RequestHandler = async ({ params, locals }) => {
+	const userId = locals.user?.id;
 
 	if (!userId) {
 		return json({ success: false, error: 'Non authentifié.' }, { status: 401 });
@@ -30,7 +34,10 @@ export const DELETE: RequestHandler = async ({ params, cookies }) => {
 		await deleteListing(params.id, userId);
 
 		return json({ success: true });
-	} catch (error: any) {
-		return json({ success: false, error: error.message || 'Erreur lors de la suppression.' }, { status: 400 });
+	} catch (error) {
+		return json(
+			{ success: false, error: toErrorMessage(error, 'Erreur lors de la suppression.') },
+			{ status: 400 }
+		);
 	}
 };

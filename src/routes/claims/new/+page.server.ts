@@ -31,7 +31,7 @@ export const load: PageServerLoad = async ({ url, parent }) => {
 	});
 
 	// If a specific bookingId is provided, check its details and user's role on it
-	let selectedBooking: any = null;
+	let selectedBooking: (typeof hostBookings)[number] | null = null;
 	let isHostOfSelected = false;
 	let hoursSinceEnd = 0;
 

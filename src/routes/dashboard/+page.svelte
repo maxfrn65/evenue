@@ -1,20 +1,18 @@
 <script lang="ts">
 	import Badge from '$lib/components/ui/badge/badge.svelte';
+	import { toErrorMessage } from '$lib/utils';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import * as Card from '$lib/components/ui/card/index.js';
 	import Separator from '$lib/components/ui/separator/separator.svelte';
-	import * as Tooltip from "$lib/components/ui/tooltip/index.js";
+	import * as Tooltip from '$lib/components/ui/tooltip/index.js';
 	import {
 		Calendar,
-		Home,
 		ShieldCheck,
 		TrendingUp,
 		MapPin,
-		Users,
 		PlusCircle,
 		X,
 		Eye,
-		LayoutDashboard,
 		CalendarDays,
 		Wallet,
 		Building2,
@@ -22,9 +20,7 @@
 		AlertTriangle,
 		Pencil,
 		Trash2,
-
 		CirclePlus
-
 	} from '@lucide/svelte';
 
 	let { data } = $props();
@@ -125,12 +121,12 @@
 			const data = await res.json();
 
 			if (!res.ok || !data.success) {
-				alert(data.error || 'Erreur lors de l\'annulation.');
+				alert(data.error || "Erreur lors de l'annulation.");
 			} else {
 				window.location.reload();
 			}
-		} catch (e: any) {
-			alert(e.message || 'Erreur réseau.');
+		} catch (e) {
+			alert(toErrorMessage(e, 'Erreur réseau.'));
 		} finally {
 			cancellingId = null;
 		}
@@ -139,7 +135,10 @@
 	let deletingListingId = $state<string | null>(null);
 
 	async function handleDeleteListing(listingId: string) {
-		if (!confirm('Êtes-vous sûr de vouloir supprimer cette annonce ? Cette action est irréversible.')) return;
+		if (
+			!confirm('Êtes-vous sûr de vouloir supprimer cette annonce ? Cette action est irréversible.')
+		)
+			return;
 		deletingListingId = listingId;
 
 		try {
@@ -152,8 +151,8 @@
 			} else {
 				window.location.reload();
 			}
-		} catch (e: any) {
-			alert(e.message || 'Erreur réseau.');
+		} catch (e) {
+			alert(toErrorMessage(e, 'Erreur réseau.'));
 		} finally {
 			deletingListingId = null;
 		}
@@ -217,7 +216,9 @@
 				</div>
 				<div>
 					<p class="text-xs font-medium text-slate-500">Total dépensé</p>
-					<p class="text-2xl font-bold text-slate-950">{formatCurrency(dashboard.stats.totalSpent)}</p>
+					<p class="text-2xl font-bold text-slate-950">
+						{formatCurrency(dashboard.stats.totalSpent)}
+					</p>
 				</div>
 			</div>
 		</Card.Root>
@@ -230,7 +231,9 @@
 					</div>
 					<div>
 						<p class="text-xs font-medium text-slate-500">Revenus hôte</p>
-						<p class="text-2xl font-bold text-slate-950">{formatCurrency(dashboard.stats.totalEarnings)}</p>
+						<p class="text-2xl font-bold text-slate-950">
+							{formatCurrency(dashboard.stats.totalEarnings)}
+						</p>
 					</div>
 				</div>
 			</Card.Root>
@@ -258,15 +261,15 @@
 				<Calendar class="h-5 w-5" />
 				Mes réservations
 			</h2>
-			<Badge variant="secondary">{dashboard.bookings.length} réservation{dashboard.bookings.length > 1 ? 's' : ''}</Badge>
+			<Badge variant="secondary"
+				>{dashboard.bookings.length} réservation{dashboard.bookings.length > 1 ? 's' : ''}</Badge
+			>
 		</div>
 
 		{#if dashboard.bookings.length === 0}
 			<Card.Root class="border-slate-200 p-8 text-center">
 				<p class="text-sm text-slate-500">Aucune réservation pour le moment.</p>
-				<Button href="/listings" variant="outline" class="mt-4 gap-2">
-					Explorer les lieux
-				</Button>
+				<Button href="/listings" variant="outline" class="mt-4 gap-2">Explorer les lieux</Button>
 			</Card.Root>
 		{:else}
 			<div class="space-y-3">
@@ -275,10 +278,15 @@
 						<div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
 							<div class="flex-1 space-y-1">
 								<div class="flex items-center gap-2">
-									<a href={`/listings/${booking.listing.id}`} class="text-sm font-semibold text-slate-950 hover:underline">
+									<a
+										href={`/listings/${booking.listing.id}`}
+										class="text-sm font-semibold text-slate-950 hover:underline"
+									>
 										{booking.listing.title}
 									</a>
-									<Badge variant={getStatusVariant(booking.status)}>{getStatusLabel(booking.status)}</Badge>
+									<Badge variant={getStatusVariant(booking.status)}
+										>{getStatusLabel(booking.status)}</Badge
+									>
 								</div>
 								<div class="flex flex-wrap items-center gap-3 text-xs text-slate-500">
 									<span class="flex items-center gap-1">
@@ -306,13 +314,24 @@
 									{formatCurrency(booking.totalPrice)}
 								</span>
 
-								<Button href={`/listings/${booking.listing.id}`} variant="outline" size="sm" class="gap-1">
+								<Button
+									href={`/listings/${booking.listing.id}`}
+									variant="outline"
+									size="sm"
+									class="gap-1"
+								>
 									<Eye class="h-3.5 w-3.5" />
 									Voir
 								</Button>
 
 								{#if booking.insurancePolicy}
-									<Button href={`/bookings/${booking.id}/certificate`} target="_blank" variant="outline" size="sm" class="gap-1">
+									<Button
+										href={`/bookings/${booking.id}/certificate`}
+										target="_blank"
+										variant="outline"
+										size="sm"
+										class="gap-1"
+									>
 										<FileText class="h-3.5 w-3.5 text-emerald-600" />
 										Attestation PDF
 									</Button>
@@ -359,30 +378,38 @@
 
 			{#if !dashboard.hostReceivedBookings || dashboard.hostReceivedBookings.length === 0}
 				<Card.Root class="border-slate-200 p-6 text-center">
-					<p class="text-xs text-slate-500">Aucune réservation reçue sur vos annonces pour le moment.</p>
+					<p class="text-xs text-slate-500">
+						Aucune réservation reçue sur vos annonces pour le moment.
+					</p>
 				</Card.Root>
-				{:else}
+			{:else}
 				<div class="space-y-3">
 					{#each dashboard.hostReceivedBookings as rBooking (rBooking.id)}
 						<Card.Root>
 							<div class="flex flex-col gap-4 p-4 md:flex-row md:items-center md:justify-between">
 								<div class="flex-1 space-y-1">
 									<div class="flex items-center gap-2">
-										<a href={`/listings/${rBooking.listing.id}`} class="text-sm font-bold text-slate-950 hover:underline">
+										<a
+											href={`/listings/${rBooking.listing.id}`}
+											class="text-sm font-bold text-slate-950 hover:underline"
+										>
 											{rBooking.listing.title}
 										</a>
-										<Badge variant={getStatusVariant(rBooking.status)}>{getStatusLabel(rBooking.status)}</Badge>
+										<Badge variant={getStatusVariant(rBooking.status)}
+											>{getStatusLabel(rBooking.status)}</Badge
+										>
 									</div>
 									<div class="flex flex-wrap items-center gap-3 text-xs text-slate-600">
 										<span class="font-semibold">
-											Invité : {rBooking.guest?.firstName} {rBooking.guest?.lastName}
+											Invité : {rBooking.guest?.firstName}
+											{rBooking.guest?.lastName}
 										</span>
 										<span class="flex items-center gap-1 text-slate-500">
 											<Calendar class="h-3 w-3" />
 											{formatDate(rBooking.startDate)} — {formatDate(rBooking.endDate)}
 										</span>
 										{#if rBooking.insurancePolicy}
-											<span class="flex items-center gap-1 text-emerald-700 font-medium">
+											<span class="flex items-center gap-1 font-medium text-emerald-700">
 												<ShieldCheck class="h-3 w-3" />
 												Police Wakam {rBooking.insurancePolicy.policyNumber}
 											</span>
@@ -400,7 +427,7 @@
 											href={`/claims/new?bookingId=${rBooking.id}`}
 											variant="default"
 											size="sm"
-											class="gap-1.5 bg-purple-700 text-white hover:bg-purple-800 font-semibold"
+											class="gap-1.5 bg-purple-700 font-semibold text-white hover:bg-purple-800"
 										>
 											<AlertTriangle class="h-3.5 w-3.5" />
 											Déclarer un sinistre
@@ -413,7 +440,7 @@
 														disabled={true}
 														variant="outline"
 														size="sm"
-														class="gap-1.5 text-slate-400 border-slate-200 cursor-not-allowed opacity-60"
+														class="cursor-not-allowed gap-1.5 border-slate-200 text-slate-400 opacity-60"
 													>
 														<AlertTriangle class="h-3.5 w-3.5" />
 														Sinistre indisponible
@@ -441,11 +468,13 @@
 					<Building2 class="h-5 w-5" />
 					Mes annonces
 				</h2>
-				<Badge variant="secondary">{dashboard.listings.length} annonce{dashboard.listings.length > 1 ? 's' : ''}</Badge>
+				<Badge variant="secondary"
+					>{dashboard.listings.length} annonce{dashboard.listings.length > 1 ? 's' : ''}</Badge
+				>
 			</div>
 
 			{#if dashboard.listings.length === 0}
-				<Card.Root class="border-slate-200 p-8 text-center flex justify-center items-center">
+				<Card.Root class="flex items-center justify-center border-slate-200 p-8 text-center">
 					<p class="text-sm text-slate-500">Vous n'avez publié aucune annonce.</p>
 					<Button href="/listings/new" class="w-fit">
 						<CirclePlus class="h-4 w-4" />
@@ -472,7 +501,9 @@
 										<p class="text-[10px] text-slate-500">Réservations</p>
 									</div>
 									<div>
-										<p class="text-lg font-bold text-slate-950">{formatCurrency(listing.totalRevenue)}</p>
+										<p class="text-lg font-bold text-slate-950">
+											{formatCurrency(listing.totalRevenue)}
+										</p>
 										<p class="text-[10px] text-slate-500">Revenus</p>
 									</div>
 									<div>
@@ -486,7 +517,12 @@
 									<Eye class="h-3.5 w-3.5" />
 									Voir
 								</Button>
-								<Button href={`/listings/${listing.id}/edit`} variant="outline" size="sm" class="gap-1">
+								<Button
+									href={`/listings/${listing.id}/edit`}
+									variant="outline"
+									size="sm"
+									class="gap-1"
+								>
 									<Pencil class="h-3.5 w-3.5" />
 									Éditer
 								</Button>

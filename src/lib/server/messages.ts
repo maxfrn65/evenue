@@ -1,4 +1,5 @@
 import { prisma } from './db';
+import type { Prisma } from '../../../generated/prisma/client';
 
 export interface SendMessageInput {
 	senderId: string;
@@ -81,11 +82,14 @@ export async function getConversations(userId: string) {
 	});
 
 	// Group by conversation partner
-	const partnerMap = new Map<string, {
-		partner: { id: string; firstName: string; lastName: string; role: string };
-		lastMessage: typeof messages[0];
-		unreadCount: number;
-	}>();
+	const partnerMap = new Map<
+		string,
+		{
+			partner: { id: string; firstName: string; lastName: string; role: string };
+			lastMessage: (typeof messages)[0];
+			unreadCount: number;
+		}
+	>();
 
 	for (const msg of messages) {
 		const isSender = msg.senderId === userId;
@@ -109,7 +113,11 @@ export async function getConversations(userId: string) {
 	return Array.from(partnerMap.values());
 }
 
-export async function getConversationMessages(userId: string, otherUserId: string, bookingId?: string) {
+export async function getConversationMessages(
+	userId: string,
+	otherUserId: string,
+	bookingId?: string
+) {
 	const incomingMessagesWhere = {
 		senderId: otherUserId,
 		receiverId: userId,
@@ -123,7 +131,7 @@ export async function getConversationMessages(userId: string, otherUserId: strin
 		data: { read: true }
 	});
 
-	const whereClause: any = {
+	const whereClause: Prisma.MessageWhereInput = {
 		OR: [
 			{ senderId: userId, receiverId: otherUserId },
 			{ senderId: otherUserId, receiverId: userId }

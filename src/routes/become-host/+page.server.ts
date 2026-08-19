@@ -17,8 +17,8 @@ export const load: PageServerLoad = async ({ parent }) => {
 };
 
 export const actions: Actions = {
-	default: async ({ cookies }) => {
-		const userId = cookies.get('evenue_session');
+	default: async ({ locals }) => {
+		const userId = locals.user?.id;
 
 		if (!userId) {
 			return fail(401, { error: 'Non authentifié.' });

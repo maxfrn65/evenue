@@ -7,3 +7,19 @@ bun.lockb
 
 # Miscellaneous
 /static/
+
+# Generated output
+/coverage/
+/build/
+/.svelte-kit/
+/generated/
+
+# Vendored tooling (Prisma agent skills, Claude Code config) — not our source
+/.agents/
+/.claude/
+skills-lock.json
+
+# Certification deliverables: prose documents, deliberately left to their authors'
+# formatting rather than reflowed by Prettier.
+/docs/
+/Evenue Platform Environment Configuration.md

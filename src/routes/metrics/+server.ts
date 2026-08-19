@@ -1,5 +1,5 @@
 import type { RequestHandler } from './$types';
-import { wakamCircuitBreaker } from '$lib/server/circuit-breaker';
+import { wakamCircuitBreaker } from '$lib/server/wakam';
 import { denyMetricsAccess } from '$lib/server/metrics-auth';
 import { METRICS_CONTENT_TYPE, renderMetrics, setCircuitBreakerState } from '$lib/server/metrics';
 
