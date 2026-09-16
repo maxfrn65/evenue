@@ -1,7 +1,6 @@
 import { PrismaClient } from '../../../generated/prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import pg from 'pg';
-import { env } from '$env/dynamic/private';
 
 /**
  * Prisma client, created on first use rather than on import.
@@ -19,7 +18,7 @@ let client: PrismaClient | undefined;
 
 function createClient(): PrismaClient {
 	// Runtime private env (merges .env + process.env), never a hardcoded fallback.
-	const connectionString = env.DATABASE_URL || process.env.DATABASE_URL;
+	const connectionString = process.env.DATABASE_URL;
 
 	if (!connectionString) {
 		throw new Error(
